@@ -1,10 +1,12 @@
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { MutationCache, QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import "./App.css";
-import { BottomBar } from "./components/organisms/bottom-bar";
-import { ListExpenses } from "./components/organisms/list-expenses";
-import { toast } from "./lib/toast";
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { MutationCache, QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { Route, Routes } from 'react-router-dom';
+import './App.css';
+import MainLayout from './components/layouts/main-layout';
+import { toast } from './lib/toast';
+import Home from './pages/home';
+import Expenses from './pages/expenses';
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -44,8 +46,12 @@ function App() {
         });
       }}
     >
-      <ListExpenses />
-      <BottomBar />
+      <Routes>
+        <Route path='/' element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path='expenses' element={<Expenses />} />
+        </Route>
+      </Routes>
     </PersistQueryClientProvider>
   );
 }

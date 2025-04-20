@@ -1,6 +1,8 @@
 import { FC, useState } from 'react';
-import AppBottomSheet from '../../atoms/app-bottom-sheet';
 import AppButton from '../../atoms/app-button';
+import ModalExpenseAdd from '../modal-expense-add/modal-expense-add';
+import { AddExpenseParams } from '../../../services/expense-service/expense.service';
+import { useCreateExpense } from '../../../hooks/expenses/hooks/use-create-expense';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type CreateButtonProps = {};
@@ -8,20 +10,16 @@ type CreateButtonProps = {};
 const CreateButton: FC<CreateButtonProps> = () => {
   const [shouldOpenForm, setShouldOpenForm] = useState<boolean>(false);
 
-  // const createExpense = useCreateExpense();
+  const createExpense = useCreateExpense();
 
   const handleClickAdd = () => {
-    // createExpense.mutate({
-    //   amount: 100,
-    //   title: 'Test',
-    //   transaction_date: new Date(),
-    //   description: 'Testing Description',
-    //   category_id: null,
-    //   recurrence: null,
-    //   recurrence_id: null,
-    // });
-
     setShouldOpenForm(true);
+  };
+
+  const handleSubmitExpenseAdd = async (expenseToAdd: AddExpenseParams) => {
+    await createExpense.mutate(expenseToAdd);
+    setShouldOpenForm(false);
+    // TODO: success, error, loading, etc
   };
 
   const handleCloseForm = () => setShouldOpenForm(false);
@@ -34,9 +32,11 @@ const CreateButton: FC<CreateButtonProps> = () => {
       >
         +
       </AppButton>
-      <AppBottomSheet onClose={handleCloseForm} isOpen={shouldOpenForm}>
-        Test
-      </AppBottomSheet>
+      <ModalExpenseAdd
+        onSubmit={handleSubmitExpenseAdd}
+        onClose={handleCloseForm}
+        isOpen={shouldOpenForm}
+      />
     </>
   );
 };

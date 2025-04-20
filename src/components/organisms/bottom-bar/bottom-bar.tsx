@@ -1,13 +1,28 @@
-import CreateButton from "./create-button";
+import { NavLink } from 'react-router-dom';
+import CreateButton from './create-button';
 
 export default function BottomBar() {
   return (
     <div
-      id="bottom-bar"
-      className='fixed bottom-6 inset-x-6 z-(--z-bottom-bar) h-16 rounded-full overflow-hidden'
+      id='bottom-bar'
+      className='fixed bottom-0 inset-x-0 z-(--z-bottom-bar) rounded-full overflow-hidden'
     >
-      <div className='border border-black w-full h-full rounded-full'>
-        <CreateButton />
+      <div className='grid grid-cols-5 mb-6 mx-6 h-16'>
+        <div className='p-2 flex items-center justify-center'>
+          <NavLink to='/'>H</NavLink>
+        </div>
+        <div className='p-2 pr-4 flex items-center justify-center'>
+          <NavLink to='/expenses'>E</NavLink>
+        </div>
+        <div>
+          <CreateButton />
+        </div>
+        <div className='p-2 pl-4 flex items-center justify-center'>
+          <NavLink to='/'>T</NavLink>
+        </div>
+        <div className='p-2 flex items-center justify-center'>
+          <NavLink to='/expenses'>S</NavLink>
+        </div>
       </div>
     </div>
   );

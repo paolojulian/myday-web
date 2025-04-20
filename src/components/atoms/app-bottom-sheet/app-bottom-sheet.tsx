@@ -9,7 +9,6 @@ type AppBottomSheetProps = {
 };
 
 const AppBottomSheet: FC<AppBottomSheetProps> = ({
-  onClose,
   children,
   isOpen = false,
 }) => {
@@ -22,7 +21,6 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
     >
       {/* App bottom sheet card */}
       <div
-        onClick={onClose}
         className={cn(
           'bg-white w-full h-full',
           'transition-all duration-300 [transition-timing-function:cubic-bezier(0.2,0,0,1)]',
