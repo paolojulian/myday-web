@@ -1,5 +1,6 @@
 import { Try } from "../..";
 import { DBError } from "../../config/errors.constants";
+import { generateUUID } from "../../lib/db.utils";
 import { Todo, todoDB } from "./todo.db";
 
 export type AddTodoBody = Pick<Todo, "title" | "description">;
@@ -24,7 +25,7 @@ export class TodoService {
     try {
       await todoDB.todos.add({
         ...todoToAdd,
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         createdAt: new Date(),
       });
 
