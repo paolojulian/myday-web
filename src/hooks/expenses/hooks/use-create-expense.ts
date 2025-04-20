@@ -28,7 +28,7 @@ export const useCreateExpense = () => {
 
       return { previousExpenses };
     },
-    onError: (_err, _newTodo, context) => {
+    onError: (_err, _newExpense, context) => {
       if (context?.previousExpenses) {
         queryClient.setQueryData(USE_EXPENSES_KEYS.list(), context.previousExpenses);
       }

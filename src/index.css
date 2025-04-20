@@ -3,5 +3,6 @@
 @theme {
     --z-bottom-bar: 100;
     --z-modals: 200;
+    --z-bottom-sheet: 150;
     --z-toasts: 999;
 }

@@ -32,14 +32,8 @@ class ExpenseService {
     }
   }
 
-  public async list(): Promise<Try<Expense[]>> {
-    try {
-      const expenses = await db.expenses.toArray();
-
-      return [expenses, null];
-    } catch (e) {
-      return [null, handleError(e, new DBError('Unable to add expense'))];
-    }
+  public async list(): Promise<Expense[]> {
+    return await db.expenses.toArray();
   }
 
   public async delete(expenseId: Expense['id']): Promise<Error | null> {
