@@ -1,31 +1,26 @@
-import { DBError } from "../../config/errors.constants";
-import { generateUUID } from "../../lib/db.utils";
-import { handleError } from "../../lib/handle-error.utils";
-import { Expense, ExpenseDB, expenseDB } from "./expense.db";
+import { Try } from '../..';
+import { DBError } from '../../config/errors.constants';
+import { generateUUID } from '../../lib/db.utils';
+import { handleError } from '../../lib/handle-error.utils';
+import { db, type Expense } from '../../repository';
 
-type AddExpenseParams = Pick<
+export type AddExpenseParams = Pick<
   Expense,
-  | "title"
-  | "amount"
-  | "transaction_date"
-  | "description"
-  | "category_id"
-  | "recurrence"
-  | "recurrence_id"
+  | 'title'
+  | 'amount'
+  | 'transaction_date'
+  | 'description'
+  | 'category_id'
+  | 'recurrence'
+  | 'recurrence_id'
 >;
 
 class ExpenseService {
-  expenseDB: ExpenseDB;
-
-  constructor() {
-    this.expenseDB = expenseDB;
-  }
-
   public async add(expenseToAdd: AddExpenseParams): Promise<Error | null> {
     const dateNow = new Date();
 
     try {
-      await this.expenseDB.expenses.add({
+      await db.expenses.add({
         ...expenseToAdd,
         id: generateUUID(),
         created_at: dateNow,
@@ -33,19 +28,27 @@ class ExpenseService {
       });
       return null;
     } catch (e) {
-      return handleError(e, new DBError("Unable to add expense"));
+      return handleError(e, new DBError('Unable to add expense'));
     }
   }
 
-  public async list() {}
-
-  public async delete(expenseId: Expense["id"]): Promise<Error | null> {
+  public async list(): Promise<Try<Expense[]>> {
     try {
-      await this.expenseDB.expenses.delete(expenseId);
+      const expenses = await db.expenses.toArray();
+
+      return [expenses, null];
+    } catch (e) {
+      return [null, handleError(e, new DBError('Unable to add expense'))];
+    }
+  }
+
+  public async delete(expenseId: Expense['id']): Promise<Error | null> {
+    try {
+      await db.expenses.delete(expenseId);
 
       return null;
     } catch (e) {
-      return handleError(e, new DBError("Unable to delete expense"));
+      return handleError(e, new DBError('Unable to delete expense'));
     }
   }
 

@@ -1,4 +1,4 @@
-import { Todo } from "../../services/todo-service/todo.db";
+import { Todo } from "../../../repository/todo.db";
 import { useTodos } from "./hooks/use-todos";
 
 export default function TodoList() {

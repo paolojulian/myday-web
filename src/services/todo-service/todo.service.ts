@@ -1,14 +1,14 @@
 import { Try } from "../..";
 import { DBError } from "../../config/errors.constants";
 import { generateUUID } from "../../lib/db.utils";
-import { Todo, todoDB } from "./todo.db";
+import { db, type Todo } from "../../repository";
 
 export type AddTodoBody = Pick<Todo, "title" | "description">;
 
 export class TodoService {
   public async list(): Promise<Try<Todo[]>> {
     try {
-      const todos = await todoDB.todos.toArray();
+      const todos = await db.todos.toArray();
 
       return [todos, null];
     } catch (e) {
@@ -23,10 +23,10 @@ export class TodoService {
 
   public async add(todoToAdd: AddTodoBody): Promise<null | Error> {
     try {
-      await todoDB.todos.add({
+      await db.todos.add({
         ...todoToAdd,
         id: generateUUID(),
-        createdAt: new Date(),
+        created_at: new Date(),
       });
 
       return null;
@@ -41,7 +41,7 @@ export class TodoService {
 
   public async delete(todoId: Todo["id"]): Promise<null | Error> {
     try {
-      await todoDB.todos.delete(todoId);
+      await db.todos.delete(todoId);
 
       return null;
     } catch (e) {

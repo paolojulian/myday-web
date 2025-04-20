@@ -2,9 +2,9 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import "./App.css";
+import { BottomBar } from "./components/organisms/bottom-bar";
+import { ListExpenses } from "./components/organisms/list-expenses";
 import { toast } from "./lib/toast";
-import TodoList from "./components/list-todo/list-todo";
-import BottomBar from "./components/bottom-bar/bottom-bar";
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -44,7 +44,7 @@ function App() {
         });
       }}
     >
-      <TodoList />
+      <ListExpenses />
       <BottomBar />
     </PersistQueryClientProvider>
   );

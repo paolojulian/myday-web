@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Todo } from "../../../services/todo-service/todo.db";
+import { Todo } from "../../../../repository/todo.db";
 import {
   AddTodoBody,
   todoService,
-} from "../../../services/todo-service/todo.service";
+} from "../../../../services/todo-service/todo.service";
 
 export const TODO_KEYS = {
   all: () => ["todos"],
@@ -67,9 +67,9 @@ export const useTodos = () => {
       queryClient.setQueryData<Todo[]>(TODO_KEYS.list(), (old) => [
         ...(old ?? []),
         {
-          id: "temp-id",
-          createdAt: new Date(),
           ...newTodo,
+          id: "temp-id",
+          created_at: new Date(),
         },
       ]);
 
