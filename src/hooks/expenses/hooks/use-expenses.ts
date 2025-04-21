@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { expenseService } from "../../../services/expense-service/expense.service"
+import { expenseService, ListFilter } from "../../../services/expense-service/expense.service"
 import { Expense } from "../../../repository"
 
 export const USE_EXPENSES_KEYS = {
@@ -8,9 +8,9 @@ export const USE_EXPENSES_KEYS = {
   detail: (id: Expense['id']) => [...USE_EXPENSES_KEYS.all(), 'detail', id],
 }
 
-export const useExpenses = () => {
+export const useExpenses = (filter: ListFilter) => {
   return useQuery({
     queryKey: USE_EXPENSES_KEYS.list(),
-    queryFn: expenseService.list,
+    queryFn: () => expenseService.list(filter),
   })
 }

@@ -1,4 +1,4 @@
-import { ComponentProps, FC } from 'react';
+import { ComponentProps, FC, useEffect, useRef } from 'react';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
 import AppBottomSheet from '../../atoms/app-bottom-sheet';
 
@@ -6,7 +6,13 @@ type ModalExpenseAddProps = {
   onSubmit: (expenseToAdd: AddExpenseParams) => void;
 } & Omit<ComponentProps<typeof AppBottomSheet>, 'children'>;
 
-const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({ onSubmit, ...props }) => {
+const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
+  onSubmit,
+  isOpen,
+  ...props
+}) => {
+  const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -14,7 +20,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({ onSubmit, ...props }) => {
     onSubmit({
       title: formData.get('title') as string,
       amount: Number(formData.get('amount')),
-      transaction_date: new Date(formData.get('transaction_date') as string),
+      transaction_date: new Date('2025-03-20'),
       description: formData.get('description') as string,
       category_id: null,
       recurrence: null,
@@ -22,13 +28,20 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({ onSubmit, ...props }) => {
     });
   };
 
+  useEffect(() => {
+    formRef.current?.reset();
+    if (isOpen) {
+      inputRef.current?.focus();
+    }
+  }, [isOpen]);
+
   return (
-    <AppBottomSheet {...props}>
-      <form onSubmit={handleSubmit}>
+    <AppBottomSheet isOpen={isOpen} {...props}>
+      <form ref={formRef} onSubmit={handleSubmit}>
         {/* title */}
         <section>
           <label htmlFor='title'>Title</label>
-          <input type='text' id='title' name='title' />
+          <input ref={inputRef} type='text' id='title' name='title' />
         </section>
         {/* transaction amount */}
         <section></section>

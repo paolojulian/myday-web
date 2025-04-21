@@ -2,10 +2,20 @@ import toast from 'react-hot-toast';
 import { useDeleteExpense } from '../../../hooks/expenses/hooks/use-delete-expense';
 import { useExpenses } from '../../../hooks/expenses/hooks/use-expenses';
 import { Expense } from '../../../repository';
+import { ExpenseRecurrence } from '../../../repository/expense.db';
+import { useState } from 'react';
 
 export default function ListExpenses() {
+  const [transactionDate] = useState(new Date());
   const deleteExpense = useDeleteExpense();
-  const { data: expenses, isLoading, isFetched } = useExpenses();
+  const {
+    data: expenses,
+    isLoading,
+    isFetched,
+  } = useExpenses({
+    filterType: ExpenseRecurrence.Monthly,
+    transactionDate,
+  });
 
   const handleClickRemoveExpense = (id: Expense['id']) => async () => {
     const result = await deleteExpense.mutateAsync(id);

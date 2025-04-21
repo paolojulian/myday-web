@@ -12,9 +12,9 @@ class MyDayDB extends Dexie {
 
   private constructor() {
     super(DATABASE_NAME);
-    this.version(2).stores({
+    this.version(3).stores({
       todos: 'id, created_at', // primary key + indexes
-      expenses: 'id, category_id, created_at', // primary key + indexes
+      expenses: 'id, category_id, transaction_date, [transaction_date+created_at]', // primary key + indexes
     });
   }
 
