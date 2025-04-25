@@ -1,8 +1,8 @@
-import { FC, useState } from 'react';
-import AppButton from '../../atoms/app-button';
-import ModalExpenseAdd from '../modal-expense-add/modal-expense-add';
-import { AddExpenseParams } from '../../../services/expense-service/expense.service';
-import { useCreateExpense } from '../../../hooks/expenses/hooks/use-create-expense';
+import { AppButton } from "@/components/atoms";
+import { FC, useState } from "react";
+import { useCreateExpense } from "../../../hooks/expenses/hooks/use-create-expense";
+import { AddExpenseParams } from "../../../services/expense-service/expense.service";
+import ModalExpenseAdd from "../modal-expense-add/modal-expense-add";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type CreateButtonProps = {};
@@ -28,7 +28,7 @@ const CreateButton: FC<CreateButtonProps> = () => {
     <>
       <AppButton
         onClick={handleClickAdd}
-        className='h-full aspect-square rounded-full border border-black active:scale-95 transition-colors'
+        className="h-full aspect-square rounded-full border border-black active:scale-95 transition-colors"
       >
         +
       </AppButton>

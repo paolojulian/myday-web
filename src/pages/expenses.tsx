@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { ListExpenses } from '../components/organisms/list-expenses';
+import { FC } from "react";
+import { ListExpenses } from "../components/organisms/list-expenses";
 
 type ExpensesProps = object;
 

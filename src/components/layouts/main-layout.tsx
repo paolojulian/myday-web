@@ -1,6 +1,6 @@
-import { FC } from 'react';
-import { BottomBar } from '../organisms/bottom-bar';
-import { Outlet } from 'react-router-dom';
+import { FC } from "react";
+import { Outlet } from "react-router-dom";
+import { BottomBar } from "@/components/organisms/bottom-bar";
 
 type MainLayoutProps = object;
 
