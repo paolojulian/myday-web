@@ -1,5 +1,5 @@
 import { DBError } from '../../config/errors.constants';
-import { getStartAndEndOfMonth } from '../../lib/dates.utils';
+import { getStartAndEndOfDay, getStartAndEndOfMonth } from '../../lib/dates.utils';
 import { generateUUID } from '../../lib/db.utils';
 import { handleError } from '../../lib/handle-error.utils';
 import { db, type Expense } from '../../repository';
@@ -22,11 +22,9 @@ class ExpenseService {
   }
 
   public async list(filters: ListFilter): Promise<Expense[]> {
-    // TODO: convert to start/end of day
     const { startOfMonth, endOfMonth } = getStartAndEndOfMonth(
       filters.transactionDate
     );
-    console.log({ startOfMonth, endOfMonth })
 
     const expenses = await db.expenses
       .where('transaction_date')
@@ -34,7 +32,17 @@ class ExpenseService {
       .reverse()
       .toArray();
 
-    console.log({ expenses });
+    return expenses;
+  }
+
+  public async recentTransactions(): Promise<Expense[]>{
+    const { startOfDay, endOfDay } = getStartAndEndOfDay(new Date);
+    const expenses = await db.expenses
+      .where("transaction_date")
+      .between(startOfDay, endOfDay, true, true)
+      .reverse()
+      // .limit(20) // No need for limit, we want all transactions for today, this wont be a lot
+      .toArray();
 
     return expenses;
   }

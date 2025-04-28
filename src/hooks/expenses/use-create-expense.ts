@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { AddExpenseParams, expenseService } from "../../../services/expense-service/expense.service"
-import { Expense } from "../../../repository";
+import { AddExpenseParams, expenseService } from "../../services/expense-service/expense.service";
 import { USE_EXPENSES_KEYS } from "./use-expenses";
+import { Expense } from "../../repository";
+
 
 export const useCreateExpense = () => {
   const queryClient = useQueryClient();
@@ -9,12 +10,12 @@ export const useCreateExpense = () => {
   return useMutation({
     mutationFn: expenseService.add,
     onMutate: async (expense: AddExpenseParams) => {
-      await queryClient.cancelQueries({ queryKey: USE_EXPENSES_KEYS.list() });
+      await queryClient.cancelQueries({ queryKey: USE_EXPENSES_KEYS.all() });
 
       const previousExpenses =
-        queryClient.getQueryData<Expense[]>(USE_EXPENSES_KEYS.list()) ?? [];
+        queryClient.getQueryData<Expense[]>(USE_EXPENSES_KEYS.all()) ?? [];
 
-      queryClient.setQueryData<Expense[]>(USE_EXPENSES_KEYS.list(), (old) => {
+      queryClient.setQueryData<Expense[]>(USE_EXPENSES_KEYS.all(), (old) => {
         return [
           ...(old || []),
           {
@@ -30,11 +31,11 @@ export const useCreateExpense = () => {
     },
     onError: (_err, _newExpense, context) => {
       if (context?.previousExpenses) {
-        queryClient.setQueryData(USE_EXPENSES_KEYS.list(), context.previousExpenses);
+        queryClient.setQueryData(USE_EXPENSES_KEYS.all(), context.previousExpenses);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: USE_EXPENSES_KEYS.list() });
+      queryClient.invalidateQueries({ queryKey: USE_EXPENSES_KEYS.all() });
     },
   })
 }

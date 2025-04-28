@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { expenseService } from '../../../services/expense-service/expense.service';
 import { USE_EXPENSES_KEYS } from './use-expenses';
-import { Expense } from '../../../repository';
+import { expenseService } from '../../services/expense-service/expense.service';
+import { Expense } from '../../repository';
 
 export const useDeleteExpense = () => {
   const queryClient = useQueryClient();

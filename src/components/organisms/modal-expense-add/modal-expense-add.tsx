@@ -20,7 +20,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     onSubmit({
       title: formData.get('title') as string,
       amount: Number(formData.get('amount')),
-      transaction_date: new Date('2025-03-20'),
+      transaction_date: new Date(),
       description: formData.get('description') as string,
       category_id: null,
       recurrence: null,

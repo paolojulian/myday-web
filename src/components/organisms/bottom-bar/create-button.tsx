@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import AppButton from '../../atoms/app-button';
 import ModalExpenseAdd from '../modal-expense-add/modal-expense-add';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
-import { useCreateExpense } from '../../../hooks/expenses/hooks/use-create-expense';
+import { useCreateExpense } from '../../../hooks/expenses/use-create-expense';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type CreateButtonProps = {};

@@ -1,30 +1,22 @@
-import toast from 'react-hot-toast';
-import { useDeleteExpense } from '../../../hooks/expenses/hooks/use-delete-expense';
-import { useExpenses } from '../../../hooks/expenses/hooks/use-expenses';
-import { Expense } from '../../../repository';
-import { ExpenseRecurrence } from '../../../repository/expense.db';
-import { useState } from 'react';
+import { FC } from "react";
+import { Expense } from "../../../repository";
 
-export default function ListExpenses() {
-  const [transactionDate] = useState(new Date());
-  const deleteExpense = useDeleteExpense();
-  const {
-    data: expenses,
-    isLoading,
-    isFetched,
-  } = useExpenses({
-    filterType: ExpenseRecurrence.Monthly,
-    transactionDate,
-  });
+type Props = {
+  onDeleteExpense: (id: string)=> Promise<void>;
+  expenses: Expense[] | undefined;
+  isLoading: boolean;
+  isFetched: boolean;
+}
 
-  const handleClickRemoveExpense = (id: Expense['id']) => async () => {
-    const result = await deleteExpense.mutateAsync(id);
-    if (result) {
-      toast.error('Error deleting expense');
-      return;
-    }
+const ListExpenses: FC<Props> = ({
+  onDeleteExpense,
+  expenses,
+  isLoading,
+  isFetched
+}) => {
 
-    // TODO: Success
+  const handleClickRemoveExpense = (id: string) => () => {
+    onDeleteExpense(id);
   };
 
   if (isLoading || !expenses) {
@@ -49,3 +41,5 @@ export default function ListExpenses() {
     </div>
   );
 }
+
+export default ListExpenses;
