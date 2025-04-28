@@ -1,10 +1,10 @@
-import { ComponentProps, FC, useEffect, useRef } from 'react';
-import { AddExpenseParams } from '../../../services/expense-service/expense.service';
-import AppBottomSheet from '../../atoms/app-bottom-sheet';
+import { AppBottomSheet } from "@/components/atoms";
+import { ComponentProps, FC, useEffect, useRef } from "react";
+import { AddExpenseParams } from "../../../services/expense-service/expense.service";
 
 type ModalExpenseAddProps = {
   onSubmit: (expenseToAdd: AddExpenseParams) => void;
-} & Omit<ComponentProps<typeof AppBottomSheet>, 'children'>;
+} & Omit<ComponentProps<typeof AppBottomSheet>, "children">;
 
 const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   onSubmit,
@@ -40,8 +40,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       <form ref={formRef} onSubmit={handleSubmit}>
         {/* title */}
         <section>
-          <label htmlFor='title'>Title</label>
-          <input ref={inputRef} type='text' id='title' name='title' />
+          <label htmlFor="title">Title</label>
+          <input ref={inputRef} type="text" id="title" name="title" />
         </section>
         {/* transaction amount */}
         <section></section>
@@ -52,10 +52,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
         {/* save */}
         <section>
-          <button onClick={props.onClose} type='button'>
+          <button onClick={props.onClose} type="button">
             Cancel
           </button>
-          <button type='submit'>Save</button>
+          <button type="submit">Save</button>
         </section>
       </form>
     </AppBottomSheet>

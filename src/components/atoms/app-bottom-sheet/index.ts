@@ -1,1 +1,2 @@
-export { default } from './app-bottom-sheet'
+export { default as AppBottomSheet } from "./app-bottom-sheet";
+

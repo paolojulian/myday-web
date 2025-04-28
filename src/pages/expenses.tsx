@@ -1,10 +1,10 @@
 import { FC, useState } from 'react';
+import toast from 'react-hot-toast';
+import { FilterExpenses } from '../components/organisms/filter-expenses';
 import { ListExpenses } from '../components/organisms/list-expenses';
 import { useDeleteExpense } from '../hooks/expenses/use-delete-expense';
 import { useExpenses } from '../hooks/expenses/use-expenses';
 import { Expense, ExpenseRecurrence } from '../repository/expense.db';
-import toast from 'react-hot-toast';
-import { FilterExpenses } from '../components/organisms/filter-expenses';
 
 type ExpensesProps = object;
 
