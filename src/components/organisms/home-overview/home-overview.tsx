@@ -12,7 +12,7 @@ const HomeOverview: FC<Props> = ({ remainingBudget, spentToday }) => {
       <div className="grid grid-cols-2 gap-4">
         {/* TODO: Add no remaining budget */}
         {remainingBudget ? <Item title={toCurrency(remainingBudget)} subtitle="Remaining Budget" /> : null}
-        <Item title={`${-toCurrency(spentToday)}`} subtitle="Spent Today" />
+        <Item title={`${toCurrency(spentToday)}`} subtitle="Spent Today" />
       </div>
     </div>
   );

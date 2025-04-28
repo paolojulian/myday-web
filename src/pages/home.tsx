@@ -14,9 +14,12 @@ const Home: FC<HomeProps> = () => {
     isLoading,
     error,
   } = useRecentTransactions();
+
   const amountSpentToday: number = recentTransactions?.reduce((acc, transaction) => {
     return acc + transaction.amount;
   }, 0) || 0;
+
+  console.log({ amountSpentToday, recentTransactions })
 
 
   return (

@@ -12,12 +12,8 @@ type Props = {
 const HomeRecentTransactions: FC<Props> = ({ recentTransactions, isLoading, error }) => {
   return (
     <div className="py-4 text-left">
-      <div className="flex flex-col gap-2 mt-2">
-        <Item title="Lunch at Jollibee" subtitle="Restaurant" amount={-890} />
-        <Item title="Dinner at Max" subtitle="Restaurant" amount={-1000} />
-      </div>
         <h2>Recent Transactions</h2>
-        <div className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2 mt-2'>
           {isLoading ? (
             <AppDelayLoader>
               {/* TODO: Add a design */}
@@ -46,7 +42,7 @@ const Item = ({
   amount: number;
 }) => {
   return (
-    <div className="flex flex-row items-center justify-between">
+    <div className="flex flex-row items-center justify-between border p-4">
       <div>
         <h2>{title}</h2>
         <p>{subtitle}</p>
