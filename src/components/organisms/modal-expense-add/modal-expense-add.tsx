@@ -13,15 +13,16 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 }) => {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
     onSubmit({
-      title: formData.get('title') as string,
-      amount: Number(formData.get('amount')),
+      title: formData.get("title") as string,
+      amount: Number(formData.get("amount")),
       transaction_date: new Date(),
-      description: formData.get('description') as string,
+      description: formData.get("description") as string,
       category_id: null,
       recurrence: null,
       recurrence_id: null,
@@ -44,7 +45,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
           <input ref={inputRef} type="text" id="title" name="title" />
         </section>
         {/* transaction amount */}
-        <section></section>
+        <section>
+          <label htmlFor="amount">Amount</label>
+          <input ref={amountRef} type="number" id="amount" name="amount" />
+        </section>
         {/* category */}
         <section></section>
         {/* description */}
