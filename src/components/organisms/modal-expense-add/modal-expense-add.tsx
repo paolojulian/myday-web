@@ -14,6 +14,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -38,19 +39,46 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
   return (
     <AppBottomSheet isOpen={isOpen} {...props}>
-      <form ref={formRef} onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-2">
         {/* title */}
         <section>
           <label htmlFor="title">Title</label>
           <input ref={inputRef} type="text" id="title" name="title" />
         </section>
+
+        {/* category */}
+        <section>
+
+        </section>
+
         {/* transaction amount */}
         <section>
           <label htmlFor="amount">Amount</label>
           <input ref={amountRef} type="number" id="amount" name="amount" />
         </section>
-        {/* category */}
+
+        {/* transaction date */}
+        <section className="grid grid-cols-3 gap-2">
+          <div className="p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2">
+            <div className="size-6 rounded-full bg-neutral-400">
+            </div>
+            <p>Today</p>
+          </div>
+          <div className="p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2">
+            <div className="size-6 rounded-full bg-neutral-400">
+            </div>
+            <p>Tomorrow</p>
+          </div>
+          <div className="p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2">
+            <div className="size-6 rounded-full bg-neutral-400">
+            </div>
+            <p>Custom</p>
+          </div>
+        </section>
+
+        {/* recurring */}
         <section></section>
+
         {/* description */}
         <section></section>
 
