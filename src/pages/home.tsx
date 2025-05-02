@@ -3,24 +3,18 @@ import { HomeOverview, HomeRecentTransactions } from "@/components/organisms";
 import { FC, useState } from 'react';
 import { useBudget } from '../hooks/budget/use-budget';
 import useRecentTransactions from '../hooks/expenses/use-recent-transactions';
+import { useSpentToday } from "@/hooks/expenses/use-spent-today";
 
 type HomeProps = object;
 
 const Home: FC<HomeProps> = () => {
   const [dateFilter] = useState<Date>(new Date());
   const { data: remainingBudget } = useBudget(dateFilter);
-  const {
-    data: recentTransactions,
-    isLoading,
-    error,
-  } = useRecentTransactions();
 
-  const amountSpentToday: number = recentTransactions?.reduce((acc, transaction) => {
-    return acc + transaction.amount;
-  }, 0) || 0;
+  const recentTransactionsQuery = useRecentTransactions();
+  const spentTodayQuery = useSpentToday();
 
-  console.log({ amountSpentToday, recentTransactions })
-
+  const amountSpentToday: number = spentTodayQuery.data || 0;
 
   return (
     <div>
@@ -33,7 +27,7 @@ const Home: FC<HomeProps> = () => {
       </section>
 
       <section id="home-recent-transactions">
-        <HomeRecentTransactions recentTransactions={recentTransactions} isLoading={isLoading} error={error} />
+        <HomeRecentTransactions recentTransactions={recentTransactionsQuery.data} isLoading={recentTransactionsQuery.isLoading} error={recentTransactionsQuery.error} />
       </section>
     </div>
   );

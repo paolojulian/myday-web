@@ -4,7 +4,7 @@ import { expenseService } from "../../services/expense-service/expense.service";
 
 const useRecentTransactions = () => {
   const recentTransactionsQuery = useQuery({
-    queryKey: [USE_EXPENSES_KEYS.recentTransactions()],
+    queryKey: USE_EXPENSES_KEYS.recentTransactions(),
     queryFn: expenseService.recentTransactions,
   })
 

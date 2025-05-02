@@ -1,5 +1,6 @@
 import AppDelayLoader from "@/components/atoms/app-delay-loader";
 import { toCurrency } from "@/lib/currency.utils";
+import { getDateFormat } from "@/lib/dates.utils";
 import { Expense } from "@/repository";
 import { FC } from "react";
 
@@ -24,8 +25,20 @@ const HomeRecentTransactions: FC<Props> = ({ recentTransactions, isLoading, erro
           {/* TODO: Add a design */}
           {error ? <div>Error: {error.message}</div> : null}
 
+          {recentTransactions !== undefined && recentTransactions.length === 0 && !isLoading && (
+            <div>
+              <p>No recent transactions</p>
+            </div>
+          )}
+
           {recentTransactions?.map((recentTransaction) => (
-            <Item key={recentTransaction.id} title={recentTransaction.title} subtitle={recentTransaction.description || ''} amount={recentTransaction.amount} />
+            <Item 
+              key={recentTransaction.id}
+              title={recentTransaction.title}
+              subtitle={recentTransaction.description || ''}
+              amount={recentTransaction.amount}
+              transactionDate={recentTransaction.transaction_date}
+            />
           ))}
         </div>
     </div>
@@ -36,16 +49,23 @@ const Item = ({
   title,
   subtitle,
   amount,
+  transactionDate,
 }: {
   title: string;
   subtitle: string;
   amount: number;
+  transactionDate: Date;
 }) => {
   return (
     <div className="flex flex-row items-center justify-between border p-4">
       <div>
+        <div>
         <h2>{title}</h2>
-        <p>{subtitle}</p>
+        <small>{subtitle}</small>
+        </div>
+        <div>
+          <small>{getDateFormat(transactionDate, 'MMM-DD-YYYY')}</small>
+        </div>
       </div>
       <div>
         <p>{toCurrency(amount)}</p>

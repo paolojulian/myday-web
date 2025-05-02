@@ -9,13 +9,13 @@ export const useDeleteExpense = () => {
   return useMutation({
     mutationFn: expenseService.delete,
     onMutate: async (expenseId) => {
-      queryClient.cancelQueries({ queryKey: USE_EXPENSES_KEYS.list() });
+      queryClient.cancelQueries({ queryKey: USE_EXPENSES_KEYS.all() });
 
       const previousExpenses = queryClient.getQueryData<Expense[]>(
-        USE_EXPENSES_KEYS.list()
+        USE_EXPENSES_KEYS.all()
       );
 
-      queryClient.setQueryData<Expense[]>(USE_EXPENSES_KEYS.list(), (old) => {
+      queryClient.setQueryData<Expense[]>(USE_EXPENSES_KEYS.all(), (old) => {
         return (old || []).filter((expense) => expense?.id !== expenseId);
       });
 
@@ -24,7 +24,7 @@ export const useDeleteExpense = () => {
     onError: (_err, _expenseId, context) => {
       if (context?.previousExpenses) {
         queryClient.setQueryData(
-          USE_EXPENSES_KEYS.list(),
+          USE_EXPENSES_KEYS.all(),
           context.previousExpenses
         );
       }

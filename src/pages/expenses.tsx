@@ -33,7 +33,8 @@ const Expenses: FC<ExpensesProps> = () => {
   }, [expenses]);
 
   // start section budget ==========
-  const { data: budget } = useBudget(transactionDate);
+  const { data: budget, isFetched: isUseBudgetFetched } =
+    useBudget(transactionDate);
   const remainingBudget: number = (budget?.amount || 0) - totalExpenses;
   // end section budget ==========
 
@@ -57,12 +58,14 @@ const Expenses: FC<ExpensesProps> = () => {
         onChangeTransactionDate={setTransactionDate}
         transactionDate={transactionDate}
       />
-      {budget ? (
+
+      {!!isUseBudgetFetched && (
         <CardBudget
           remainingBudget={remainingBudget}
-          monthlyBudget={budget.amount}
+          monthlyBudget={budget?.amount || null}
         />
-      ) : null}
+      )}
+
       <ListExpenses
         onDeleteExpense={handleDeleteExpense}
         expenses={expenses}

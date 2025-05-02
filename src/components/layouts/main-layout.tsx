@@ -6,7 +6,7 @@ type MainLayoutProps = object;
 
 const MainLayout: FC<MainLayoutProps> = () => {
   return (
-    <div className="text-left">
+    <div className="text-left pb-[80px]">
       <Outlet />
       <BottomBar />
     </div>

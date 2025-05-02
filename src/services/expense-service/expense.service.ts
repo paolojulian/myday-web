@@ -36,15 +36,26 @@ class ExpenseService {
   }
 
   public async recentTransactions(): Promise<Expense[]>{
-    const { startOfDay, endOfDay } = getStartAndEndOfDay(new Date);
     const expenses = await db.expenses
-      .where("transaction_date")
-      .between(startOfDay, endOfDay, true, true)
+      .orderBy('transaction_date')
+      .limit(10)
       .reverse()
-      // .limit(20) // No need for limit, we want all transactions for today, this wont be a lot
       .toArray();
 
     return expenses;
+  }
+
+  public async spentToday(): Promise<number> {
+    const { startOfDay, endOfDay } = getStartAndEndOfDay(new Date());
+
+    const expenses = await db.expenses
+      .where('transaction_date')
+      .between(startOfDay, endOfDay, true, true)
+      .toArray();
+
+    return expenses.reduce((prev, curr) => {
+      return prev + curr.amount;
+    }, 0);
   }
 
   public async delete(expenseId: Expense['id']): Promise<Error | null> {
