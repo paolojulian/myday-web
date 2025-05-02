@@ -1,8 +1,18 @@
 @import "tailwindcss"; 
 
+:root {
+    --black: #030712;
+    --white: #f9fafb;
+    --primary: #ff6c6c;
+  }
+
 @theme {
     --z-bottom-bar: 100;
     --z-modals: 200;
     --z-bottom-sheet: 150;
     --z-toasts: 999;
 }
+
+*:focus {
+    outline-color: var(--black);
+  }
