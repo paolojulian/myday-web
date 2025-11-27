@@ -7,7 +7,7 @@ const typographyVariants = cva('', {
     variant: {
       heading: 'text-2xl font-bold leading-tight',
       body: 'text-base font-normal leading-normal',
-      body2: 'text-sm font-normal leading-relaxed',
+      body2: 'text-sm font-semibold leading-relaxed',
       small: 'text-xs font-normal leading-snug',
     },
   },
@@ -29,7 +29,10 @@ const AppTypography: FC<AppTypographyProps> = ({
   ...props
 }) => {
   return (
-    <Component className={cn(typographyVariants({ variant }), className)} {...props}>
+    <Component
+      className={cn(typographyVariants({ variant }), className)}
+      {...props}
+    >
       {children}
     </Component>
   );

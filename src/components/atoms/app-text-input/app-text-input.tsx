@@ -1,3 +1,4 @@
+import AppTypography from '@/components/atoms/app-typography';
 import cn from '@/utils/cn';
 import { FC, InputHTMLAttributes, useEffect, useState } from 'react';
 
@@ -56,7 +57,8 @@ const AppTextInput: FC<AppTextInputProps> = ({
         className={cn(
           'peer',
           'placeholder-transparent focus:placeholder-neutral-500',
-          'pt-6 px-4 pb-2 border border-neutral-200 dark:border-neutral-700',
+          'pt-6 px-4 pb-2 bg-neutral-100 rounded dark:border-neutral-700',
+          'text-base font-normal leading-normal',
           {
             'w-full': isFullWidth,
             'border-red-500 outline outline-red-500': !!hasError,
@@ -84,7 +86,13 @@ const AppTextInput: FC<AppTextInputProps> = ({
           }
         )}
       >
-        <small>{resolvedLabel}</small>
+        <AppTypography
+          as='span'
+          variant='small'
+          className='text-black font-bold'
+        >
+          {resolvedLabel}
+        </AppTypography>
       </div>
 
       {/* Placeholder label */}
@@ -106,7 +114,13 @@ const AppTextInput: FC<AppTextInputProps> = ({
           }
         )}
       >
-        <p>{resolvedLabel}</p>
+        <AppTypography
+          as='p'
+          variant='body2'
+          className='text-neutral-500 font-semibold'
+        >
+          {resolvedLabel}
+        </AppTypography>
       </label>
     </div>
   );

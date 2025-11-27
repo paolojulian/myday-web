@@ -1,62 +1,116 @@
-import { AppBottomSheet, ThreeWayDatePicker } from '@/components/atoms';
-import { ComponentProps, FC, useEffect, useRef } from 'react';
-import { AddExpenseParams } from '../../../services/expense-service/expense.service';
+import {
+  AppBottomSheet,
+  AppSegmentedControl,
+  ThreeWayDatePicker,
+} from '@/components/atoms';
 import AppTextInput from '@/components/atoms/app-text-input';
+import { ComponentProps, FC, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { AddExpenseParams } from '../../../services/expense-service/expense.service';
 
 type ModalExpenseAddProps = {
   onSubmit: (expenseToAdd: AddExpenseParams) => void;
 } & Omit<ComponentProps<typeof AppBottomSheet>, 'children'>;
+
+type FormData = {
+  title: string;
+  category: string;
+  amount: string;
+  description: string;
+};
 
 const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   onSubmit,
   isOpen,
   ...props
 }) => {
-  const formRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const amountRef = useRef<HTMLInputElement>(null);
+  const { register, handleSubmit, reset, watch, setValue } = useForm<FormData>({
+    defaultValues: {
+      title: '',
+      category: '',
+      amount: '',
+      description: '',
+    },
+  });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  const amountValue = watch('amount');
+
+  const handleFormSubmit = (data: FormData) => {
+    // Remove ₱ symbol and parse amount
+    const cleanAmount = data.amount.replace('₱', '').trim();
 
     onSubmit({
-      title: formData.get('title') as string,
-      amount: Number(formData.get('amount')),
+      title: data.title,
+      amount: Number(cleanAmount),
       transaction_date: new Date(),
-      description: formData.get('description') as string,
+      description: data.description,
       category_id: null,
       recurrence: null,
       recurrence_id: null,
     });
   };
 
-  useEffect(() => {
-    formRef.current?.reset();
-    if (isOpen) {
-      inputRef.current?.focus();
+  const handleAmountChange = (value?: string | number) => {
+    const stringValue = String(value || '');
+    // Remove any existing ₱ symbols and non-numeric characters except decimal point
+    const numericValue = stringValue.replace(/[₱\s]/g, '');
+
+    if (numericValue) {
+      setValue('amount', `₱ ${numericValue}`);
+    } else {
+      setValue('amount', '');
     }
-  }, [isOpen]);
+  };
+
+  useEffect(() => {
+    reset();
+  }, [isOpen, reset]);
 
   return (
-    <AppBottomSheet isOpen={isOpen} {...props} title='Add Expense'>
+    <AppBottomSheet isOpen={isOpen} {...props} HeaderComponent={null}>
+      <AppSegmentedControl
+        options={[
+          { label: 'Expense', value: 'expense' },
+          { label: 'To Buy', value: 'to-buy' },
+        ]}
+        activeValue='expense'
+        onChange={() => {}}
+        className='mb-4'
+      />
       <form
-        ref={formRef}
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(handleFormSubmit)}
         className='flex flex-col gap-2'
       >
         {/* title */}
         <section>
-          <AppTextInput id='title' label='Title' placeholder='Type here..' />
+          <AppTextInput
+            id='title'
+            label='Title'
+            placeholder='Type here..'
+            {...register('title')}
+          />
         </section>
-
-        {/* category */}
-        <section></section>
 
         {/* transaction amount */}
         <section>
-          <label htmlFor='amount'>Amount</label>
-          <input ref={amountRef} type='number' id='amount' name='amount' />
+          <AppTextInput
+            id='amount'
+            label='Amount'
+            placeholder='₱ 0.00'
+            type='number'
+            value={amountValue}
+            onChangeText={handleAmountChange}
+          />
+        </section>
+
+        {/* category */}
+        <section>
+          <AppTextInput
+            id='category'
+            label='Category (Optional)'
+            placeholder='ex: Restaurant, Grocery...'
+            {...register('category')}
+          />
         </section>
 
         {/* transaction date */}

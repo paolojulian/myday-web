@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 
 type AppBottomSheetProps = {
   onClose: () => void;
-  HeaderComponent?: ReactNode;
+  HeaderComponent?: ReactNode | null;
   HeaderRightComponent?: ReactNode;
   children: ReactNode;
   isOpen: boolean;
@@ -64,7 +64,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
         }}
       >
-        {HeaderComponent ? (
+        {HeaderComponent === undefined ? (
           HeaderComponent
         ) : (
           <div className='grid grid-cols-[1fr_auto_1fr] p-4 items-center'>
