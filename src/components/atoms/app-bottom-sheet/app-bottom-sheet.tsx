@@ -10,6 +10,10 @@ type AppBottomSheetProps = {
   children: ReactNode;
   isOpen: boolean;
   title?: string;
+  /** percent/number */
+  height?: string;
+  variant?: 'full' | 'custom';
+  zIndex?: number;
 };
 
 const AppBottomSheet: FC<AppBottomSheetProps> = ({
@@ -19,25 +23,46 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
   children,
   title,
   isOpen = false,
+  height = '100%',
+  variant = 'full',
+  zIndex = 1000,
 }) => {
   return ReactDOM.createPortal(
     <div
-      className={cn('z-(--z-bottom-sheet)', 'fixed inset-0', {
+      className={cn('fixed inset-0 flex flex-col justify-end', {
         'pointer-events-none': !isOpen,
         'pointer-events-auto': isOpen,
       })}
+      style={{
+        zIndex,
+      }}
     >
+      {/* Backdrop */}
+      {variant !== 'full' && (
+        <div
+          className={cn('absolute inset-0 bg-black/20', 'transition-opacity', {
+            'opacity-0': !isOpen,
+          })}
+          onClick={onClose}
+        ></div>
+      )}
+
       {/* App bottom sheet card */}
       <div
         className={cn(
-          'bg-white w-full h-full',
-          'transition-all duration-300 [transition-timing-function:cubic-bezier(0.2,0,0,1)]',
+          'bg-white w-full mt-auto',
+          'transition-all ease-out duration-300 [transition-timing-function:cubic-bezier(0.2,0,0,1)]',
           'shadow-2xl',
           {
+            'rounded-t-3xl': variant !== 'full',
             'translate-y-full': !isOpen,
             'translate-y-0': isOpen,
           }
         )}
+        style={{
+          height,
+          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+        }}
       >
         {HeaderComponent ? (
           HeaderComponent

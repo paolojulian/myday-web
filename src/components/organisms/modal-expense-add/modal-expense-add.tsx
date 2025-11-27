@@ -1,4 +1,4 @@
-import { AppBottomSheet } from '@/components/atoms';
+import { AppBottomSheet, ThreeWayDatePicker } from '@/components/atoms';
 import { ComponentProps, FC, useEffect, useRef } from 'react';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
 import AppTextInput from '@/components/atoms/app-text-input';
@@ -47,7 +47,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       >
         {/* title */}
         <section>
-          <AppTextInput id='title' label='Title' placeholder="Type here.." />
+          <AppTextInput id='title' label='Title' placeholder='Type here..' />
         </section>
 
         {/* category */}
@@ -60,19 +60,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
         </section>
 
         {/* transaction date */}
-        <section className='grid grid-cols-3 gap-2'>
-          <div className='p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2'>
-            <div className='size-6 rounded-full bg-neutral-400'></div>
-            <p>Today</p>
-          </div>
-          <div className='p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2'>
-            <div className='size-6 rounded-full bg-neutral-400'></div>
-            <p>Tomorrow</p>
-          </div>
-          <div className='p-2 py-4 bg-neutral-50 dark:bg-neutral-800 flex flex-col items-center gap-2'>
-            <div className='size-6 rounded-full bg-neutral-400'></div>
-            <p>Custom</p>
-          </div>
+        <section>
+          <ThreeWayDatePicker />
         </section>
 
         {/* recurring */}
