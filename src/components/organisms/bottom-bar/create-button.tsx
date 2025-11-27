@@ -9,7 +9,8 @@ import { useQueryParamState } from '@/hooks/use-query-param-state';
 type CreateButtonProps = {};
 
 const CreateButton: FC<CreateButtonProps> = () => {
-  const [shouldOpenForm, setShouldOpenForm, removeOpenForm] = useQueryParamState('add', false);
+  const [shouldOpenForm, setShouldOpenForm, removeOpenForm] =
+    useQueryParamState('add', false);
 
   const createExpense = useCreateExpense();
 
