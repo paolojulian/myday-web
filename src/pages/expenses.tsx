@@ -1,13 +1,13 @@
-import CardBudget from "@/components/organisms/card-budget";
-import { useBudget } from "@/hooks/budget/use-budget";
-import { FC, useMemo, useState } from "react";
-import toast from "react-hot-toast";
-import { FilterExpenses } from "../components/organisms/filter-expenses";
-import { ListExpenses } from "../components/organisms/list-expenses";
-import { useDeleteExpense } from "../hooks/expenses/use-delete-expense";
-import { useExpenses } from "../hooks/expenses/use-expenses";
-import { Expense, ExpenseRecurrence } from "../repository/expense.db";
-import { AppPageHeader } from "@/components/atoms";
+import CardBudget from '@/components/organisms/card-budget';
+import { useBudget } from '@/hooks/budget/use-budget';
+import { FC, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { FilterExpenses } from '../components/organisms/filter-expenses';
+import { ListExpenses } from '../components/organisms/list-expenses';
+import { useDeleteExpense } from '../hooks/expenses/use-delete-expense';
+import { useExpenses } from '../hooks/expenses/use-expenses';
+import { Expense, ExpenseRecurrence } from '../repository/expense.db';
+import { AppPageHeader } from '@/components/atoms';
 
 type ExpensesProps = object;
 
@@ -38,10 +38,10 @@ const Expenses: FC<ExpensesProps> = () => {
   const remainingBudget: number = (budget?.amount || 0) - totalExpenses;
   // end section budget ==========
 
-  const handleDeleteExpense = async (id: Expense["id"]) => {
+  const handleDeleteExpense = async (id: Expense['id']) => {
     const result = await deleteExpense.mutateAsync(id);
     if (result) {
-      toast.error("Error deleting expense");
+      toast.error('Error deleting expense');
       return;
     }
 
@@ -50,8 +50,8 @@ const Expenses: FC<ExpensesProps> = () => {
 
   return (
     <div>
-      <section id="home-header">
-        <AppPageHeader title={"My Day"} description={"Expenses"} />
+      <section id='home-header'>
+        <AppPageHeader title={'My Day'} description={'Expenses'} />
       </section>
 
       <FilterExpenses
