@@ -11,6 +11,10 @@ import XIcon from '@/components/atoms/icons/x-icon';
 import { ComponentProps, FC, useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
+import {
+  clearCurrencyFormatting,
+  formatCurrency,
+} from '@/lib/formatters.utils';
 
 type ModalExpenseAddProps = {
   onSubmit: (expenseToAdd: AddExpenseParams) => void;
@@ -41,7 +45,13 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   isOpen,
   ...props
 }) => {
-  const { register, handleSubmit, reset, control } = useForm<FormData>({
+  const {
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<FormData>({
+    mode: 'onBlur',
     defaultValues: {
       title: '',
       category: '',
@@ -54,10 +64,9 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const handleFormSubmit = (data: FormData) => {
-    // Remove ₱ symbol and parse amount
-    const cleanAmount = data.amount.replace(/[₱\s,]/g, '').trim();
+    const cleanAmount = clearCurrencyFormatting(data.amount);
 
-    onSubmit({
+    const formData: AddExpenseParams = {
       title: data.title,
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
@@ -65,47 +74,9 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       category_id: null,
       recurrence: null,
       recurrence_id: null,
-    });
-  };
+    };
 
-  const formatCurrency = (value: string): string => {
-    // Remove any existing ₱ symbols, spaces, and commas, but keep decimal point and numbers
-    const numericValue = value.replace(/[₱\s,]/g, '');
-
-    if (!numericValue || numericValue === '') {
-      return '';
-    }
-
-    // Allow typing decimal point
-    if (numericValue === '.') {
-      return '₱ 0.';
-    }
-
-    // Check if it ends with a decimal point (user is about to type decimals)
-    const endsWithDecimal = numericValue.endsWith('.');
-
-    // Split by decimal to handle integer and decimal parts separately
-    const parts = numericValue.split('.');
-    const integerPart = parts[0];
-    const decimalPart = parts[1];
-
-    // Format integer part with commas
-    const number = parseInt(integerPart || '0', 10);
-    if (isNaN(number)) {
-      return '';
-    }
-
-    let formatted = `₱ ${number.toLocaleString('en-US')}`;
-
-    // Add decimal point and decimal digits if present
-    if (endsWithDecimal) {
-      formatted += '.';
-    } else if (decimalPart !== undefined) {
-      // Limit to 2 decimal places
-      formatted += '.' + decimalPart.slice(0, 2);
-    }
-
-    return formatted;
+    onSubmit(formData);
   };
 
   useEffect(() => {
@@ -114,9 +85,12 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     // Auto-focus title input when modal opens
     if (isOpen) {
       // Use setTimeout to ensure the modal is fully rendered
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         titleInputRef.current?.focus();
       }, 100);
+      return () => {
+        clearTimeout(timeout);
+      };
     }
   }, [isOpen, reset]);
 
@@ -140,25 +114,72 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
         >
           {/* title */}
           <section>
-            <AppTextInput
-              id='title'
-              label='Title'
-              placeholder='Type here..'
-              {...register('title')}
-              ref={titleInputRef}
+            <Controller
+              name='title'
+              control={control}
+              rules={{
+                required: 'Title is required',
+                minLength: {
+                  value: 2,
+                  message: 'Title must be at least 2 characters',
+                },
+                maxLength: {
+                  value: 100,
+                  message: 'Title must not exceed 100 characters',
+                },
+              }}
+              render={({ field }) => (
+                <AppTextInput
+                  id='title'
+                  label='Title'
+                  placeholder='Type here..'
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={titleInputRef}
+                  errorMessage={errors.title?.message}
+                />
+              )}
             />
           </section>
 
           {/* transaction amount */}
           <section>
-            <AppTextInput
-              id='amount'
-              label='Amount'
-              placeholder='₱ 0.00'
-              type='text'
-              inputMode='decimal'
-              formatter={formatCurrency}
-              {...register('amount')}
+            <Controller
+              name='amount'
+              control={control}
+              rules={{
+                required: 'Amount is required',
+                validate: (value) => {
+                  const cleanAmount = clearCurrencyFormatting(value);
+                  const numValue = Number(cleanAmount);
+
+                  if (isNaN(numValue)) {
+                    return 'Please enter a valid number';
+                  }
+                  if (numValue <= 0) {
+                    return 'Amount must be greater than 0';
+                  }
+                  if (numValue >= 999999999) {
+                    return 'Amount must be less than 999,999,999';
+                  }
+                  return true;
+                },
+              }}
+              render={({ field }) => (
+                <AppTextInput
+                  id='amount'
+                  label='Amount'
+                  placeholder='₱ 0.00'
+                  type='text'
+                  inputMode='decimal'
+                  formatter={formatCurrency}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  errorMessage={errors.amount?.message}
+                />
+              )}
             />
           </section>
 
@@ -201,12 +222,27 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
           {/* description */}
           <section>
-            <AppTextArea
-              id='description'
-              label='Description (Optional)'
-              placeholder='Type here...'
-              rows={4}
-              {...register('description')}
+            <Controller
+              name='description'
+              control={control}
+              rules={{
+                maxLength: {
+                  value: 500,
+                  message: 'Description must not exceed 500 characters',
+                },
+              }}
+              render={({ field }) => (
+                <AppTextArea
+                  id='description'
+                  label='Description (Optional)'
+                  placeholder='Type here...'
+                  rows={4}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  errorMessage={errors.description?.message}
+                />
+              )}
             />
           </section>
         </form>
@@ -217,18 +253,18 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
             <button
               onClick={props.onClose}
               type='button'
-              className='w-14 h-14 rounded-full border border-orange-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
+              className='w-14 h-14 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
               aria-label='Cancel'
             >
-              <XIcon className='w-6 h-6 text-orange-500' />
+              <XIcon className='w-6 h-6 text-neutral-800' />
             </button>
             <button
               onClick={handleSubmit(handleFormSubmit)}
               type='button'
-              className='w-fit px-6 h-14 rounded-full bg-black text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
+              className='w-fit px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
               aria-label='Save'
             >
-              <AppTypography>Add Expense</AppTypography>
+              <AppTypography className='text-white'>Add Expense</AppTypography>
               {/* <CheckIcon className='w-6 h-6' /> */}
             </button>
           </div>

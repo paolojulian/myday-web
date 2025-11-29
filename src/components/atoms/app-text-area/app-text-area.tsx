@@ -24,9 +24,8 @@ const AppTextArea: FC<AppTextAreaProps> = ({
 }) => {
   const [localValue, setLocalValue] = useState<string | undefined>(value);
 
-  const hasValue: boolean = !!localValue;
+  const hasValue: boolean = !!value;
   const hasError: boolean = !!errorMessage;
-  const resolvedLabel: string = hasError && errorMessage ? errorMessage : label;
 
   useEffect(() => {
     // Sync local value with the parent
@@ -72,11 +71,7 @@ const AppTextArea: FC<AppTextAreaProps> = ({
         htmlFor={id}
         className={cn(
           'absolute left-4 top-1',
-          'pointer-events-none',
-          {
-            'text-red-500': hasError,
-            'text-neutral-500': !hasError,
-          }
+          'pointer-events-none text-neutral-500'
         )}
       >
         <AppTypography
@@ -84,9 +79,18 @@ const AppTextArea: FC<AppTextAreaProps> = ({
           variant='small'
           className='font-bold'
         >
-          {resolvedLabel}
+          {label}
         </AppTypography>
       </label>
+
+      {/* Error message below textarea */}
+      {hasError && (
+        <div className='mt-1 px-1'>
+          <AppTypography variant='small' className='text-red-500'>
+            {errorMessage}
+          </AppTypography>
+        </div>
+      )}
     </div>
   );
 };
