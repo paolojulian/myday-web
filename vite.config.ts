@@ -19,13 +19,8 @@ export default defineConfig({
         theme_color: '#ffffff',
         icons: [
           {
-            src: 'web-app-manifest-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'web-app-manifest-512x512.png',
-            sizes: '512x512',
+            src: 'favicon-64x64.png',
+            sizes: '64x64',
             type: 'image/png',
           },
         ],
