@@ -1,6 +1,6 @@
 import AppTypography from '@/components/atoms/app-typography';
 import cn from '@/utils/cn';
-import { FC, InputHTMLAttributes, useEffect, useState } from 'react';
+import { forwardRef, InputHTMLAttributes, useEffect, useState } from 'react';
 
 type AppTextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   onChangeText?: (text?: string | number) => void;
@@ -12,18 +12,22 @@ type AppTextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   formatter?: (value: string) => string;
 };
 
-const AppTextInput: FC<AppTextInputProps> = ({
-  onChangeText = () => {},
-  onChange,
-  id,
-  label,
-  className,
-  isFullWidth = true,
-  errorMessage,
-  value,
-  formatter,
-  ...props
-}) => {
+const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
+  (
+    {
+      onChangeText = () => {},
+      onChange,
+      id,
+      label,
+      className,
+      isFullWidth = true,
+      errorMessage,
+      value,
+      formatter,
+      ...props
+    },
+    ref
+  ) => {
   const [localValue, setLocalValue] = useState<string | number | undefined>(
     value
   );
@@ -62,6 +66,7 @@ const AppTextInput: FC<AppTextInputProps> = ({
       })}
     >
       <input
+        ref={ref}
         onChange={handleChange}
         id={id}
         className={cn(
@@ -134,6 +139,9 @@ const AppTextInput: FC<AppTextInputProps> = ({
       </label>
     </div>
   );
-};
+  }
+);
+
+AppTextInput.displayName = 'AppTextInput';
 
 export default AppTextInput;

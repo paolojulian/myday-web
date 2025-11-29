@@ -4,10 +4,11 @@ import {
   AppTypography,
   ThreeWayDatePicker,
 } from '@/components/atoms';
+import { AppPicker } from '@/components/atoms/app-picker';
 import { AppTextArea } from '@/components/atoms/app-text-area';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
-import { ComponentProps, FC, useEffect } from 'react';
+import { ComponentProps, FC, useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
 
@@ -23,6 +24,18 @@ type FormData = {
   transaction_date: Date;
 };
 
+const CATEGORY_OPTIONS = [
+  { label: 'Food & Dining', value: 'food' },
+  { label: 'Transportation', value: 'transportation' },
+  { label: 'Shopping', value: 'shopping' },
+  { label: 'Entertainment', value: 'entertainment' },
+  { label: 'Bills & Utilities', value: 'bills' },
+  { label: 'Healthcare', value: 'healthcare' },
+  { label: 'Education', value: 'education' },
+  { label: 'Personal Care', value: 'personal' },
+  { label: 'Others', value: 'others' },
+];
+
 const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   onSubmit,
   isOpen,
@@ -37,6 +50,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       transaction_date: new Date(),
     },
   });
+
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const handleFormSubmit = (data: FormData) => {
     // Remove ₱ symbol and parse amount
@@ -95,6 +110,14 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
   useEffect(() => {
     reset();
+
+    // Auto-focus title input when modal opens
+    if (isOpen) {
+      // Use setTimeout to ensure the modal is fully rendered
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 100);
+    }
   }, [isOpen, reset]);
 
   return (
@@ -122,6 +145,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
               label='Title'
               placeholder='Type here..'
               {...register('title')}
+              ref={titleInputRef}
             />
           </section>
 
@@ -140,11 +164,21 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
           {/* category */}
           <section>
-            <AppTextInput
-              id='category'
-              label='Category (Optional)'
-              placeholder='ex: Restaurant, Grocery...'
-              {...register('category')}
+            <Controller
+              name='category'
+              control={control}
+              render={({ field }) => (
+                <AppPicker
+                  id='category'
+                  label='Category (Optional)'
+                  placeholder='Select or create a category'
+                  options={CATEGORY_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  allowCustom
+                  searchPlaceholder='Search categories...'
+                />
+              )}
             />
           </section>
 
@@ -171,6 +205,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
               id='description'
               label='Description (Optional)'
               placeholder='Type here...'
+              rows={4}
               {...register('description')}
             />
           </section>
@@ -182,10 +217,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
             <button
               onClick={props.onClose}
               type='button'
-              className='w-14 h-14 rounded-full border-2 border-neutral-300 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
+              className='w-14 h-14 rounded-full border border-orange-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
               aria-label='Cancel'
             >
-              <XIcon className='w-6 h-6 text-neutral-700' />
+              <XIcon className='w-6 h-6 text-orange-500' />
             </button>
             <button
               onClick={handleSubmit(handleFormSubmit)}
