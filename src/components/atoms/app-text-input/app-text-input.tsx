@@ -9,6 +9,7 @@ type AppTextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   value?: string | number;
   isFullWidth?: boolean;
   errorMessage?: string;
+  formatter?: (value: string) => string;
 };
 
 const AppTextInput: FC<AppTextInputProps> = ({
@@ -20,6 +21,7 @@ const AppTextInput: FC<AppTextInputProps> = ({
   isFullWidth = true,
   errorMessage,
   value,
+  formatter,
   ...props
 }) => {
   const [localValue, setLocalValue] = useState<string | number | undefined>(
@@ -40,8 +42,16 @@ const AppTextInput: FC<AppTextInputProps> = ({
   const handleChange: InputHTMLAttributes<HTMLInputElement>['onChange'] = (
     e
   ) => {
+    const inputValue = e.target?.value;
+    const formattedValue = formatter ? formatter(inputValue) : inputValue;
+
+    // Update the event target value with formatted value before calling onChange
+    if (formatter) {
+      e.target.value = formattedValue;
+    }
+
     onChange?.(e);
-    setLocalValue(e.target?.value);
+    setLocalValue(formattedValue);
   };
 
   return (

@@ -53,7 +53,6 @@ const AppTextArea: FC<AppTextAreaProps> = ({
         id={id}
         className={cn(
           'peer',
-          'placeholder-transparent focus:placeholder-neutral-500',
           'pt-6 px-4 pb-2 bg-neutral-100 rounded dark:border-neutral-700',
           'text-base font-normal leading-normal',
           'resize-y min-h-[100px]',
@@ -67,55 +66,23 @@ const AppTextArea: FC<AppTextAreaProps> = ({
         {...props}
       />
 
-      {/* Focused label */}
-      <div
+      {/* Label - always visible at top */}
+      <label
+        aria-label={id}
+        htmlFor={id}
         className={cn(
           'absolute left-4 top-1',
-          'text-neutral-500',
-          'pointer-events-none transition-all ease-in-out',
-          'peer-placeholder-shown:opacity-0',
-          'peer-placeholder-shown:scale-0',
-          'peer-focus:opacity-100',
-          'peer-focus:scale-100',
+          'pointer-events-none',
           {
             'text-red-500': hasError,
-            'opacity-0 scale-0': !hasValue,
-            'opacity-100 scale-100': !!hasValue,
+            'text-neutral-500': !hasError,
           }
         )}
       >
         <AppTypography
           as='span'
           variant='small'
-          className='text-black font-bold'
-        >
-          {resolvedLabel}
-        </AppTypography>
-      </div>
-
-      {/* Placeholder label */}
-      <label
-        aria-label={id}
-        htmlFor={id}
-        className={cn(
-          'absolute left-4 top-6',
-          'text-neutral-500',
-          'pointer-events-none transition-all ease-in-out',
-          'peer-placeholder-shown:opacity-100',
-          'peer-placeholder-shown:scale-100',
-          'peer-focus:opacity-0',
-          'peer-focus:scale-0',
-          {
-            'text-red-500': hasError,
-            'opacity-0 scale-0': hasValue,
-            'opacity-100 scale-100': !hasValue,
-          }
-        )}
-      >
-        <AppTypography
-          as='p'
-          variant='body2'
-          className='text-neutral-500 font-semibold'
+          className='font-bold'
         >
           {resolvedLabel}
         </AppTypography>

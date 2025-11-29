@@ -33,13 +33,17 @@ function ThreeWayDatePicker({
   const handleCustomClicked = () => {};
 
   const isToday: boolean = useMemo(
-    () => !!value && dayjs(value).isSame(dayjs()),
+    () => !!value && dayjs(value).isSame(dayjs(), 'day'),
     [value]
   );
   const isTomorrow: boolean = useMemo(
-    () => !!value && dayjs(value).isSame(dayjs().add(1, 'day')),
+    () => !!value && dayjs(value).isSame(dayjs().add(1, 'day'), 'day'),
     [value]
   );
+  const customDateText: string = useMemo(() => {
+    if (!value || isToday || isTomorrow) return 'Custom';
+    return dayjs(value).format('MMM D');
+  }, [value, isToday, isTomorrow]);
 
   return (
     <div className='grid grid-cols-3 gap-2'>
@@ -64,7 +68,7 @@ function ThreeWayDatePicker({
             isActive={!isToday && !isTomorrow && !!value}
           >
             <CustomCalendarIcon className='size-5 text-neutral-700' />
-            <AppTypography variant='small'>Custom</AppTypography>
+            <AppTypography variant='small'>{customDateText}</AppTypography>
           </ThreeWayDatePickerButton>
         )}
       </AppDatePicker>
