@@ -7,6 +7,7 @@ type AppBottomSheetProps = {
   onClose: () => void;
   HeaderComponent?: ReactNode | null;
   HeaderRightComponent?: ReactNode;
+  shouldHideHeader?: boolean;
   children: ReactNode;
   isOpen: boolean;
   title?: string;
@@ -20,6 +21,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
   onClose,
   HeaderComponent,
   HeaderRightComponent,
+  shouldHideHeader = false,
   children,
   title,
   isOpen = false,
@@ -64,7 +66,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
         }}
       >
-        {HeaderComponent === undefined ? (
+        {shouldHideHeader ? null : HeaderComponent ? (
           HeaderComponent
         ) : (
           <div className='grid grid-cols-[1fr_auto_1fr] p-4 items-center'>

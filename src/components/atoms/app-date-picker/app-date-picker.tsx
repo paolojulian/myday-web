@@ -1,5 +1,6 @@
 import { AppBottomSheet } from '@/components/atoms/app-bottom-sheet';
 import React, { useState } from 'react';
+import Calendar from './calendar';
 
 type Props = {
   onDateChange?: (date: Date) => void;
@@ -9,9 +10,23 @@ type Props = {
 
 function AppDatePicker({ onDateChange, children, value }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(
+    value || null
+  );
 
-  const handleOpen = () => setIsOpen(true);
+  const handleOpen = () => {
+    setTempSelectedDate(value || null);
+    setIsOpen(true);
+  };
+
   const handleClose = () => setIsOpen(false);
+
+  const handleConfirm = () => {
+    if (tempSelectedDate) {
+      onDateChange?.(tempSelectedDate);
+    }
+    handleClose();
+  };
 
   return (
     <>
@@ -26,7 +41,12 @@ function AppDatePicker({ onDateChange, children, value }: Props) {
         variant='custom'
         zIndex={1001}
       >
-        <div>Test</div>
+        <Calendar
+          selectedDate={tempSelectedDate}
+          onDateSelect={setTempSelectedDate}
+          onConfirm={handleConfirm}
+          onCancel={handleClose}
+        />
       </AppBottomSheet>
     </>
   );

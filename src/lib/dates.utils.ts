@@ -39,3 +39,19 @@ export function getNextMonth(date: Date) {
 export function isSameYearAsToday(date: Date) {
   return dayjs(date).isSame(new Date(), 'year');
 }
+
+export function isSameDay(date1: Date, date2: Date): boolean {
+  return dayjs(date1).isSame(dayjs(date2), 'day');
+}
+
+export function formatMonthYear(date: Date): string {
+  return dayjs(date).format('MMMM YYYY');
+}
+
+export function getMonthName(date: Date): string {
+  return dayjs(date).format('MMMM');
+}
+
+export function getYear(date: Date): number {
+  return dayjs(date).year();
+}

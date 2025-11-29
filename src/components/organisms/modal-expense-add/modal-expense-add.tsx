@@ -67,7 +67,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   }, [isOpen, reset]);
 
   return (
-    <AppBottomSheet isOpen={isOpen} {...props} HeaderComponent={null}>
+    <AppBottomSheet isOpen={isOpen} {...props} shouldHideHeader>
       <AppSegmentedControl
         options={[
           { label: 'Expense', value: 'expense' },

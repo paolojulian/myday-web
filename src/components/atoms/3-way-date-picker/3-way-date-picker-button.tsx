@@ -28,7 +28,7 @@ function ThreeWayDatePickerButton({
       <div
         className={cn(
           'absolute inset-0 group-active:scale-90 group-active:outline-1 transition-all -z-10',
-          'bg-neutral-50 dark:bg-neutral-800',
+          'bg-neutral-100 dark:bg-neutral-800 rounded',
           'outline-neutral-800 dark:outline-neutral-50',
           {
             'outline-1': isActive,

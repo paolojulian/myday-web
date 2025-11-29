@@ -1,5 +1,9 @@
 import ThreeWayDatePickerButton from '@/components/atoms/3-way-date-picker/3-way-date-picker-button';
 import { AppDatePicker } from '@/components/atoms/app-date-picker';
+import AppTypography from '@/components/atoms/app-typography';
+import CustomCalendarIcon from '@/components/atoms/icons/custom-calendar-icon';
+import TodayCalendarIcon from '@/components/atoms/icons/today-calendar-icon';
+import TomorrowCalendarIcon from '@/components/atoms/icons/tomorrow-calendar-icon';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 
@@ -40,17 +44,17 @@ function ThreeWayDatePicker({
   return (
     <div className='grid grid-cols-3 gap-2'>
       <ThreeWayDatePickerButton onClick={handleTodayClicked} isActive={isToday}>
-        <div className='size-6 rounded-full bg-neutral-400'></div>
-        <p>Today</p>
+        <TodayCalendarIcon className='size-5 text-neutral-700' />
+        <AppTypography variant='small'>Today</AppTypography>
       </ThreeWayDatePickerButton>
       <ThreeWayDatePickerButton
         onClick={handleTomorrowClicked}
         isActive={isTomorrow}
       >
-        <div className='size-6 rounded-full bg-neutral-400'></div>
-        <p>Tomorrow</p>
+        <TomorrowCalendarIcon className='size-5 text-neutral-700' />
+        <AppTypography variant='small'>Tomorrow</AppTypography>
       </ThreeWayDatePickerButton>
-      <AppDatePicker>
+      <AppDatePicker value={value} onDateChange={onDateChanged}>
         {({ handleOpen }) => (
           <ThreeWayDatePickerButton
             onClick={() => {
@@ -59,8 +63,8 @@ function ThreeWayDatePicker({
             }}
             isActive={!isToday && !isTomorrow && !!value}
           >
-            <div className='size-6 rounded-full bg-neutral-400'></div>
-            <p>Custom</p>
+            <CustomCalendarIcon className='size-5 text-neutral-700' />
+            <AppTypography variant='small'>Custom</AppTypography>
           </ThreeWayDatePickerButton>
         )}
       </AppDatePicker>
