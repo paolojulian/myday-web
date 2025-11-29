@@ -24,7 +24,6 @@ const AppTextArea: FC<AppTextAreaProps> = ({
 }) => {
   const [localValue, setLocalValue] = useState<string | undefined>(value);
 
-  const hasValue: boolean = !!value;
   const hasError: boolean = !!errorMessage;
 
   useEffect(() => {
@@ -74,11 +73,7 @@ const AppTextArea: FC<AppTextAreaProps> = ({
           'pointer-events-none text-neutral-500'
         )}
       >
-        <AppTypography
-          as='span'
-          variant='small'
-          className='font-bold'
-        >
+        <AppTypography as='span' variant='small' className='font-bold'>
           {label}
         </AppTypography>
       </label>
