@@ -2,6 +2,7 @@ import { AppBottomSheet } from '@/components/atoms/app-bottom-sheet';
 import AppTextInput from '@/components/atoms/app-text-input';
 import AppTypography from '@/components/atoms/app-typography';
 import ChevronDownIcon from '@/components/atoms/icons/chevron-down-icon';
+import { useKeyboardVisibility } from '@/hooks/use-keyboard-visibility';
 import cn from '@/utils/cn';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -37,12 +38,27 @@ const AppPicker: FC<AppPickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const keyboard = useKeyboardVisibility();
 
   const hasValue = !!value;
   const hasError = !!errorMessage;
   const resolvedLabel = hasError && errorMessage ? errorMessage : label;
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Dynamic height based on keyboard visibility
+  const bottomSheetHeight = useMemo(() => {
+    return keyboard.isVisible ? '70%' : '50%';
+  }, [keyboard.isVisible]);
+
+  // Calculate content height
+  const contentHeight = useMemo(() => {
+    if (keyboard.isVisible) {
+      // Use most of the visual viewport when keyboard is visible
+      return `${keyboard.visualViewportHeight * 0.9 - 100}px`;
+    }
+    return 'calc(70vh - 100px)';
+  }, [keyboard.isVisible, keyboard.visualViewportHeight]);
 
   useEffect(() => {
     if (isOpen) {
@@ -151,14 +167,11 @@ const AppPicker: FC<AppPickerProps> = ({
         isOpen={isOpen}
         onClose={handleClose}
         title={label}
-        height='70%'
+        height={bottomSheetHeight}
         variant='custom'
         zIndex={1002}
       >
-        <div
-          className='flex flex-col gap-4'
-          style={{ height: 'calc(70vh - 100px)' }}
-        >
+        <div className='flex flex-col gap-4' style={{ height: contentHeight }}>
           {/* Search Input */}
           <AppTextInput
             id={`${id}-search`}

@@ -6,6 +6,11 @@ export default function BottomBar() {
     <div
       id='bottom-bar'
       className='fixed bottom-0 bg-white inset-x-0 z-(--z-bottom-bar) rounded-full overflow-hidden pt-4'
+      style={{
+        paddingBottom: 'var(--safe-area-inset-bottom)',
+        paddingLeft: 'var(--safe-area-inset-left)',
+        paddingRight: 'var(--safe-area-inset-right)',
+      }}
     >
       <div className='grid grid-cols-5 mb-6 mx-6 h-16'>
         <div className='p-2 flex items-center justify-center'>

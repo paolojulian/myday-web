@@ -64,6 +64,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
         style={{
           height,
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+          paddingBottom: 'var(--safe-area-inset-bottom)',
         }}
       >
         {shouldHideHeader ? null : HeaderComponent ? (

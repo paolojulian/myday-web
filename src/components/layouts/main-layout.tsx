@@ -6,7 +6,14 @@ type MainLayoutProps = object;
 
 const MainLayout: FC<MainLayoutProps> = () => {
   return (
-    <div className="text-left pb-[80px]">
+    <div
+      className="text-left pb-[80px]"
+      style={{
+        paddingTop: 'var(--safe-area-inset-top)',
+        paddingLeft: 'var(--safe-area-inset-left)',
+        paddingRight: 'var(--safe-area-inset-right)',
+      }}
+    >
       <Outlet />
       <BottomBar />
     </div>
