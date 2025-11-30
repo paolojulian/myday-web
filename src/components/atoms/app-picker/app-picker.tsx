@@ -4,7 +4,7 @@ import AppTypography from '@/components/atoms/app-typography';
 import ChevronDownIcon from '@/components/atoms/icons/chevron-down-icon';
 import { useKeyboardVisibility } from '@/hooks/use-keyboard-visibility';
 import cn from '@/utils/cn';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 export type PickerOption = {
   label: string;
@@ -24,7 +24,11 @@ type AppPickerProps = {
   searchPlaceholder?: string;
 };
 
-const AppPicker: FC<AppPickerProps> = ({
+export type AppPickerRef = {
+  open: () => void;
+};
+
+const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(({
   id,
   label,
   placeholder = 'Select an option',
@@ -35,7 +39,7 @@ const AppPicker: FC<AppPickerProps> = ({
   errorMessage,
   allowCustom = false,
   searchPlaceholder = 'Search...',
-}) => {
+}, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const keyboard = useKeyboardVisibility();
@@ -45,6 +49,11 @@ const AppPicker: FC<AppPickerProps> = ({
   const resolvedLabel = hasError && errorMessage ? errorMessage : label;
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Expose open method via ref
+  useImperativeHandle(ref, () => ({
+    open: () => setIsOpen(true),
+  }));
 
   // Dynamic height based on keyboard visibility
   const bottomSheetHeight = useMemo(() => {
@@ -245,6 +254,8 @@ const AppPicker: FC<AppPickerProps> = ({
       </AppBottomSheet>
     </>
   );
-};
+});
+
+AppPicker.displayName = 'AppPicker';
 
 export default AppPicker;

@@ -4,7 +4,7 @@ import {
   AppTypography,
   ThreeWayDatePicker,
 } from '@/components/atoms';
-import { AppPicker } from '@/components/atoms/app-picker';
+import { AppPicker, type AppPickerRef } from '@/components/atoms/app-picker';
 import { AppTextArea } from '@/components/atoms/app-text-area';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
@@ -35,7 +35,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   isOpen,
   ...props
 }) => {
-  const { data: categories = [], isLoading: isCategoriesLoading } = useCategories();
+  const { data: categories = [], isLoading: isCategoriesLoading } =
+    useCategories();
   const createCategory = useCreateCategory();
 
   const {
@@ -55,6 +56,9 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   });
 
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+  const categoryPickerRef = useRef<AppPickerRef>(null);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Convert categories to picker options
   const categoryOptions = useMemo(() => {
@@ -80,10 +84,13 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     onSubmit(formData);
   };
 
-  const handleCategoryChange = async (value: string, onChange: (value: number | null) => void) => {
+  const handleCategoryChange = async (
+    value: string,
+    onChange: (value: number | null) => void
+  ) => {
     // Check if this is a new category (not in existing options)
     const numValue = Number(value);
-    const isExisting = categories.some(cat => cat.id === numValue);
+    const isExisting = categories.some((cat) => cat.id === numValue);
 
     if (!isExisting && value && isNaN(numValue)) {
       // Create new category - value is the category name (not a number)
@@ -92,10 +99,12 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
         // After mutation succeeds, categories will be automatically refetched
         // Find the newly created category and set its ID
         setTimeout(() => {
-          const newCategory = categories.find(cat => cat.name === value);
+          const newCategory = categories.find((cat) => cat.name === value);
           if (newCategory?.id) {
             onChange(newCategory.id);
           }
+          // Focus on description field after selecting category
+          descriptionInputRef.current?.focus();
         }, 100); // Small delay to allow query to refetch
       } catch (error) {
         console.error('Failed to create category:', error);
@@ -103,6 +112,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       }
     } else {
       onChange(numValue || null);
+      // Focus on description field after selecting category
+      setTimeout(() => {
+        descriptionInputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -165,6 +178,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
                   onBlur={field.onBlur}
                   ref={titleInputRef}
                   errorMessage={errors.title?.message}
+                  enterKeyHint='next'
+                  onSubmitEditing={() => amountInputRef.current?.focus()}
                 />
               )}
             />
@@ -204,7 +219,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
+                  ref={amountInputRef}
                   errorMessage={errors.amount?.message}
+                  enterKeyHint='next'
+                  onSubmitEditing={() => categoryPickerRef.current?.open()}
                 />
               )}
             />
@@ -217,12 +235,19 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
               control={control}
               render={({ field }) => (
                 <AppPicker
+                  ref={categoryPickerRef}
                   id='category'
                   label='Category (Optional)'
-                  placeholder={isCategoriesLoading ? 'Loading...' : 'Select or create a category'}
+                  placeholder={
+                    isCategoriesLoading
+                      ? 'Loading...'
+                      : 'Select or create a category'
+                  }
                   options={categoryOptions}
                   value={field.value !== null ? String(field.value) : undefined}
-                  onChange={(value) => handleCategoryChange(value, field.onChange)}
+                  onChange={(value) =>
+                    handleCategoryChange(value, field.onChange)
+                  }
                   allowCustom
                   searchPlaceholder='Search categories...'
                 />
@@ -267,7 +292,9 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
+                  ref={descriptionInputRef}
                   errorMessage={errors.description?.message}
+                  enterKeyHint='done'
                 />
               )}
             />

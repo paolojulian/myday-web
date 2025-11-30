@@ -10,6 +10,8 @@ type AppTextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   isFullWidth?: boolean;
   errorMessage?: string;
   formatter?: (value: string) => string;
+  enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  onSubmitEditing?: () => void;
 };
 
 const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
@@ -24,6 +26,8 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
       errorMessage,
       value,
       formatter,
+      enterKeyHint,
+      onSubmitEditing,
       ...props
     },
     ref
@@ -57,6 +61,15 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
       setLocalValue(formattedValue);
     };
 
+    const handleKeyDown: InputHTMLAttributes<HTMLInputElement>['onKeyDown'] = (
+      e
+    ) => {
+      if (e.key === 'Enter' && onSubmitEditing) {
+        e.preventDefault();
+        onSubmitEditing();
+      }
+    };
+
     return (
       <div>
         <div
@@ -68,6 +81,7 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
           <input
             ref={ref}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             id={id}
             className={cn(
               'peer',
@@ -81,6 +95,7 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
               className
             )}
             value={value}
+            enterKeyHint={enterKeyHint}
             {...props}
           />
 

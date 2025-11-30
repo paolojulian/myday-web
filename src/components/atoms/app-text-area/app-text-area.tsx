@@ -1,6 +1,6 @@
 import AppTypography from '@/components/atoms/app-typography';
 import cn from '@/utils/cn';
-import { FC, TextareaHTMLAttributes, useEffect, useState } from 'react';
+import { forwardRef, TextareaHTMLAttributes, useEffect, useState } from 'react';
 
 type AppTextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   onChangeText?: (text?: string) => void;
@@ -11,7 +11,7 @@ type AppTextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   errorMessage?: string;
 };
 
-const AppTextArea: FC<AppTextAreaProps> = ({
+const AppTextArea = forwardRef<HTMLTextAreaElement, AppTextAreaProps>(({
   onChangeText = () => {},
   onChange,
   id,
@@ -21,7 +21,7 @@ const AppTextArea: FC<AppTextAreaProps> = ({
   errorMessage,
   value,
   ...props
-}) => {
+}, ref) => {
   const [localValue, setLocalValue] = useState<string | undefined>(value);
 
   const hasError: boolean = !!errorMessage;
@@ -47,6 +47,7 @@ const AppTextArea: FC<AppTextAreaProps> = ({
       })}
     >
       <textarea
+        ref={ref}
         onChange={handleChange}
         id={id}
         className={cn(
@@ -88,6 +89,8 @@ const AppTextArea: FC<AppTextAreaProps> = ({
       )}
     </div>
   );
-};
+});
+
+AppTextArea.displayName = 'AppTextArea';
 
 export default AppTextArea;
