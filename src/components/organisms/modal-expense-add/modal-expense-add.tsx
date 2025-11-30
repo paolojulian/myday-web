@@ -309,7 +309,14 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
         </form>
 
         {/* Fixed bottom buttons with gradient */}
-        <div className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'>
+        <div
+          className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'
+          style={{
+            marginBottom: 'var(--safe-area-inset-bottom)',
+            marginLeft: 'var(--safe-area-inset-left)',
+            marginRight: 'var(--safe-area-inset-right)',
+          }}
+        >
           <div className='flex flex-row justify-between items-center gap-4'>
             <button
               onClick={props.onClose}

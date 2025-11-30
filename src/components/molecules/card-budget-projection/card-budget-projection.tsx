@@ -44,7 +44,7 @@ const CardBudgetProjection: FC<CardBudgetProjectionProps> = ({
         </AppTypography>
 
         <div className='mb-2'>
-          <AppTypography as='h3' className='text-2xl font-bold mb-1'>
+          <AppTypography as='h3' variant='heading' className='mb-1'>
             {Math.floor(analysis.projectedDaysLeft)} days
           </AppTypography>
           <AppTypography variant='small' className='text-neutral-600'>

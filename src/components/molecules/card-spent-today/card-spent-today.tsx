@@ -20,7 +20,7 @@ const CardSpentToday: FC<CardSpentTodayProps> = ({ amount, isLoading }) => {
             ...
           </AppTypography>
         ) : (
-          <AppTypography as='h2' className='text-3xl font-bold text-neutral-900'>
+          <AppTypography as='h2' variant='heading' className='text-neutral-900'>
             {toCurrency(amount)}
           </AppTypography>
         )}
