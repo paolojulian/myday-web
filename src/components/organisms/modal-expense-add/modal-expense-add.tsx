@@ -84,13 +84,24 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     onSubmit(formData);
   };
 
+  const focusDescriptionInput = () => {
+    return setTimeout(() => {
+      descriptionInputRef.current?.focus();
+    }, 100);
+  };
+  const focusTitleInput = () => {
+    return setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 100);
+  };
+
   const handleCategoryChange = async (
     value: string,
     onChange: (value: number | null) => void
   ) => {
     // Check if this is a new category (not in existing options)
-    const numValue = Number(value);
-    const isExisting = categories.some((cat) => cat.id === numValue);
+    const numValue: number = Number(value);
+    const isExisting: boolean = categories.some((cat) => cat.id === numValue);
 
     if (!isExisting && value && isNaN(numValue)) {
       // Create new category - value is the category name (not a number)
@@ -102,10 +113,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
             if (newCategory?.id) {
               onChange(newCategory.id);
             }
-            // Focus on description field after selecting category
-            setTimeout(() => {
-              descriptionInputRef.current?.focus();
-            }, 100);
+            focusDescriptionInput();
           },
           onError: (error) => {
             console.error('Failed to create category:', error);
@@ -113,13 +121,11 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
           },
         }
       );
-    } else {
-      onChange(numValue || null);
-      // Focus on description field after selecting category
-      setTimeout(() => {
-        descriptionInputRef.current?.focus();
-      }, 100);
+      return;
     }
+
+    onChange(numValue || null);
+    focusDescriptionInput();
   };
 
   useEffect(() => {
@@ -128,9 +134,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     // Auto-focus title input when modal opens
     if (isOpen) {
       // Use setTimeout to ensure the modal is fully rendered
-      const timeout = setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 100);
+      const timeout = focusTitleInput();
       return () => {
         clearTimeout(timeout);
       };

@@ -25,7 +25,19 @@ export function getEndOfMonth(date: Date) {
 }
 
 export function getDateFormat(date: Date, format = 'YYYY-MM-DD') {
+  const dayjsDate = dayjs(date);
+  if (dayjsDate.isSame(dayjs(), 'year')) {
+    return dayjs(date).format(format.replace('YYYY-', ''));
+  }
   return dayjs(date).format(format);
+}
+
+export function getHumanReadableDate(date: Date) {
+  const dayjsDate = dayjs(date);
+  if (dayjsDate.isSame(dayjs(), 'year')) {
+    return dayjs(date).format('MMM DD');
+  }
+  return dayjs(date).format('MMM DD, YYYY');
 }
 
 export function getPreviousMonth(date: Date) {

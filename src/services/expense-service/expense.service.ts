@@ -1,8 +1,12 @@
 import { DBError } from '../../config/errors.constants';
 import { getStartAndEndOfDay, getStartAndEndOfMonth } from '../../lib/dates.utils';
 import { handleError } from '../../lib/handle-error.utils';
-import { db, type Expense } from '../../repository';
+import { db, type Expense, type Category } from '../../repository';
 import { ExpenseRecurrence } from '../../repository/expense.db';
+
+export type ExpenseWithCategory = Expense & {
+  category?: Category | null;
+};
 class ExpenseService {
   public async add(expenseToAdd: AddExpenseParams): Promise<Error | null> {
     const dateNow = new Date();
@@ -33,14 +37,25 @@ class ExpenseService {
     return expenses;
   }
 
-  public async recentTransactions(): Promise<Expense[]>{
+  public async recentTransactions(): Promise<ExpenseWithCategory[]> {
     const expenses = await db.expenses
       .orderBy('transaction_date')
       .limit(10)
       .reverse()
       .toArray();
 
-    return expenses;
+    // Fetch categories for all expenses
+    const expensesWithCategories = await Promise.all(
+      expenses.map(async (expense) => {
+        if (expense.category_id) {
+          const category = await db.categories.get(expense.category_id);
+          return { ...expense, category };
+        }
+        return { ...expense, category: null };
+      })
+    );
+
+    return expensesWithCategories;
   }
 
   public async spentToday(): Promise<number> {
