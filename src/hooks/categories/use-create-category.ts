@@ -11,11 +11,11 @@ export function useCreateCategory() {
 
   return useMutation({
     mutationFn: async (params: CreateCategoryParams) => {
-      const error = await categoryService.add(params);
+      const { error, category } = await categoryService.add(params);
       if (error) {
         throw error;
       }
-      return { message: 'Category created successfully' };
+      return category;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });

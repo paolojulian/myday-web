@@ -94,22 +94,25 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
 
     if (!isExisting && value && isNaN(numValue)) {
       // Create new category - value is the category name (not a number)
-      try {
-        await createCategory.mutateAsync({ name: value });
-        // After mutation succeeds, categories will be automatically refetched
-        // Find the newly created category and set its ID
-        setTimeout(() => {
-          const newCategory = categories.find((cat) => cat.name === value);
-          if (newCategory?.id) {
-            onChange(newCategory.id);
-          }
-          // Focus on description field after selecting category
-          descriptionInputRef.current?.focus();
-        }, 100); // Small delay to allow query to refetch
-      } catch (error) {
-        console.error('Failed to create category:', error);
-        onChange(null);
-      }
+      createCategory.mutate(
+        { name: value },
+        {
+          onSuccess: (newCategory) => {
+            // Set the newly created category ID
+            if (newCategory?.id) {
+              onChange(newCategory.id);
+            }
+            // Focus on description field after selecting category
+            setTimeout(() => {
+              descriptionInputRef.current?.focus();
+            }, 100);
+          },
+          onError: (error) => {
+            console.error('Failed to create category:', error);
+            onChange(null);
+          },
+        }
+      );
     } else {
       onChange(numValue || null);
       // Focus on description field after selecting category

@@ -5,17 +5,21 @@ import { db, type Category } from '../../repository';
 type AddCategoryParams = Omit<Category, 'id' | 'created_at'>;
 
 class CategoryService {
-  public async add(categoryToAdd: AddCategoryParams): Promise<Error | null> {
+  public async add(categoryToAdd: AddCategoryParams): Promise<{ error: Error | null; category?: Category }> {
     const dateNow = new Date();
 
     try {
-      await db.categories.add({
+      const id = await db.categories.add({
         ...categoryToAdd,
         created_at: dateNow,
       });
-      return null;
+
+      // Fetch the created category to return it with the ID
+      const category = await db.categories.get(id);
+
+      return { error: null, category };
     } catch (e) {
-      return handleError(e, new DBError('Unable to add category'));
+      return { error: handleError(e, new DBError('Unable to add category')) };
     }
   }
 
