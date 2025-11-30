@@ -8,13 +8,15 @@ import { AppPicker } from '@/components/atoms/app-picker';
 import { AppTextArea } from '@/components/atoms/app-text-area';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
-import { ComponentProps, FC, useEffect, useRef } from 'react';
+import { ComponentProps, FC, useEffect, useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { AddExpenseParams } from '../../../services/expense-service/expense.service';
 import {
   clearCurrencyFormatting,
   formatCurrency,
 } from '@/lib/formatters.utils';
+import { useCategories } from '@/hooks/categories/use-categories';
+import { useCreateCategory } from '@/hooks/categories/use-create-category';
 
 type ModalExpenseAddProps = {
   onSubmit: (expenseToAdd: AddExpenseParams) => void;
@@ -22,29 +24,20 @@ type ModalExpenseAddProps = {
 
 type FormData = {
   title: string;
-  category: string;
+  category: number | null;
   amount: string;
   description: string;
   transaction_date: Date;
 };
-
-const CATEGORY_OPTIONS = [
-  { label: 'Food & Dining', value: 'food' },
-  { label: 'Transportation', value: 'transportation' },
-  { label: 'Shopping', value: 'shopping' },
-  { label: 'Entertainment', value: 'entertainment' },
-  { label: 'Bills & Utilities', value: 'bills' },
-  { label: 'Healthcare', value: 'healthcare' },
-  { label: 'Education', value: 'education' },
-  { label: 'Personal Care', value: 'personal' },
-  { label: 'Others', value: 'others' },
-];
 
 const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   onSubmit,
   isOpen,
   ...props
 }) => {
+  const { data: categories = [], isLoading: isCategoriesLoading } = useCategories();
+  const createCategory = useCreateCategory();
+
   const {
     handleSubmit,
     reset,
@@ -54,7 +47,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     mode: 'onBlur',
     defaultValues: {
       title: '',
-      category: '',
+      category: null,
       amount: '',
       description: '',
       transaction_date: new Date(),
@@ -62,6 +55,14 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
   });
 
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Convert categories to picker options
+  const categoryOptions = useMemo(() => {
+    return categories.map((category) => ({
+      label: category.name,
+      value: String(category.id || ''),
+    }));
+  }, [categories]);
 
   const handleFormSubmit = (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
@@ -71,12 +72,38 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
       description: data.description,
-      category_id: null,
+      category_id: data.category || null,
       recurrence: null,
       recurrence_id: null,
     };
 
     onSubmit(formData);
+  };
+
+  const handleCategoryChange = async (value: string, onChange: (value: number | null) => void) => {
+    // Check if this is a new category (not in existing options)
+    const numValue = Number(value);
+    const isExisting = categories.some(cat => cat.id === numValue);
+
+    if (!isExisting && value && isNaN(numValue)) {
+      // Create new category - value is the category name (not a number)
+      try {
+        await createCategory.mutateAsync({ name: value });
+        // After mutation succeeds, categories will be automatically refetched
+        // Find the newly created category and set its ID
+        setTimeout(() => {
+          const newCategory = categories.find(cat => cat.name === value);
+          if (newCategory?.id) {
+            onChange(newCategory.id);
+          }
+        }, 100); // Small delay to allow query to refetch
+      } catch (error) {
+        console.error('Failed to create category:', error);
+        onChange(null);
+      }
+    } else {
+      onChange(numValue || null);
+    }
   };
 
   useEffect(() => {
@@ -192,10 +219,10 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
                 <AppPicker
                   id='category'
                   label='Category (Optional)'
-                  placeholder='Select or create a category'
-                  options={CATEGORY_OPTIONS}
-                  value={field.value}
-                  onChange={field.onChange}
+                  placeholder={isCategoriesLoading ? 'Loading...' : 'Select or create a category'}
+                  options={categoryOptions}
+                  value={field.value !== null ? String(field.value) : undefined}
+                  onChange={(value) => handleCategoryChange(value, field.onChange)}
                   allowCustom
                   searchPlaceholder='Search categories...'
                 />

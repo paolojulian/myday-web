@@ -68,7 +68,7 @@ export const useTodos = () => {
         ...(old ?? []),
         {
           ...newTodo,
-          id: "temp-id",
+          id: Date.now(), // Use timestamp as temporary ID
           created_at: new Date(),
         },
       ]);

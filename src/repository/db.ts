@@ -3,27 +3,25 @@ import { DATABASE_NAME } from '../config/database.constants';
 import { Expense } from './expense.db';
 import { Todo } from './todo.db';
 import { Budget } from './budget.db';
+import { Category } from './category.db';
 
 class MyDayDB extends Dexie {
   // Private static instance to store the single instance of the class
   private static instance: MyDayDB;
 
-  todos!: Table<Todo, string>;
-  expenses!: Table<Expense, string>;
-  budget!: Table<Budget, string>;
+  todos!: Table<Todo, number>;
+  expenses!: Table<Expense, number>;
+  budget!: Table<Budget, number>;
+  categories!: Table<Category, number>;
 
   private constructor() {
     super(DATABASE_NAME);
-    this.version(5).stores({
-      todos: '++id, created_at', // primary key + indexes
-      expenses: '++id, category_id, transaction_date, [transaction_date+created_at]', // primary key + indexes
+    // Version 1: Use auto-increment IDs for all tables
+    this.version(1).stores({
+      todos: '++id, created_at',
+      expenses: '++id, category_id, transaction_date, [transaction_date+created_at]',
       budget: '++id, created_at',
-    });
-    // Version 6: Fix ID fields to use string UUIDs instead of auto-increment
-    this.version(6).stores({
-      todos: 'id, created_at', // string UUID primary key + indexes
-      expenses: 'id, category_id, transaction_date, [transaction_date+created_at]', // string UUID primary key + indexes
-      budget: 'id, created_at', // string UUID primary key + indexes
+      categories: '++id, name, created_at',
     });
 
     // Add error handlers
@@ -48,12 +46,14 @@ class MyDayDB extends Dexie {
       const todoCount = await this.todos.count();
       const expenseCount = await this.expenses.count();
       const budgetCount = await this.budget.count();
+      const categoryCount = await this.categories.count();
       console.log('Database Status:', {
         name: this.name,
         version: this.verno,
         todos: todoCount,
         expenses: expenseCount,
         budgets: budgetCount,
+        categories: categoryCount,
       });
     } catch (error) {
       console.error('Error checking database status:', error);
@@ -65,8 +65,12 @@ export const db = MyDayDB.getInstance();
 
 // Log database status on initialization (useful for debugging)
 if (typeof window !== 'undefined') {
-  db.open().then(() => {
+  db.open().then(async () => {
     db.checkStatus();
+
+    // Seed default categories on first run
+    const { categoryService } = await import('../services/category-service/category.service');
+    await categoryService.seedDefaultCategories();
   }).catch((error) => {
     console.error('Failed to open database:', error);
   });

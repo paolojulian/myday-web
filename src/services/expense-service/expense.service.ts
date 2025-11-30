@@ -1,6 +1,5 @@
 import { DBError } from '../../config/errors.constants';
 import { getStartAndEndOfDay, getStartAndEndOfMonth } from '../../lib/dates.utils';
-import { generateUUID } from '../../lib/db.utils';
 import { handleError } from '../../lib/handle-error.utils';
 import { db, type Expense } from '../../repository';
 import { ExpenseRecurrence } from '../../repository/expense.db';
@@ -11,7 +10,6 @@ class ExpenseService {
     try {
       await db.expenses.add({
         ...expenseToAdd,
-        id: generateUUID(),
         created_at: dateNow,
         updated_at: dateNow,
       });
@@ -59,6 +57,10 @@ class ExpenseService {
   }
 
   public async delete(expenseId: Expense['id']): Promise<Error | null> {
+    if (expenseId === undefined) {
+      return new DBError('Expense ID is required');
+    }
+
     try {
       await db.expenses.delete(expenseId);
 

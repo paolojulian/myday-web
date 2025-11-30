@@ -1,6 +1,5 @@
 import { Try } from "../..";
 import { DBError } from "../../config/errors.constants";
-import { generateUUID } from "../../lib/db.utils";
 import { db, type Todo } from "../../repository";
 
 export type AddTodoBody = Pick<Todo, "title" | "description">;
@@ -25,7 +24,6 @@ export class TodoService {
     try {
       await db.todos.add({
         ...todoToAdd,
-        id: generateUUID(),
         created_at: new Date(),
       });
 
@@ -40,6 +38,10 @@ export class TodoService {
   }
 
   public async delete(todoId: Todo["id"]): Promise<null | Error> {
+    if (todoId === undefined) {
+      return new DBError('Todo ID is required');
+    }
+
     try {
       await db.todos.delete(todoId);
 

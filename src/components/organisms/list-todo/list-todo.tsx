@@ -34,7 +34,7 @@ export default function TodoList() {
         {todoQuery.data.map((item) => (
           <div key={item.id}>
             <p>{item.title}</p>
-            {item.id !== "temp-id" && (
+            {item.id !== undefined && (
               <button onClick={handleDeleteTodoClicked(item.id)}>Remove</button>
             )}
           </div>

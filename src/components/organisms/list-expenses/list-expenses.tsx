@@ -3,7 +3,7 @@ import { Expense } from "../../../repository";
 import { toCurrency } from "@/lib/currency.utils";
 
 type Props = {
-  onDeleteExpense: (id: string) => Promise<void>;
+  onDeleteExpense: (id: number | undefined) => Promise<void>;
   expenses: Expense[] | undefined;
   isLoading: boolean;
   isFetched: boolean;
@@ -15,7 +15,7 @@ const ListExpenses: FC<Props> = ({
   isLoading,
   isFetched,
 }) => {
-  const handleClickRemoveExpense = (id: string) => () => {
+  const handleClickRemoveExpense = (id: number | undefined) => () => {
     onDeleteExpense(id);
   };
 

@@ -1,5 +1,4 @@
 import { getEndOfMonth } from '../../lib/dates.utils';
-import { generateUUID } from '../../lib/db.utils';
 import { db } from '../../repository';
 import { Budget } from '../../repository/budget.db';
 
@@ -19,7 +18,6 @@ class BudgetService {
   async add(amount: number): Promise<Budget | null> {
     const budgetId = await db.budget.add({
       amount,
-      id: generateUUID(),
       created_at: new Date(),
     });
 

@@ -20,7 +20,7 @@ export const useCreateExpense = () => {
           ...(old || []),
           {
             ...expense,
-            id: 'temp-id',
+            id: Date.now(), // Use timestamp as temporary ID
             created_at: new Date(),
             updated_at: new Date(),
           }
