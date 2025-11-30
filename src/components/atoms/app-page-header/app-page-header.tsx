@@ -1,3 +1,5 @@
+import AppTypography from '@/components/atoms/app-typography';
+
 type Props = {
   title: string;
   description: string;
@@ -5,13 +7,13 @@ type Props = {
 
 export const AppPageHeader = ({ title, description }: Props) => {
   return (
-    <div className="flex flex-row justify-between items-center">
-      <div className="flex flex-col items-start">
-        <h2>{title}</h2>
+    <div className='flex flex-row justify-between items-center'>
+      <div className='flex flex-col items-start'>
+        <AppTypography variant='body'>{title}</AppTypography>
         <p>{description}</p>
       </div>
 
-      <button aria-label="Open settings button">S</button>
+      <button aria-label='Open settings button'>S</button>
     </div>
   );
 };

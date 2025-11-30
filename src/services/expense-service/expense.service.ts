@@ -71,6 +71,17 @@ class ExpenseService {
     }, 0);
   }
 
+  public async spentThisMonth(date: Date = new Date()): Promise<number> {
+    const { startOfMonth, endOfMonth } = getStartAndEndOfMonth(date);
+
+    const expenses = await db.expenses
+      .where('transaction_date')
+      .between(startOfMonth, endOfMonth, true, true)
+      .toArray();
+
+    return expenses.reduce((total, expense) => total + expense.amount, 0);
+  }
+
   public async delete(expenseId: Expense['id']): Promise<Error | null> {
     if (expenseId === undefined) {
       return new DBError('Expense ID is required');

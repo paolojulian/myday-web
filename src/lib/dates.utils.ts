@@ -67,3 +67,21 @@ export function getMonthName(date: Date): string {
 export function getYear(date: Date): number {
   return dayjs(date).year();
 }
+
+export function getDaysElapsedInMonth(date: Date = new Date()): number {
+  return dayjs(date).date();
+}
+
+export function getTotalDaysInMonth(date: Date = new Date()): number {
+  return dayjs(date).daysInMonth();
+}
+
+export function getDaysRemainingInMonth(date: Date = new Date()): number {
+  const totalDays = getTotalDaysInMonth(date);
+  const currentDay = getDaysElapsedInMonth(date);
+  return totalDays - currentDay;
+}
+
+export function getStartOfMonth(date: Date = new Date()): Date {
+  return dayjs(date).startOf('month').toDate();
+}

@@ -1,32 +1,39 @@
 import { AppPageHeader } from '@/components/atoms/app-page-header';
 import { HomeOverview, HomeRecentTransactions } from '@/components/organisms';
+import ModalBudgetSetup from '@/components/organisms/modal-budget-setup';
 import { FC, useState } from 'react';
-import { useBudget } from '../hooks/budget/use-budget';
 import useRecentTransactions from '../hooks/expenses/use-recent-transactions';
-import { useSpentToday } from '@/hooks/expenses/use-spent-today';
+import { useUpdateBudget } from '@/hooks/budget/use-update-budget';
 
 type HomeProps = object;
 
 const Home: FC<HomeProps> = () => {
   const [dateFilter] = useState<Date>(new Date());
-  const { data: remainingBudget } = useBudget(dateFilter);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   const recentTransactionsQuery = useRecentTransactions();
-  const spentTodayQuery = useSpentToday();
+  const updateBudget = useUpdateBudget();
 
-  const amountSpentToday: number = spentTodayQuery.data || 0;
+  const handleSetBudget = () => {
+    setIsBudgetModalOpen(true);
+  };
+
+  const handleBudgetSubmit = (amount: number) => {
+    updateBudget.mutate(amount, {
+      onSuccess: () => {
+        setIsBudgetModalOpen(false);
+      },
+    });
+  };
 
   return (
     <div>
       <section id='home-header'>
-        <AppPageHeader title={'My Day'} description={'April 25, 2025'} />
+        <AppPageHeader title={'My Day'} description={''} />
       </section>
 
       <section id='home-overview'>
-        <HomeOverview
-          remainingBudget={remainingBudget?.amount}
-          spentToday={amountSpentToday}
-        />
+        <HomeOverview date={dateFilter} onSetBudget={handleSetBudget} />
       </section>
 
       <section id='home-recent-transactions'>
@@ -36,6 +43,12 @@ const Home: FC<HomeProps> = () => {
           error={recentTransactionsQuery.error}
         />
       </section>
+
+      <ModalBudgetSetup
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        onSubmit={handleBudgetSubmit}
+      />
     </div>
   );
 };
