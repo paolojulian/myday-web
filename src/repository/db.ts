@@ -22,12 +22,11 @@ class MyDayDB extends Dexie {
     // Configure Dexie Cloud first
     this.cloud.configure(DEXIE_CLOUD_CONFIG);
 
-    // Version 1: All tables use string IDs (UUIDs) for Dexie Cloud sync
     this.version(1).stores({
-      todos: 'id, created_at',
-      expenses: 'id, category_id, transaction_date, [transaction_date+created_at]',
-      budget: 'id, created_at',
-      categories: 'id, name, created_at',
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
     });
 
     // Add error handlers

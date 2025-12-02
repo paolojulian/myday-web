@@ -3,13 +3,13 @@ import { MutationCache, QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Route, Routes } from 'react-router-dom';
 import './App.css';
-import MainLayout from './components/layouts/main-layout';
 import { AppSplashScreen } from './components/atoms';
-import { toast } from './lib/toast';
-import Home from './pages/home';
-import Expenses from './pages/expenses';
-import ExpenseAdd from './pages/expense-add';
+import MainLayout from './components/layouts/main-layout';
 import { useDexieSync } from './hooks/use-dexie-sync';
+import { toast } from './lib/toast';
+import ExpenseAdd from './pages/expense-add';
+import Expenses from './pages/expenses';
+import Home from './pages/home';
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -38,8 +38,15 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isInitialSync, isConnecting } = useDexieSync();
+  const { isInitialSync, isConnecting, hasError, errorMessage } =
+    useDexieSync();
   const showSplash = isInitialSync && isConnecting;
+
+  // Show error toast when sync fails
+  if (hasError && errorMessage) {
+    console.warn('Dexie Cloud Sync Error:', errorMessage);
+    // Note: The app still works offline, so we don't block the UI
+  }
 
   return (
     <PersistQueryClientProvider
@@ -57,13 +64,15 @@ function App() {
 
       {/* Hide main content while splash screen is showing */}
       {!showSplash && (
-        <Routes>
-          <Route path='/' element={<MainLayout />}>
-            <Route index element={<Home />} />
-            <Route path='expenses' element={<Expenses />} />
-          </Route>
-          <Route path='/expense/add' element={<ExpenseAdd />} />
-        </Routes>
+        <>
+          <Routes>
+            <Route path='/' element={<MainLayout />}>
+              <Route index element={<Home />} />
+              <Route path='expenses' element={<Expenses />} />
+            </Route>
+            <Route path='/expense/add' element={<ExpenseAdd />} />
+          </Routes>
+        </>
       )}
     </PersistQueryClientProvider>
   );
