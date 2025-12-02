@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
 import { db } from '@/repository';
+import { useEffect, useState } from 'react';
 
 export type SyncState = 'offline' | 'connecting' | 'online' | 'error';
 
@@ -7,16 +7,6 @@ export const useDexieSync = () => {
   const [syncState, setSyncState] = useState<SyncState>('connecting');
   const [isInitialSync, setIsInitialSync] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const manualSync = useCallback(async () => {
-    try {
-      console.log('Manually triggering Dexie Cloud sync...');
-      await db.cloud.sync();
-      console.log('Manual sync completed');
-    } catch (error) {
-      console.error('Manual sync failed:', error);
-    }
-  }, []);
 
   useEffect(() => {
     // Subscribe to Dexie Cloud sync state
@@ -65,18 +55,6 @@ export const useDexieSync = () => {
       }
     });
 
-    // Manually trigger sync on mount to ensure it starts
-    const initSync = async () => {
-      try {
-        console.log('Initializing Dexie Cloud sync...');
-        await db.cloud.sync({ purpose: 'push', wait: false });
-      } catch (error) {
-        console.error('Failed to initialize sync:', error);
-      }
-    };
-
-    initSync();
-
     return () => {
       subscription.unsubscribe();
     };
@@ -90,6 +68,5 @@ export const useDexieSync = () => {
     isConnecting: syncState === 'connecting',
     isOffline: syncState === 'offline',
     hasError: syncState === 'error',
-    manualSync,
   };
 };
