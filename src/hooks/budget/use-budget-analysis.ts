@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useBudget } from './use-budget';
-import { useSpentThisMonth } from '../expenses/use-spent-this-month';
+import { useSpentThisMonthLive } from '../expenses/use-spent-this-month-live';
 import {
   calculateBudgetAnalysis,
   BudgetAnalysis,
@@ -8,23 +8,23 @@ import {
 
 export const useBudgetAnalysis = (date: Date = new Date()) => {
   const budgetQuery = useBudget(date);
-  const spentQuery = useSpentThisMonth(date);
+  const spentThisMonth = useSpentThisMonthLive(date);
 
   const analysis = useMemo<BudgetAnalysis | null>(() => {
-    if (!budgetQuery.data?.amount || spentQuery.data === undefined) {
+    if (!budgetQuery.data?.amount || spentThisMonth === undefined) {
       return null;
     }
 
     return calculateBudgetAnalysis(
       budgetQuery.data.amount,
-      spentQuery.data,
+      spentThisMonth,
       date
     );
-  }, [budgetQuery.data, spentQuery.data, date]);
+  }, [budgetQuery.data, spentThisMonth, date]);
 
   return {
     data: analysis,
-    isLoading: budgetQuery.isLoading || spentQuery.isLoading,
-    error: budgetQuery.error || spentQuery.error,
+    isLoading: budgetQuery.isLoading,
+    error: budgetQuery.error,
   };
 };

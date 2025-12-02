@@ -4,4 +4,5 @@
 export const DEXIE_CLOUD_CONFIG = {
   databaseUrl: import.meta.env.VITE_DEXIE_CLOUD_DB_URL || 'https://z1uowu8yd.dexie.cloud',
   requireAuth: false,
+  tryUseServiceWorker: true, // Enable service worker for better sync
 };

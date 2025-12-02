@@ -2,7 +2,7 @@ import { AppPageHeader } from '@/components/atoms/app-page-header';
 import { HomeOverview, HomeRecentTransactions } from '@/components/organisms';
 import ModalBudgetSetup from '@/components/organisms/modal-budget-setup';
 import { FC, useState } from 'react';
-import useRecentTransactions from '../hooks/expenses/use-recent-transactions';
+import { useRecentTransactionsLive } from '../hooks/expenses/use-recent-transactions-live';
 import { useUpdateBudget } from '@/hooks/budget/use-update-budget';
 
 type HomeProps = object;
@@ -11,7 +11,7 @@ const Home: FC<HomeProps> = () => {
   const [dateFilter] = useState<Date>(new Date());
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
-  const recentTransactionsQuery = useRecentTransactions();
+  const recentTransactions = useRecentTransactionsLive();
   const updateBudget = useUpdateBudget();
 
   const handleSetBudget = () => {
@@ -38,9 +38,9 @@ const Home: FC<HomeProps> = () => {
 
       <section id='home-recent-transactions'>
         <HomeRecentTransactions
-          recentTransactions={recentTransactionsQuery.data}
-          isLoading={recentTransactionsQuery.isLoading}
-          error={recentTransactionsQuery.error}
+          recentTransactions={recentTransactions}
+          isLoading={!recentTransactions}
+          error={null}
         />
       </section>
 

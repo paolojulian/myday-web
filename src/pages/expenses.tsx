@@ -4,26 +4,22 @@ import { FC, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { FilterExpenses } from '../components/organisms/filter-expenses';
 import { ListExpenses } from '../components/organisms/list-expenses';
-import { useDeleteExpense } from '../hooks/expenses/use-delete-expense';
-import { useExpenses } from '../hooks/expenses/use-expenses';
+import { useExpensesLive } from '../hooks/expenses/use-expenses-live';
 import { Expense, ExpenseRecurrence } from '../repository/expense.db';
 import { AppPageHeader } from '@/components/atoms';
+import { expenseService } from '../services/expense-service/expense.service';
 
 type ExpensesProps = object;
 
 const Expenses: FC<ExpensesProps> = () => {
   const [transactionDate, setTransactionDate] = useState<Date>(new Date());
 
-  const deleteExpense = useDeleteExpense();
-
-  const {
-    data: expenses,
-    isLoading,
-    isFetched,
-  } = useExpenses({
+  // Use live query hook - automatically updates when data changes
+  const expenses = useExpensesLive({
     filterType: ExpenseRecurrence.Monthly,
     transactionDate,
   });
+
   const totalExpenses: number = useMemo(() => {
     if (!expenses) return 0;
 
@@ -39,13 +35,13 @@ const Expenses: FC<ExpensesProps> = () => {
   // end section budget ==========
 
   const handleDeleteExpense = async (id: Expense['id']) => {
-    const result = await deleteExpense.mutateAsync(id);
+    const result = await expenseService.delete(id);
     if (result) {
       toast.error('Error deleting expense');
       return;
     }
-
-    // TODO: Success
+    // Success - useLiveQuery will automatically update the UI
+    toast.success('Expense deleted successfully');
   };
 
   return (
@@ -69,8 +65,6 @@ const Expenses: FC<ExpensesProps> = () => {
       <ListExpenses
         onDeleteExpense={handleDeleteExpense}
         expenses={expenses}
-        isFetched={isFetched}
-        isLoading={isLoading}
       />
     </div>
   );

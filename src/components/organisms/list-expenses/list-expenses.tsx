@@ -5,25 +5,20 @@ import { toCurrency } from '@/lib/currency.utils';
 type Props = {
   onDeleteExpense: (id: string | undefined) => Promise<void>;
   expenses: Expense[] | undefined;
-  isLoading: boolean;
-  isFetched: boolean;
 };
 
-const ListExpenses: FC<Props> = ({
-  onDeleteExpense,
-  expenses,
-  isLoading,
-  isFetched,
-}) => {
+const ListExpenses: FC<Props> = ({ onDeleteExpense, expenses }) => {
   const handleClickRemoveExpense = (id: string | undefined) => () => {
     onDeleteExpense(id);
   };
 
-  if (isLoading || !expenses) {
-    return null;
+  // While loading (expenses is undefined)
+  if (!expenses) {
+    return <p>Loading...</p>;
   }
 
-  if (isFetched && expenses.length === 0) {
+  // After loading completes with no results
+  if (expenses.length === 0) {
     return <p>No expenses found</p>;
   }
 
