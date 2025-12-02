@@ -1,9 +1,9 @@
-import { FC } from "react";
-import { Expense } from "../../../repository";
-import { toCurrency } from "@/lib/currency.utils";
+import { FC } from 'react';
+import { Expense } from '../../../repository';
+import { toCurrency } from '@/lib/currency.utils';
 
 type Props = {
-  onDeleteExpense: (id: number | undefined) => Promise<void>;
+  onDeleteExpense: (id: string | undefined) => Promise<void>;
   expenses: Expense[] | undefined;
   isLoading: boolean;
   isFetched: boolean;
@@ -15,7 +15,7 @@ const ListExpenses: FC<Props> = ({
   isLoading,
   isFetched,
 }) => {
-  const handleClickRemoveExpense = (id: number | undefined) => () => {
+  const handleClickRemoveExpense = (id: string | undefined) => () => {
     onDeleteExpense(id);
   };
 
@@ -33,9 +33,9 @@ const ListExpenses: FC<Props> = ({
         <button
           key={expense.id}
           onClick={handleClickRemoveExpense(expense.id)}
-          className="block w-full"
+          className='block w-full'
         >
-          <div className="flex flex-row justify-between items-center">
+          <div className='flex flex-row justify-between items-center'>
             <p>{expense.title}</p>
             <p>-{toCurrency(expense.amount)}</p>
           </div>

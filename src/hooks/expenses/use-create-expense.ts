@@ -1,8 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { AddExpenseParams, expenseService } from "../../services/expense-service/expense.service";
-import { USE_EXPENSES_KEYS } from "./use-expenses";
-import { Expense } from "../../repository";
-
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  AddExpenseParams,
+  expenseService,
+} from '../../services/expense-service/expense.service';
+import { USE_EXPENSES_KEYS } from './use-expenses';
+import { Expense } from '../../repository';
 
 export const useCreateExpense = () => {
   const queryClient = useQueryClient();
@@ -20,22 +22,25 @@ export const useCreateExpense = () => {
           ...(old || []),
           {
             ...expense,
-            id: Date.now(), // Use timestamp as temporary ID
+            id: Date.now().toString(), // Use timestamp as temporary ID
             created_at: new Date(),
             updated_at: new Date(),
-          }
-        ]
+          },
+        ];
       });
 
       return { previousExpenses };
     },
     onError: (_err, _newExpense, context) => {
       if (context?.previousExpenses) {
-        queryClient.setQueryData(USE_EXPENSES_KEYS.all(), context.previousExpenses);
+        queryClient.setQueryData(
+          USE_EXPENSES_KEYS.all(),
+          context.previousExpenses
+        );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: USE_EXPENSES_KEYS.all() });
     },
-  })
-}
+  });
+};

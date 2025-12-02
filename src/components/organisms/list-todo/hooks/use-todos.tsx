@@ -1,15 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Todo } from "../../../../repository/todo.db";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Todo } from '../../../../repository/todo.db';
 import {
   AddTodoBody,
   todoService,
-} from "../../../../services/todo-service/todo.service";
+} from '../../../../services/todo-service/todo.service';
 
 export const TODO_KEYS = {
-  all: () => ["todos"],
-  list: () => [...TODO_KEYS.all(), "list"],
-  detail: (id: Todo["id"]) => [...TODO_KEYS.all(), "detail", id],
-  add: () => [...TODO_KEYS.all(), "add"],
+  all: () => ['todos'],
+  list: () => [...TODO_KEYS.all(), 'list'],
+  detail: (id: Todo['id']) => [...TODO_KEYS.all(), 'detail', id],
+  add: () => [...TODO_KEYS.all(), 'add'],
 };
 
 export const useTodos = () => {
@@ -30,7 +30,7 @@ export const useTodos = () => {
 
   const deleteTodoMutation = useMutation({
     mutationFn: todoService.delete,
-    onMutate: async (todoId: Todo["id"]) => {
+    onMutate: async (todoId: Todo['id']) => {
       await queryClient.cancelQueries({ queryKey: TODO_KEYS.all() });
 
       const previousTodos =
@@ -68,7 +68,7 @@ export const useTodos = () => {
         ...(old ?? []),
         {
           ...newTodo,
-          id: Date.now(), // Use timestamp as temporary ID
+          id: Date.now().toString(), // Use timestamp as temporary ID
           created_at: new Date(),
         },
       ]);
