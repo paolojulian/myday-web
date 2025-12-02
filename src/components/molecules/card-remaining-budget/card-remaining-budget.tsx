@@ -31,7 +31,7 @@ const CardRemainingBudget: FC<CardRemainingBudgetProps> = ({
           Remaining Budget
         </AppTypography>
 
-        <AppTypography as='h2' className='font-bold mb-3' variant='body'>
+        <AppTypography as='h2' className='font-bold mb-3' variant='heading'>
           {toCurrency(analysis.remainingBudget)}
         </AppTypography>
 

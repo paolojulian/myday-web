@@ -63,7 +63,7 @@ const CardSpendingRate: FC<CardSpendingRateProps> = ({
           </AppTypography>
         </div>
 
-        <div className='flex flex-col gap-2 pt-2 border-t border-neutral-200'>
+        <div className='flex justify-between gap-2 pt-2 border-t border-neutral-200'>
           <AppTypography variant='small' className='text-neutral-600'>
             Difference:
           </AppTypography>

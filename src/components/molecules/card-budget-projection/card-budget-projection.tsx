@@ -43,7 +43,7 @@ const CardBudgetProjection: FC<CardBudgetProjectionProps> = ({
           Budget Survival
         </AppTypography>
 
-        <div className='mb-2'>
+        <div className='mb-2 flex flex-row items-baseline gap-2'>
           <AppTypography as='h3' variant='heading' className='mb-1'>
             {Math.floor(analysis.projectedDaysLeft)} days
           </AppTypography>

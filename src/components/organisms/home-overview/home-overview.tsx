@@ -37,8 +37,8 @@ const HomeOverview: FC<HomeOverviewProps> = ({
   return (
     <div className='py-4'>
       {hasBudget && budgetAnalysisQuery.data ? (
-        // 2x2 Grid with Budget
-        <div className='grid grid-cols-2 gap-4'>
+        // Single column grid with Budget
+        <div className='grid grid-cols-1 gap-2'>
           <CardSpentToday
             amount={spentTodayQuery.data || 0}
             isLoading={spentTodayQuery.isLoading}
@@ -60,8 +60,8 @@ const HomeOverview: FC<HomeOverviewProps> = ({
           />
         </div>
       ) : (
-        // 2 Cards: Spent Today + No Budget Prompt
-        <div className='grid grid-cols-2 gap-4'>
+        // Single column: Spent Today + No Budget Prompt
+        <div className='grid grid-cols-1 gap-4'>
           <CardSpentToday
             amount={spentTodayQuery.data || 0}
             isLoading={spentTodayQuery.isLoading}
