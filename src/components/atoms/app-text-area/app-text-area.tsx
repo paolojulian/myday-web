@@ -52,7 +52,7 @@ const AppTextArea = forwardRef<HTMLTextAreaElement, AppTextAreaProps>(({
         id={id}
         className={cn(
           'peer',
-          'pt-6 px-4 pb-2 bg-neutral-100 rounded dark:border-neutral-700',
+          'pt-6 px-4 pb-2 bg-neutral-100 rounded',
           'text-base font-normal leading-normal',
           'resize-y min-h-[100px]',
           {

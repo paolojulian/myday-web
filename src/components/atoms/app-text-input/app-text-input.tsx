@@ -86,7 +86,7 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
             className={cn(
               'peer',
               'placeholder-transparent focus:placeholder-neutral-500',
-              'pt-6 px-4 pb-2 bg-neutral-100 rounded dark:border-neutral-700',
+              'pt-6 px-4 pb-2 bg-neutral-100 rounded',
               'text-base font-normal leading-normal',
               {
                 'w-full': isFullWidth,

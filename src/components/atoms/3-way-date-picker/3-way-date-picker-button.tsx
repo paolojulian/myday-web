@@ -17,8 +17,8 @@ function ThreeWayDatePickerButton({
         'group',
         'relative',
         {
-          'text-black dark:text-white': isActive,
-          'text-neutral-600 dark:text-neutral-400': !isActive,
+          'text-black': isActive,
+          'text-neutral-600': !isActive,
         },
         className
       )}
@@ -31,7 +31,7 @@ function ThreeWayDatePickerButton({
           'rounded',
           {
             'bg-orange-100 outline outline-orange-500': isActive,
-            'bg-neutral-100 dark:bg-neutral-800': !isActive,
+            'bg-neutral-100': !isActive,
           }
         )}
       ></div>
