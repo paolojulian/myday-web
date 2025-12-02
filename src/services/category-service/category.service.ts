@@ -5,11 +5,15 @@ import { db, type Category } from '../../repository';
 type AddCategoryParams = Omit<Category, 'id' | 'created_at'>;
 
 class CategoryService {
-  public async add(categoryToAdd: AddCategoryParams): Promise<{ error: Error | null; category?: Category }> {
+  public async add(
+    categoryToAdd: AddCategoryParams
+  ): Promise<{ error: Error | null; category?: Category }> {
     const dateNow = new Date();
+    const id = crypto.randomUUID();
 
     try {
-      const id = await db.categories.add({
+      await db.categories.add({
+        id,
         ...categoryToAdd,
         created_at: dateNow,
       });
@@ -24,18 +28,16 @@ class CategoryService {
   }
 
   public async list(): Promise<Category[]> {
-    const categories = await db.categories
-      .orderBy('name')
-      .toArray();
+    const categories = await db.categories.orderBy('name').toArray();
 
     return categories;
   }
 
-  public async getById(id: number): Promise<Category | undefined> {
+  public async getById(id: string): Promise<Category | undefined> {
     return await db.categories.get(id);
   }
 
-  public async delete(id: number): Promise<Error | null> {
+  public async delete(id: string): Promise<Error | null> {
     try {
       await db.categories.delete(id);
       return null;
@@ -54,6 +56,7 @@ class CategoryService {
 
     const defaultCategories = [
       'Food',
+      'Groceries',
       'Shopping',
       'Bills',
       'Transportation',
@@ -64,6 +67,7 @@ class CategoryService {
     ];
 
     const categoriesToAdd = defaultCategories.map((name) => ({
+      id: crypto.randomUUID(),
       name,
       created_at: new Date(),
     }));

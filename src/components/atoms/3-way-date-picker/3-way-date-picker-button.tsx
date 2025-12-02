@@ -14,8 +14,7 @@ function ThreeWayDatePickerButton({
   return (
     <button
       className={cn(
-        'group',
-        'relative',
+        'group relative z-0',
         {
           'text-black': isActive,
           'text-neutral-600': !isActive,

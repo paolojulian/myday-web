@@ -8,8 +8,8 @@ export const useDexieSync = () => {
   const [isInitialSync, setIsInitialSync] = useState(true);
 
   useEffect(() => {
-    // Subscribe to sync state changes
-    const syncStateSubscription = db.cloud.syncState.subscribe((state) => {
+    // Subscribe to Dexie Cloud sync state
+    const subscription = db.cloud.syncState.subscribe((state) => {
       if (state.phase === 'offline') {
         setSyncState('offline');
         setIsInitialSync(false);
@@ -25,7 +25,7 @@ export const useDexieSync = () => {
     });
 
     return () => {
-      syncStateSubscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 

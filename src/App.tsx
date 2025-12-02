@@ -8,6 +8,7 @@ import { AppSplashScreen } from './components/atoms';
 import { toast } from './lib/toast';
 import Home from './pages/home';
 import Expenses from './pages/expenses';
+import ExpenseAdd from './pages/expense-add';
 import { useDexieSync } from './hooks/use-dexie-sync';
 
 const persister = createSyncStoragePersister({
@@ -61,6 +62,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path='expenses' element={<Expenses />} />
           </Route>
+          <Route path='/expense/add' element={<ExpenseAdd />} />
         </Routes>
       )}
     </PersistQueryClientProvider>

@@ -1,5 +1,4 @@
 import {
-  AppBottomSheet,
   AppSegmentedControl,
   AppTypography,
   ThreeWayDatePicker,
@@ -8,40 +7,35 @@ import { AppPicker, type AppPickerRef } from '@/components/atoms/app-picker';
 import { AppTextArea } from '@/components/atoms/app-text-area';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
-import { ComponentProps, FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { AddExpenseParams } from '../../../services/expense-service/expense.service';
+import { AddExpenseParams } from '../services/expense-service/expense.service';
 import {
   clearCurrencyFormatting,
   formatCurrency,
 } from '@/lib/formatters.utils';
 import { useCategories } from '@/hooks/categories/use-categories';
 import { useCreateCategory } from '@/hooks/categories/use-create-category';
-
-type ModalExpenseAddProps = {
-  onSubmit: (expenseToAdd: AddExpenseParams) => void;
-} & Omit<ComponentProps<typeof AppBottomSheet>, 'children'>;
+import { useNavigate } from 'react-router-dom';
+import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
 
 type FormData = {
   title: string;
-  category: number | null;
+  category: string | null;
   amount: string;
   description: string;
   transaction_date: Date;
 };
 
-const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
-  onSubmit,
-  isOpen,
-  ...props
-}) => {
+const ExpenseAdd: FC = () => {
+  const navigate = useNavigate();
   const { data: categories = [], isLoading: isCategoriesLoading } =
     useCategories();
   const createCategory = useCreateCategory();
+  const createExpense = useCreateExpense();
 
   const {
     handleSubmit,
-    reset,
     control,
     formState: { errors },
   } = useForm<FormData>({
@@ -68,7 +62,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
     }));
   }, [categories]);
 
-  const handleFormSubmit = (data: FormData) => {
+  const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
     const formData: AddExpenseParams = {
@@ -81,7 +75,8 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       recurrence_id: null,
     };
 
-    onSubmit(formData);
+    createExpense.mutate(formData);
+    navigate(-1);
   };
 
   const focusDescriptionInput = () => {
@@ -89,22 +84,16 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       descriptionInputRef.current?.focus();
     }, 100);
   };
-  const focusTitleInput = () => {
-    return setTimeout(() => {
-      titleInputRef.current?.focus();
-    }, 100);
-  };
 
   const handleCategoryChange = async (
     value: string,
-    onChange: (value: number | null) => void
+    onChange: (value: string | null) => void
   ) => {
     // Check if this is a new category (not in existing options)
-    const numValue: number = Number(value);
-    const isExisting: boolean = categories.some((cat) => cat.id === numValue);
+    const isExisting: boolean = categories.some((cat) => cat.id === value);
 
-    if (!isExisting && value && isNaN(numValue)) {
-      // Create new category - value is the category name (not a number)
+    if (!isExisting && value) {
+      // Create new category - value is the category name
       createCategory.mutate(
         { name: value },
         {
@@ -124,26 +113,27 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
       return;
     }
 
-    onChange(numValue || null);
+    onChange(value || null);
     focusDescriptionInput();
   };
 
   useEffect(() => {
-    reset();
+    // Auto-focus title input when page loads
+    const timeout = setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 100);
 
-    // Auto-focus title input when modal opens
-    if (isOpen) {
-      // Use setTimeout to ensure the modal is fully rendered
-      const timeout = focusTitleInput();
-      return () => {
-        clearTimeout(timeout);
-      };
-    }
-  }, [isOpen, reset]);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  const handleCancel = () => {
+    navigate(-1);
+  };
 
   return (
-    <AppBottomSheet isOpen={isOpen} {...props} shouldHideHeader height='100%'>
-      <div className='flex flex-col h-full -m-4'>
+    <div className='flex flex-col h-full bg-white'>
         <div className='px-4 pt-4'>
           <AppSegmentedControl
             options={[
@@ -187,6 +177,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
                   errorMessage={errors.title?.message}
                   enterKeyHint='next'
                   onSubmitEditing={() => amountInputRef.current?.focus()}
+                  autoFocus
                 />
               )}
             />
@@ -277,7 +268,7 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
           </section>
 
           {/* recurring */}
-          <section></section>
+          {/* <section></section> */}
 
           {/* description */}
           <section>
@@ -308,38 +299,36 @@ const ModalExpenseAdd: FC<ModalExpenseAddProps> = ({
           </section>
         </form>
 
-        {/* Fixed bottom buttons with gradient */}
-        <div
-          className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'
-          style={{
-            marginBottom: 'var(--safe-area-inset-bottom)',
-            marginLeft: 'var(--safe-area-inset-left)',
-            marginRight: 'var(--safe-area-inset-right)',
-          }}
-        >
-          <div className='flex flex-row justify-between items-center gap-4'>
-            <button
-              onClick={props.onClose}
-              type='button'
-              className='w-14 h-14 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
-              aria-label='Cancel'
-            >
-              <XIcon className='w-6 h-6 text-neutral-800' />
-            </button>
-            <button
-              onClick={handleSubmit(handleFormSubmit)}
-              type='button'
-              className='w-fit px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
-              aria-label='Save'
-            >
-              <AppTypography className='text-white'>Add Expense</AppTypography>
-              {/* <CheckIcon className='w-6 h-6' /> */}
-            </button>
-          </div>
+      {/* Fixed bottom buttons with gradient */}
+      <div
+        className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'
+        style={{
+          marginBottom: 'var(--safe-area-inset-bottom)',
+          marginLeft: 'var(--safe-area-inset-left)',
+          marginRight: 'var(--safe-area-inset-right)',
+        }}
+      >
+        <div className='flex flex-row justify-between items-center gap-4'>
+          <button
+            onClick={handleCancel}
+            type='button'
+            className='w-14 h-14 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
+            aria-label='Cancel'
+          >
+            <XIcon className='w-6 h-6 text-neutral-800' />
+          </button>
+          <button
+            onClick={handleSubmit(handleFormSubmit)}
+            type='button'
+            className='w-fit px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
+            aria-label='Save'
+          >
+            <AppTypography className='text-white'>Add Expense</AppTypography>
+          </button>
         </div>
       </div>
-    </AppBottomSheet>
+    </div>
   );
 };
 
-export default ModalExpenseAdd;
+export default ExpenseAdd;

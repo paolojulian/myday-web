@@ -11,33 +11,35 @@ class MyDayDB extends Dexie {
   // Private static instance to store the single instance of the class
   private static instance: MyDayDB;
 
-  todos!: Table<Todo, number>;
-  expenses!: Table<Expense, number>;
-  budget!: Table<Budget, number>;
-  categories!: Table<Category, number>;
+  todos!: Table<Todo, string>;
+  expenses!: Table<Expense, string>;
+  budget!: Table<Budget, string>;
+  categories!: Table<Category, string>;
 
   private constructor() {
     super(DATABASE_NAME, { addons: [dexieCloud] });
 
-    // Version 1: Use @ prefix for Dexie Cloud global IDs
+    // Configure Dexie Cloud first
+    this.cloud.configure(DEXIE_CLOUD_CONFIG);
+
+    // Version 1: All tables use string IDs (UUIDs) for Dexie Cloud sync
     this.version(1).stores({
-      todos: '@id, created_at',
-      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
-      budget: '@id, created_at',
-      categories: '@id, name, created_at',
+      todos: 'id, created_at',
+      expenses: 'id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: 'id, created_at',
+      categories: 'id, name, created_at',
     });
 
     // Add error handlers
     this.on('blocked', () => {
-      console.warn('Database upgrade blocked. Please close all other tabs with this site open.');
+      console.warn(
+        'Database upgrade blocked. Please close all other tabs with this site open.'
+      );
     });
 
     this.on('versionchange', () => {
       console.log('Database version changed in another tab');
     });
-
-    // Configure Dexie Cloud
-    this.cloud.configure(DEXIE_CLOUD_CONFIG);
   }
 
   public static getInstance(): MyDayDB {
@@ -71,13 +73,17 @@ export const db = MyDayDB.getInstance();
 
 // Log database status on initialization (useful for debugging)
 if (typeof window !== 'undefined') {
-  db.open().then(async () => {
-    db.checkStatus();
+  db.open()
+    .then(async () => {
+      db.checkStatus();
 
-    // Seed default categories on first run
-    const { categoryService } = await import('../services/category-service/category.service');
-    await categoryService.seedDefaultCategories();
-  }).catch((error) => {
-    console.error('Failed to open database:', error);
-  });
+      // Seed default categories on first run
+      const { categoryService } = await import(
+        '../services/category-service/category.service'
+      );
+      await categoryService.seedDefaultCategories();
+    })
+    .catch((error) => {
+      console.error('Failed to open database:', error);
+    });
 }

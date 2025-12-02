@@ -71,10 +71,10 @@ const AppTextInput = forwardRef<HTMLInputElement, AppTextInputProps>(
     };
 
     return (
-      <div>
+      <div className='text-left'>
         <div
           data-element-name='AppTextInput'
-          className={cn('relative', 'group', {
+          className={cn('relative group', {
             'w-full': isFullWidth,
           })}
         >

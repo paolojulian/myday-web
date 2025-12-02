@@ -10,9 +10,11 @@ export type ExpenseWithCategory = Expense & {
 class ExpenseService {
   public async add(expenseToAdd: AddExpenseParams): Promise<Error | null> {
     const dateNow = new Date();
+    const id = crypto.randomUUID();
 
     try {
       await db.expenses.add({
+        id,
         ...expenseToAdd,
         created_at: dateNow,
         updated_at: dateNow,

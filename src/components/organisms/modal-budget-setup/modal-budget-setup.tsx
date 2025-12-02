@@ -1,7 +1,4 @@
-import {
-  AppBottomSheet,
-  AppTypography,
-} from '@/components/atoms';
+import { AppBottomSheet, AppTypography } from '@/components/atoms';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
 import { ComponentProps, FC, useEffect, useRef } from 'react';
@@ -58,20 +55,25 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
   }, [isOpen, reset]);
 
   return (
-    <AppBottomSheet isOpen={isOpen} {...props} shouldHideHeader height='auto'>
+    <AppBottomSheet
+      isOpen={isOpen}
+      {...props}
+      shouldHideHeader
+      height='auto'
+      variant='custom'
+      zIndex={1001}
+    >
       <div className='flex flex-col -m-4'>
-        <div className='px-4 pt-4 pb-2'>
-          <AppTypography variant='heading' className='mb-2'>
-            Set Monthly Budget
-          </AppTypography>
-          <AppTypography variant='body2' className='text-neutral-600'>
+        <div className='px-4 pt-4 pb-2 mb-4'>
+          <AppTypography variant='heading'>Set Monthly Budget</AppTypography>
+          <AppTypography variant='small' className='text-neutral-600'>
             Enter your total budget for the month to track your spending
           </AppTypography>
         </div>
 
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
-          className='flex flex-col gap-4 px-4 pb-24'
+          className='flex flex-col gap-4 px-4 pb-36'
         >
           <section>
             <Controller

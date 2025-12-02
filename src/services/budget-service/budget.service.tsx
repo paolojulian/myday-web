@@ -16,12 +16,15 @@ class BudgetService {
   }
 
   async add(amount: number): Promise<Budget | null> {
-    const budgetId = await db.budget.add({
+    const id = crypto.randomUUID();
+
+    await db.budget.add({
+      id,
       amount,
       created_at: new Date(),
     });
 
-    return (await db.budget.get(budgetId)) || null;
+    return (await db.budget.get(id)) || null;
   }
 }
 

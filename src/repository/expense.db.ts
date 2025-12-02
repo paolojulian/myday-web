@@ -6,14 +6,14 @@ export enum ExpenseRecurrence {
 }
 
 export type Expense = {
-  id?: number;
+  id?: string;
   title: string;
   amount: number;
   transaction_date: Date;
   description?: string | null;
-  category_id?: number | null; // Dynamic, users can create a category
+  category_id?: string | null; // Dynamic, users can create a category
   recurrence?: ExpenseRecurrence | null;
-  recurrence_id?: number | null; // The parent recurrence of this expense, this is also an expense
+  recurrence_id?: string | null; // The parent recurrence of this expense, this is also an expense
   created_at: Date;
   updated_at: Date;
 };

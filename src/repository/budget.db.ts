@@ -1,5 +1,5 @@
 export type Budget = {
-  id?: number;
+  id?: string;
   amount: number;
   created_at: Date;
 };
