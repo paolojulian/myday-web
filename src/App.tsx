@@ -4,9 +4,11 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { Route, Routes } from 'react-router-dom';
 import './App.css';
 import MainLayout from './components/layouts/main-layout';
+import { AppSplashScreen } from './components/atoms';
 import { toast } from './lib/toast';
 import Home from './pages/home';
 import Expenses from './pages/expenses';
+import { useDexieSync } from './hooks/use-dexie-sync';
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -35,6 +37,9 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const { isInitialSync, isConnecting } = useDexieSync();
+  const showSplash = isInitialSync && isConnecting;
+
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -46,12 +51,18 @@ function App() {
         });
       }}
     >
-      <Routes>
-        <Route path='/' element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path='expenses' element={<Expenses />} />
-        </Route>
-      </Routes>
+      {/* Show splash screen during initial sync */}
+      <AppSplashScreen isLoading={showSplash} />
+
+      {/* Hide main content while splash screen is showing */}
+      {!showSplash && (
+        <Routes>
+          <Route path='/' element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path='expenses' element={<Expenses />} />
+          </Route>
+        </Routes>
+      )}
     </PersistQueryClientProvider>
   );
 }

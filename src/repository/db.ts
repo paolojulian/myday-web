@@ -1,5 +1,7 @@
 import Dexie, { Table } from 'dexie';
+import dexieCloud from 'dexie-cloud-addon';
 import { DATABASE_NAME } from '../config/database.constants';
+import { DEXIE_CLOUD_CONFIG } from '../config/dexie-cloud.config';
 import { Expense } from './expense.db';
 import { Todo } from './todo.db';
 import { Budget } from './budget.db';
@@ -15,13 +17,14 @@ class MyDayDB extends Dexie {
   categories!: Table<Category, number>;
 
   private constructor() {
-    super(DATABASE_NAME);
-    // Version 1: Use auto-increment IDs for all tables
+    super(DATABASE_NAME, { addons: [dexieCloud] });
+
+    // Version 1: Use @ prefix for Dexie Cloud global IDs
     this.version(1).stores({
-      todos: '++id, created_at',
-      expenses: '++id, category_id, transaction_date, [transaction_date+created_at]',
-      budget: '++id, created_at',
-      categories: '++id, name, created_at',
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
     });
 
     // Add error handlers
@@ -32,6 +35,9 @@ class MyDayDB extends Dexie {
     this.on('versionchange', () => {
       console.log('Database version changed in another tab');
     });
+
+    // Configure Dexie Cloud
+    this.cloud.configure(DEXIE_CLOUD_CONFIG);
   }
 
   public static getInstance(): MyDayDB {
