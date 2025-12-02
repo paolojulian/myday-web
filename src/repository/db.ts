@@ -1,5 +1,5 @@
-import Dexie, { Table } from 'dexie';
-import dexieCloud from 'dexie-cloud-addon';
+import Dexie from 'dexie';
+import dexieCloud, { DexieCloudTable } from 'dexie-cloud-addon';
 import { DATABASE_NAME } from '../config/database.constants';
 import { DEXIE_CLOUD_CONFIG } from '../config/dexie-cloud.config';
 import { Expense } from './expense.db';
@@ -11,15 +11,18 @@ class MyDayDB extends Dexie {
   // Private static instance to store the single instance of the class
   private static instance: MyDayDB;
 
-  todos!: Table<Todo, string>;
-  expenses!: Table<Expense, string>;
-  budget!: Table<Budget, string>;
-  categories!: Table<Category, string>;
+  todos!: DexieCloudTable<Todo, 'id'>;
+  expenses!: DexieCloudTable<Expense, 'id'>;
+  budget!: DexieCloudTable<Budget, 'id'>;
+  categories!: DexieCloudTable<Category, 'id'>;
 
   private constructor() {
-    super(DATABASE_NAME, { addons: [dexieCloud] });
+    super(DATABASE_NAME, {
+      addons: [dexieCloud],
+      cache: 'immutable',
+    });
 
-    // Configure Dexie Cloud first
+    // Configure Dexie Cloud
     this.cloud.configure(DEXIE_CLOUD_CONFIG);
 
     this.version(1).stores({

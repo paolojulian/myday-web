@@ -90,7 +90,7 @@ const Item = ({
           </AppTypography>
         </div>
         {subtitle && (
-          <AppTypography variant='small' className='text-neutral-600 mb-1'>
+          <AppTypography variant='small' className='text-neutral-600 mb-1 line-clamp-3'>
             {subtitle}
           </AppTypography>
         )}

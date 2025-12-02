@@ -5,11 +5,14 @@ import { db, type Category } from '../../repository';
 type AddCategoryParams = Omit<Category, 'id' | 'created_at'>;
 
 class CategoryService {
+  static generateId(): string {
+    return `ctg${crypto.randomUUID()}`;
+  }
   public async add(
     categoryToAdd: AddCategoryParams
   ): Promise<{ error: Error | null; category?: Category }> {
     const dateNow = new Date();
-    const id = crypto.randomUUID();
+    const id = CategoryService.generateId();
 
     try {
       await db.categories.add({
@@ -67,7 +70,7 @@ class CategoryService {
     ];
 
     const categoriesToAdd = defaultCategories.map((name) => ({
-      id: crypto.randomUUID(),
+      id: CategoryService.generateId(),
       name,
       created_at: new Date(),
     }));
