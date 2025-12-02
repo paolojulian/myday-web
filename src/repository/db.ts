@@ -23,6 +23,7 @@ class MyDayDB extends Dexie {
     });
 
     // Configure Dexie Cloud
+    console.log('Configuring Dexie Cloud with URL:', DEXIE_CLOUD_CONFIG.databaseUrl);
     this.cloud.configure(DEXIE_CLOUD_CONFIG);
 
     this.version(1).stores({
