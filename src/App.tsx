@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 import './App.css';
 import { AppSplashScreen } from './components/atoms';
 import MainLayout from './components/layouts/main-layout';
+import { AuthModal } from './components/organisms/auth-modal/auth-modal';
 import { useDexieSync } from './hooks/use-dexie-sync';
 import { toast } from './lib/toast';
 import ExpenseAdd from './pages/expense-add';
@@ -38,7 +39,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isInitialSync, isConnecting, hasError, errorMessage } =
+  const { isInitialSync, isConnecting, hasError, errorMessage, isAuthenticated } =
     useDexieSync();
   const showSplash = isInitialSync && isConnecting;
 
@@ -59,11 +60,19 @@ function App() {
         });
       }}
     >
+      {/* Show authentication modal if not authenticated */}
+      {!isAuthenticated && (
+        <AuthModal onAuthenticated={() => {
+          // Authentication state will be automatically updated via useDexieSync
+          console.log('User authenticated successfully');
+        }} />
+      )}
+
       {/* Show splash screen during initial sync */}
       <AppSplashScreen isLoading={showSplash} />
 
-      {/* Hide main content while splash screen is showing */}
-      {!showSplash && (
+      {/* Hide main content while splash screen is showing or not authenticated */}
+      {!showSplash && isAuthenticated && (
         <>
           <Routes>
             <Route path='/' element={<MainLayout />}>

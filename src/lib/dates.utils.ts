@@ -20,6 +20,10 @@ export function getStartAndEndOfDay(date: Date) {
   };
 }
 
+export function getNumberOfDaysInMonth(date: Date) {
+  return dayjs(date).daysInMonth();
+}
+
 export function getEndOfMonth(date: Date) {
   return dayjs(date).endOf('month').toDate();
 }

@@ -1,5 +1,8 @@
 import { DBError } from '../../config/errors.constants';
-import { getStartAndEndOfDay, getStartAndEndOfMonth } from '../../lib/dates.utils';
+import {
+  getStartAndEndOfDay,
+  getStartAndEndOfMonth,
+} from '../../lib/dates.utils';
 import { handleError } from '../../lib/handle-error.utils';
 import { db, type Expense, type Category } from '../../repository';
 import { ExpenseRecurrence } from '../../repository/expense.db';

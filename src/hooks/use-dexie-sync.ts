@@ -7,6 +7,21 @@ export const useDexieSync = () => {
   const [syncState, setSyncState] = useState<SyncState>('connecting');
   const [isInitialSync, setIsInitialSync] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Subscribe to authentication state
+    const authSubscription = db.cloud.currentUser.subscribe((user) => {
+      console.log('Dexie Auth State:', user);
+      setIsAuthenticated(!!user?.userId);
+      setUserEmail(user?.email || null);
+    });
+
+    return () => {
+      authSubscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     // Subscribe to Dexie Cloud sync state
@@ -68,5 +83,7 @@ export const useDexieSync = () => {
     isConnecting: syncState === 'connecting',
     isOffline: syncState === 'offline',
     hasError: syncState === 'error',
+    isAuthenticated,
+    userEmail,
   };
 };

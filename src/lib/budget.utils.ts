@@ -31,7 +31,8 @@ export interface BudgetAnalysis {
 export function calculateBudgetAnalysis(
   monthlyBudget: number,
   totalSpent: number,
-  date: Date = new Date()
+  date: Date = new Date(),
+  billsSpent: number = 0
 ): BudgetAnalysis {
   const daysElapsed = getDaysElapsedInMonth(date);
   const daysRemaining = getDaysRemainingInMonth(date);
@@ -39,7 +40,14 @@ export function calculateBudgetAnalysis(
 
   // Calculate rates
   const budgetedDailyRate = monthlyBudget / totalDays;
-  const actualDailyRate = daysElapsed > 0 ? totalSpent / daysElapsed : 0;
+
+  // Calculate actual daily rate:
+  // - Bills are spread across the entire month (billsSpent / totalDays)
+  // - Regular expenses are based on days elapsed (nonBillsSpent / daysElapsed)
+  const nonBillsSpent = totalSpent - billsSpent;
+  const billsDailyRate = billsSpent / totalDays;
+  const nonBillsDailyRate = daysElapsed > 0 ? nonBillsSpent / daysElapsed : 0;
+  const actualDailyRate = billsDailyRate + nonBillsDailyRate;
 
   // Calculate projections
   const projectedTotalSpend = actualDailyRate * totalDays;

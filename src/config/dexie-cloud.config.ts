@@ -9,6 +9,6 @@ if (!dbUrl) {
 
 export const DEXIE_CLOUD_CONFIG = {
   databaseUrl: dbUrl!,
-  requireAuth: false,
+  requireAuth: true, // Require authentication to protect user data
   tryUseServiceWorker: true,
 };

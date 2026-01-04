@@ -1,26 +1,24 @@
 import { useMemo } from 'react';
 import { useBudget } from './use-budget';
-import { useSpentThisMonthLive } from '../expenses/use-spent-this-month-live';
-import {
-  calculateBudgetAnalysis,
-  BudgetAnalysis,
-} from '@/lib/budget.utils';
+import { useSpentThisMonthDetailedLive } from '../expenses/use-spent-this-month-detailed-live';
+import { calculateBudgetAnalysis, BudgetAnalysis } from '@/lib/budget.utils';
 
 export const useBudgetAnalysis = (date: Date = new Date()) => {
   const budgetQuery = useBudget(date);
-  const spentThisMonth = useSpentThisMonthLive(date);
+  const spentBreakdown = useSpentThisMonthDetailedLive(date);
 
   const analysis = useMemo<BudgetAnalysis | null>(() => {
-    if (!budgetQuery.data?.amount || spentThisMonth === undefined) {
+    if (!budgetQuery.data?.amount) {
       return null;
     }
 
     return calculateBudgetAnalysis(
       budgetQuery.data.amount,
-      spentThisMonth,
-      date
+      spentBreakdown.total,
+      date,
+      spentBreakdown.bills
     );
-  }, [budgetQuery.data, spentThisMonth, date]);
+  }, [budgetQuery.data, spentBreakdown, date]);
 
   return {
     data: analysis,
