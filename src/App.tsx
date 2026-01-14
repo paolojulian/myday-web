@@ -11,6 +11,7 @@ import { toast } from './lib/toast';
 import ExpenseAdd from './pages/expense-add';
 import Expenses from './pages/expenses';
 import Home from './pages/home';
+import ExpenseEdit from '@/pages/expense-edit';
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -39,8 +40,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isInitialSync, isConnecting, hasError, errorMessage, isAuthenticated } =
-    useDexieSync();
+  const {
+    isInitialSync,
+    isConnecting,
+    hasError,
+    errorMessage,
+    isAuthenticated,
+  } = useDexieSync();
   const showSplash = isInitialSync && isConnecting;
 
   // Show error toast when sync fails
@@ -62,10 +68,12 @@ function App() {
     >
       {/* Show authentication modal if not authenticated */}
       {!isAuthenticated && (
-        <AuthModal onAuthenticated={() => {
-          // Authentication state will be automatically updated via useDexieSync
-          console.log('User authenticated successfully');
-        }} />
+        <AuthModal
+          onAuthenticated={() => {
+            // Authentication state will be automatically updated via useDexieSync
+            console.log('User authenticated successfully');
+          }}
+        />
       )}
 
       {/* Show splash screen during initial sync */}
@@ -79,7 +87,10 @@ function App() {
               <Route index element={<Home />} />
               <Route path='expenses' element={<Expenses />} />
             </Route>
-            <Route path='/expense/add' element={<ExpenseAdd />} />
+            <Route path='/expenses'>
+              <Route path='add' element={<ExpenseAdd />} />
+              <Route path=':id' element={<ExpenseEdit />} />
+            </Route>
           </Routes>
         </>
       )}

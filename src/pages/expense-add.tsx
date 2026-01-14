@@ -7,17 +7,18 @@ import { AppPicker, type AppPickerRef } from '@/components/atoms/app-picker';
 import { AppTextArea } from '@/components/atoms/app-text-area';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
-import { FC, useEffect, useMemo, useRef } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { AddExpenseParams } from '../services/expense-service/expense.service';
+import { useCategories } from '@/hooks/categories/use-categories';
+import { useCreateCategory } from '@/hooks/categories/use-create-category';
+import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
+import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import {
   clearCurrencyFormatting,
   formatCurrency,
 } from '@/lib/formatters.utils';
-import { useCategories } from '@/hooks/categories/use-categories';
-import { useCreateCategory } from '@/hooks/categories/use-create-category';
+import { FC, useEffect, useMemo, useRef } from 'react';
+import { Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
+import { AddExpenseParams } from '../services/expense-service/expense.service';
 
 type FormData = {
   title: string;
@@ -34,20 +35,7 @@ const ExpenseAdd: FC = () => {
   const createCategory = useCreateCategory();
   const createExpense = useCreateExpense();
 
-  const {
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<FormData>({
-    mode: 'onBlur',
-    defaultValues: {
-      title: '',
-      category: null,
-      amount: '',
-      description: '',
-      transaction_date: new Date(),
-    },
-  });
+  const { handleSubmit, control, errors } = useExpenseForm();
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -134,170 +122,170 @@ const ExpenseAdd: FC = () => {
 
   return (
     <div className='flex flex-col h-full bg-white'>
-        <div className='px-4 pt-4'>
-          <AppSegmentedControl
-            options={[
-              { label: 'Expense', value: 'expense' },
-              { label: 'To Buy', value: 'to-buy' },
-            ]}
-            activeValue='expense'
-            onChange={() => {}}
-            className='mb-4'
+      <div className='px-4 pt-4'>
+        <AppSegmentedControl
+          options={[
+            { label: 'Expense', value: 'expense' },
+            { label: 'To Buy', value: 'to-buy' },
+          ]}
+          activeValue='expense'
+          onChange={() => {}}
+          className='mb-4'
+        />
+      </div>
+      <form
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className='flex flex-col gap-2 flex-1 pb-24 px-4'
+      >
+        {/* title */}
+        <section>
+          <Controller
+            name='title'
+            control={control}
+            rules={{
+              required: 'Title is required',
+              minLength: {
+                value: 2,
+                message: 'Title must be at least 2 characters',
+              },
+              maxLength: {
+                value: 100,
+                message: 'Title must not exceed 100 characters',
+              },
+            }}
+            render={({ field }) => (
+              <AppTextInput
+                id='title'
+                label='Title'
+                placeholder='Type here..'
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={titleInputRef}
+                errorMessage={errors.title?.message}
+                enterKeyHint='next'
+                onSubmitEditing={() => amountInputRef.current?.focus()}
+                autoFocus
+              />
+            )}
           />
-        </div>
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className='flex flex-col gap-2 flex-1 pb-24 px-4'
-        >
-          {/* title */}
-          <section>
-            <Controller
-              name='title'
-              control={control}
-              rules={{
-                required: 'Title is required',
-                minLength: {
-                  value: 2,
-                  message: 'Title must be at least 2 characters',
-                },
-                maxLength: {
-                  value: 100,
-                  message: 'Title must not exceed 100 characters',
-                },
-              }}
-              render={({ field }) => (
-                <AppTextInput
-                  id='title'
-                  label='Title'
-                  placeholder='Type here..'
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  ref={titleInputRef}
-                  errorMessage={errors.title?.message}
-                  enterKeyHint='next'
-                  onSubmitEditing={() => amountInputRef.current?.focus()}
-                  autoFocus
-                />
-              )}
-            />
-          </section>
+        </section>
 
-          {/* transaction amount */}
-          <section>
-            <Controller
-              name='amount'
-              control={control}
-              rules={{
-                required: 'Amount is required',
-                validate: (value) => {
-                  const cleanAmount = clearCurrencyFormatting(value);
-                  const numValue = Number(cleanAmount);
+        {/* transaction amount */}
+        <section>
+          <Controller
+            name='amount'
+            control={control}
+            rules={{
+              required: 'Amount is required',
+              validate: (value) => {
+                const cleanAmount = clearCurrencyFormatting(value);
+                const numValue = Number(cleanAmount);
 
-                  if (isNaN(numValue)) {
-                    return 'Please enter a valid number';
-                  }
-                  if (numValue <= 0) {
-                    return 'Amount must be greater than 0';
-                  }
-                  if (numValue >= 999999999) {
-                    return 'Amount must be less than 999,999,999';
-                  }
-                  return true;
-                },
-              }}
-              render={({ field }) => (
-                <AppTextInput
-                  id='amount'
-                  label='Amount'
-                  placeholder='₱ 0.00'
-                  type='text'
-                  inputMode='decimal'
-                  formatter={formatCurrency}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  ref={amountInputRef}
-                  errorMessage={errors.amount?.message}
-                  enterKeyHint='next'
-                  onSubmitEditing={() => categoryPickerRef.current?.open()}
-                />
-              )}
-            />
-          </section>
+                if (isNaN(numValue)) {
+                  return 'Please enter a valid number';
+                }
+                if (numValue <= 0) {
+                  return 'Amount must be greater than 0';
+                }
+                if (numValue >= 999999999) {
+                  return 'Amount must be less than 999,999,999';
+                }
+                return true;
+              },
+            }}
+            render={({ field }) => (
+              <AppTextInput
+                id='amount'
+                label='Amount'
+                placeholder='₱ 0.00'
+                type='text'
+                inputMode='decimal'
+                formatter={formatCurrency}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={amountInputRef}
+                errorMessage={errors.amount?.message}
+                enterKeyHint='next'
+                onSubmitEditing={() => categoryPickerRef.current?.open()}
+              />
+            )}
+          />
+        </section>
 
-          {/* category */}
-          <section>
-            <Controller
-              name='category'
-              control={control}
-              render={({ field }) => (
-                <AppPicker
-                  ref={categoryPickerRef}
-                  id='category'
-                  label='Category (Optional)'
-                  placeholder={
-                    isCategoriesLoading
-                      ? 'Loading...'
-                      : 'Select or create a category'
-                  }
-                  options={categoryOptions}
-                  value={field.value !== null ? String(field.value) : undefined}
-                  onChange={(value) =>
-                    handleCategoryChange(value, field.onChange)
-                  }
-                  allowCustom
-                  searchPlaceholder='Search categories...'
-                />
-              )}
-            />
-          </section>
+        {/* category */}
+        <section>
+          <Controller
+            name='category'
+            control={control}
+            render={({ field }) => (
+              <AppPicker
+                ref={categoryPickerRef}
+                id='category'
+                label='Category (Optional)'
+                placeholder={
+                  isCategoriesLoading
+                    ? 'Loading...'
+                    : 'Select or create a category'
+                }
+                options={categoryOptions}
+                value={field.value !== null ? String(field.value) : undefined}
+                onChange={(value) =>
+                  handleCategoryChange(value, field.onChange)
+                }
+                allowCustom
+                searchPlaceholder='Search categories...'
+              />
+            )}
+          />
+        </section>
 
-          {/* transaction date */}
-          <section>
-            <Controller
-              name='transaction_date'
-              control={control}
-              render={({ field }) => (
-                <ThreeWayDatePicker
-                  value={field.value}
-                  onDateChanged={field.onChange}
-                />
-              )}
-            />
-          </section>
+        {/* transaction date */}
+        <section>
+          <Controller
+            name='transaction_date'
+            control={control}
+            render={({ field }) => (
+              <ThreeWayDatePicker
+                value={field.value}
+                onDateChanged={field.onChange}
+              />
+            )}
+          />
+        </section>
 
-          {/* recurring */}
-          {/* <section></section> */}
+        {/* recurring */}
+        {/* <section></section> */}
 
-          {/* description */}
-          <section>
-            <Controller
-              name='description'
-              control={control}
-              rules={{
-                maxLength: {
-                  value: 500,
-                  message: 'Description must not exceed 500 characters',
-                },
-              }}
-              render={({ field }) => (
-                <AppTextArea
-                  id='description'
-                  label='Description (Optional)'
-                  placeholder='Type here...'
-                  rows={4}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  ref={descriptionInputRef}
-                  errorMessage={errors.description?.message}
-                  enterKeyHint='done'
-                />
-              )}
-            />
-          </section>
-        </form>
+        {/* description */}
+        <section>
+          <Controller
+            name='description'
+            control={control}
+            rules={{
+              maxLength: {
+                value: 500,
+                message: 'Description must not exceed 500 characters',
+              },
+            }}
+            render={({ field }) => (
+              <AppTextArea
+                id='description'
+                label='Description (Optional)'
+                placeholder='Type here...'
+                rows={4}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={descriptionInputRef}
+                errorMessage={errors.description?.message}
+                enterKeyHint='done'
+              />
+            )}
+          />
+        </section>
+      </form>
 
       {/* Fixed bottom buttons with gradient */}
       <div

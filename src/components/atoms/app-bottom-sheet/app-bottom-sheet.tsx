@@ -62,7 +62,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
           }
         )}
         style={{
-          height,
+          maxHeight: height,
           transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
           paddingBottom: 'var(--safe-area-inset-bottom)',
         }}

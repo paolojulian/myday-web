@@ -4,6 +4,7 @@ import { toCurrency } from '@/lib/currency.utils';
 import { getHumanReadableDate } from '@/lib/dates.utils';
 import { ExpenseWithCategory } from '@/services/expense-service/expense.service';
 import { FC } from 'react';
+import { Link } from 'react-router-dom';
 
 type Props = {
   recentTransactions: ExpenseWithCategory[] | undefined;
@@ -53,6 +54,7 @@ const HomeRecentTransactions: FC<Props> = ({
         {recentTransactions?.map((recentTransaction) => (
           <Item
             key={recentTransaction.id}
+            id={recentTransaction.id}
             title={recentTransaction.title}
             subtitle={recentTransaction.description || ''}
             amount={recentTransaction.amount}
@@ -66,12 +68,14 @@ const HomeRecentTransactions: FC<Props> = ({
 };
 
 const Item = ({
+  id,
   title,
   subtitle,
   amount,
   transactionDate,
   category,
 }: {
+  id?: string;
   title: string;
   subtitle: string;
   amount: number;
@@ -79,38 +83,43 @@ const Item = ({
   category?: string;
 }) => {
   return (
-    <div className='flex flex-row items-center justify-between bg-neutral-50 border border-neutral-200 rounded-xl p-4 hover:bg-neutral-100 transition-colors'>
-      <div className='flex-1'>
-        <div className='mb-1'>
-          <AppTypography
-            variant='body'
-            className='font-semibold text-neutral-900'
-          >
-            {title}
+    <Link to={`/expenses/${id}`} className='no-underline'>
+      <div className='flex flex-row items-center justify-between bg-neutral-50 border border-neutral-200 rounded-xl p-4 hover:bg-neutral-100 transition-colors'>
+        <div className='flex-1'>
+          <div className='mb-1'>
+            <AppTypography
+              variant='body'
+              className='font-semibold text-neutral-900'
+            >
+              {title}
+            </AppTypography>
+          </div>
+          {subtitle && (
+            <AppTypography
+              variant='small'
+              className='text-neutral-600 mb-1 line-clamp-3'
+            >
+              {subtitle}
+            </AppTypography>
+          )}
+          <AppTypography variant='small' className='text-neutral-500'>
+            {getHumanReadableDate(transactionDate)}
           </AppTypography>
         </div>
-        {subtitle && (
-          <AppTypography variant='small' className='text-neutral-600 mb-1 line-clamp-3'>
-            {subtitle}
+        <div className='ml-4 flex flex-col items-end'>
+          <AppTypography variant='body' className='font-bold text-neutral-900'>
+            {toCurrency(amount)}
           </AppTypography>
-        )}
-        <AppTypography variant='small' className='text-neutral-500'>
-          {getHumanReadableDate(transactionDate)}
-        </AppTypography>
+          {category && (
+            <div className='mt-1'>
+              <span className='inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium'>
+                {category}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-      <div className='ml-4 flex flex-col items-end'>
-        <AppTypography variant='body' className='font-bold text-neutral-900'>
-          {toCurrency(amount)}
-        </AppTypography>
-        {category && (
-          <div className='mt-1'>
-            <span className='inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium'>
-              {category}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
+    </Link>
   );
 };
 

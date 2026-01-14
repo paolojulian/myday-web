@@ -25,9 +25,9 @@ function ThreeWayDatePicker({
     onDateChanged?.(dayjs().toDate());
   };
 
-  const handleTomorrowClicked = () => {
+  const handleYesterdayClicked = () => {
     onTomorrowClicked?.();
-    onDateChanged?.(dayjs().add(1, 'day').toDate());
+    onDateChanged?.(dayjs().subtract(1, 'day').toDate());
   };
 
   const handleCustomClicked = () => {};
@@ -36,14 +36,14 @@ function ThreeWayDatePicker({
     () => !!value && dayjs(value).isSame(dayjs(), 'day'),
     [value]
   );
-  const isTomorrow: boolean = useMemo(
-    () => !!value && dayjs(value).isSame(dayjs().add(1, 'day'), 'day'),
+  const isYesterday: boolean = useMemo(
+    () => !!value && dayjs(value).isSame(dayjs().subtract(1, 'day'), 'day'),
     [value]
   );
   const customDateText: string = useMemo(() => {
-    if (!value || isToday || isTomorrow) return 'Custom';
+    if (!value || isToday || isYesterday) return 'Custom';
     return dayjs(value).format('MMM D');
-  }, [value, isToday, isTomorrow]);
+  }, [value, isToday, isYesterday]);
 
   return (
     <div className='grid grid-cols-3 gap-2'>
@@ -52,11 +52,11 @@ function ThreeWayDatePicker({
         <AppTypography variant='small'>Today</AppTypography>
       </ThreeWayDatePickerButton>
       <ThreeWayDatePickerButton
-        onClick={handleTomorrowClicked}
-        isActive={isTomorrow}
+        onClick={handleYesterdayClicked}
+        isActive={isYesterday}
       >
         <TomorrowCalendarIcon className='size-5 text-neutral-700' />
-        <AppTypography variant='small'>Tomorrow</AppTypography>
+        <AppTypography variant='small'>Yesterday</AppTypography>
       </ThreeWayDatePickerButton>
       <AppDatePicker value={value} onDateChange={onDateChanged}>
         {({ handleOpen }) => (
@@ -65,7 +65,7 @@ function ThreeWayDatePicker({
               handleCustomClicked();
               handleOpen();
             }}
-            isActive={!isToday && !isTomorrow && !!value}
+            isActive={!isToday && !isYesterday && !!value}
           >
             <CustomCalendarIcon className='size-5 text-neutral-700' />
             <AppTypography variant='small'>{customDateText}</AppTypography>

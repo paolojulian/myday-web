@@ -9,7 +9,7 @@ const CreateButton: FC<CreateButtonProps> = () => {
   const navigate = useNavigate();
 
   const handleClickAdd = () => {
-    navigate('/expense/add');
+    navigate('/expenses/add');
   };
 
   return (

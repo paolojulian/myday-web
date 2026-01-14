@@ -42,6 +42,12 @@ class ExpenseService {
     return expenses;
   }
 
+  public async getById(id: Expense['id']): Promise<Expense | undefined> {
+    const expense = await db.expenses.get(id);
+
+    return expense;
+  }
+
   public async recentTransactions(): Promise<ExpenseWithCategory[]> {
     const expenses = await db.expenses
       .orderBy('transaction_date')
