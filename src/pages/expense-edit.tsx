@@ -7,7 +7,7 @@ const ExpenseEdit: FC = () => {
   const { id } = useParams();
   const { isFetching, data } = useExpense(id);
 
-  if (isFetching) {
+  if (isFetching || !id) {
     return null;
   }
 

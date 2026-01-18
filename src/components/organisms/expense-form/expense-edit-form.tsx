@@ -24,7 +24,7 @@ type FormData = {
 };
 
 type ExpenseEditFormProps = {
-  expenseId: number;
+  expenseId: string;
   initialData?: FormData;
 };
 
@@ -49,7 +49,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
     const formData: UpdateExpenseParams = {
-      id: expenseId.toString(),
+      id: expenseId,
       title: data.title,
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
@@ -94,9 +94,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   return (
     <div className='flex flex-col h-full bg-white'>
       <div className='px-4 pt-4 pb-4 flex items-center justify-between'>
-        <AppTypography variant='heading'>
-          Edit Expense
-        </AppTypography>
+        <AppTypography variant='heading'>Edit Expense</AppTypography>
         <button
           onClick={handleDelete}
           type='button'
