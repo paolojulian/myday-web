@@ -182,7 +182,7 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
           isOpen={isOpen}
           onClose={handleClose}
           title={label}
-          height={'70%'}
+          height={'50%'}
           variant='custom'
           zIndex={1002}
         >

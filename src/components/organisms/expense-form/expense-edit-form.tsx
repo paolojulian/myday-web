@@ -1,5 +1,6 @@
-import { AppSegmentedControl } from '@/components/atoms';
 import { type AppPickerRef } from '@/components/atoms/app-picker';
+import { AppTypography } from '@/components/atoms';
+import TrashIcon from '@/components/atoms/icons/trash-icon';
 import CategoryField from '@/components/organisms/expense-form/category-field';
 import DescriptionField from '@/components/organisms/expense-form/description-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
@@ -8,6 +9,7 @@ import TransactionAmountField from '@/components/organisms/expense-form/transact
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
+import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
 import { FC, useEffect, useRef } from 'react';
@@ -32,6 +34,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const updateExpense = useUpdateExpense();
+  const deleteExpense = useDeleteExpense();
 
   const { handleSubmit, control, errors } = useExpenseForm({
     defaultValues: initialData,
@@ -81,18 +84,27 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     navigate(-1);
   };
 
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this expense?')) {
+      deleteExpense.mutate(expenseId.toString());
+      navigate(-1);
+    }
+  };
+
   return (
     <div className='flex flex-col h-full bg-white'>
-      <div className='px-4 pt-4'>
-        <AppSegmentedControl
-          options={[
-            { label: 'Expense', value: 'expense' },
-            { label: 'To Buy', value: 'to-buy' },
-          ]}
-          activeValue='expense'
-          onChange={() => {}}
-          className='mb-4'
-        />
+      <div className='px-4 pt-4 pb-4 flex items-center justify-between'>
+        <AppTypography variant='heading'>
+          Edit Expense
+        </AppTypography>
+        <button
+          onClick={handleDelete}
+          type='button'
+          className='p-2 hover:bg-red-50 rounded-full active:scale-95 transition-all'
+          aria-label='Delete expense'
+        >
+          <TrashIcon className='w-6 h-6 text-red-600' />
+        </button>
       </div>
       <form
         onSubmit={handleSubmit(handleFormSubmit)}
