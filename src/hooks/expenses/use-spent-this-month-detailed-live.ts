@@ -18,6 +18,7 @@ export const useSpentThisMonthDetailedLive = (
       .where('transaction_date')
       .between(startOfMonth, endOfMonth, true, true)
       .toArray();
+    console.log({ expenses })
 
     let bills = 0;
     let nonBills = 0;

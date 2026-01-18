@@ -13,6 +13,7 @@ const ExpenseEdit: FC = () => {
 
   return (
     <ExpenseEditForm
+      expenseId={id}
       initialData={{
         amount: data ? data.amount.toString() : '',
         category: data?.category_id || null,

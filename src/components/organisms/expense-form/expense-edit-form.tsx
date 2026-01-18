@@ -6,10 +6,10 @@ import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
-import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
+import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
-import { AddExpenseParams } from '@/services/expense-service/expense.service';
+import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
 import { FC, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,12 +22,16 @@ type FormData = {
 };
 
 type ExpenseEditFormProps = {
+  expenseId: number;
   initialData?: FormData;
 };
 
-const ExpenseEditForm: FC<ExpenseEditFormProps> = ({ initialData }) => {
+const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
+  expenseId,
+  initialData,
+}) => {
   const navigate = useNavigate();
-  const createExpense = useCreateExpense();
+  const updateExpense = useUpdateExpense();
 
   const { handleSubmit, control, errors } = useExpenseForm({
     defaultValues: initialData,
@@ -41,7 +45,8 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({ initialData }) => {
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
-    const formData: AddExpenseParams = {
+    const formData: UpdateExpenseParams = {
+      id: expenseId.toString(),
       title: data.title,
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
@@ -51,7 +56,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({ initialData }) => {
       recurrence_id: null,
     };
 
-    createExpense.mutate(formData);
+    updateExpense.mutate(formData);
     navigate(-1);
   };
 

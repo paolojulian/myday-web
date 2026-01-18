@@ -28,6 +28,25 @@ class ExpenseService {
     }
   }
 
+  public async update(
+    expenseToUpdate: UpdateExpenseParams
+  ): Promise<Error | null> {
+    const dateNow = new Date();
+    const id = expenseToUpdate.id;
+
+    try {
+      await db.expenses.update(id, {
+        ...expenseToUpdate,
+        id: undefined,
+        updated_at: dateNow,
+      });
+
+      return null;
+    } catch (e) {
+      return handleError(e, new DBError('Unable to update expense'));
+    }
+  }
+
   public async list(filters: ListFilter): Promise<Expense[]> {
     const { startOfMonth, endOfMonth } = getStartAndEndOfMonth(
       filters.transactionDate
@@ -106,14 +125,24 @@ class ExpenseService {
       return handleError(e, new DBError('Unable to delete expense'));
     }
   }
-
-  public async update() {}
 }
 
 export const expenseService = new ExpenseService();
 
 export type AddExpenseParams = Pick<
   Expense,
+  | 'title'
+  | 'amount'
+  | 'transaction_date'
+  | 'description'
+  | 'category_id'
+  | 'recurrence'
+  | 'recurrence_id'
+>;
+
+export type UpdateExpenseParams = Pick<
+  Expense,
+  | 'id'
   | 'title'
   | 'amount'
   | 'transaction_date'
