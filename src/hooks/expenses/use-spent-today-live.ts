@@ -2,9 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../repository';
 import { getStartAndEndOfDay } from '../../lib/dates.utils';
 
-export const useSpentTodayLive = () => {
+export const useSpentTodayLive = (date: Date = new Date()) => {
   const spentToday = useLiveQuery(async () => {
-    const { startOfDay, endOfDay } = getStartAndEndOfDay(new Date());
+    const { startOfDay, endOfDay } = getStartAndEndOfDay(date);
 
     const expenses = await db.expenses
       .where('transaction_date')
@@ -14,7 +14,7 @@ export const useSpentTodayLive = () => {
     return expenses.reduce((prev, curr) => {
       return prev + curr.amount;
     }, 0);
-  }, []); // Empty dependencies - always uses current date
+  }, [date.getTime()]);
 
   return spentToday ?? 0;
 };

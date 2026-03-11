@@ -20,12 +20,33 @@ export interface BudgetAnalysis {
   actualDailyRate: number; // How much you ARE spending per day
   projectedTotalSpend: number; // What you'll spend by month end at current rate
   projectedDaysLeft: number; // How many days until budget runs out
+  remainingDailyBudget: number; // How much you can spend daily to stay within budget
 
   // Status indicators
   status: BudgetStatus;
   percentageUsed: number; // 0-100
   isOverBudget: boolean;
   isOnTrack: boolean;
+}
+
+/**
+ * Calculate how much you can spend per day for the rest of the month (including today),
+ * excluding bills from the effective budget.
+ */
+function getRemainingDailyBudget(
+  monthlyBudget: number,
+  totalSpent: number,
+  date: Date = new Date(),
+  billsSpent: number = 0
+): number {
+  const daysRemaining = getDaysRemainingInMonth(date);
+  // Include today in the remaining days
+  const daysLeft = daysRemaining + 1;
+  if (daysLeft <= 0) return 0;
+
+  const effectiveBudget = monthlyBudget - billsSpent;
+  const nonBillsSpent = totalSpent - billsSpent;
+  return (effectiveBudget - nonBillsSpent) / daysLeft;
 }
 
 export function calculateBudgetAnalysis(
@@ -37,6 +58,13 @@ export function calculateBudgetAnalysis(
   const daysElapsed = getDaysElapsedInMonth(date);
   const daysRemaining = getDaysRemainingInMonth(date);
   const totalDays = getTotalDaysInMonth(date);
+
+  const remainingDailyBudget = getRemainingDailyBudget(
+    monthlyBudget,
+    totalSpent,
+    date,
+    billsSpent
+  );
 
   // Calculate rates
   const budgetedDailyRate = monthlyBudget / totalDays;
@@ -77,6 +105,7 @@ export function calculateBudgetAnalysis(
     monthlyBudget,
     totalSpent,
     remainingBudget,
+    remainingDailyBudget,
     daysElapsed,
     daysRemaining,
     totalDays,

@@ -12,6 +12,7 @@ import ExpenseAdd from './pages/expense-add';
 import Expenses from './pages/expenses';
 import Home from './pages/home';
 import ExpenseEdit from '@/pages/expense-edit';
+import Categories from '@/pages/categories';
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -86,6 +87,7 @@ function App() {
             <Route path='/' element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path='expenses' element={<Expenses />} />
+              <Route path='categories' element={<Categories />} />
             </Route>
             <Route path='/expenses'>
               <Route path='add' element={<ExpenseAdd />} />

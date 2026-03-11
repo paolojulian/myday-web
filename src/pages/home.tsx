@@ -1,17 +1,13 @@
 import { AppPageHeader } from '@/components/atoms/app-page-header';
-import { HomeOverview, HomeRecentTransactions } from '@/components/organisms';
+import { HomeOverview } from '@/components/organisms';
 import ModalBudgetSetup from '@/components/organisms/modal-budget-setup';
 import { FC, useState } from 'react';
-import { useRecentTransactionsLive } from '../hooks/expenses/use-recent-transactions-live';
 import { useUpdateBudget } from '@/hooks/budget/use-update-budget';
 
 type HomeProps = object;
 
 const Home: FC<HomeProps> = () => {
-  const [dateFilter] = useState<Date>(new Date());
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-
-  const recentTransactions = useRecentTransactionsLive();
   const updateBudget = useUpdateBudget();
 
   const handleSetBudget = () => {
@@ -33,15 +29,7 @@ const Home: FC<HomeProps> = () => {
       </section>
 
       <section id='home-overview'>
-        <HomeOverview date={dateFilter} onSetBudget={handleSetBudget} />
-      </section>
-
-      <section id='home-recent-transactions'>
-        <HomeRecentTransactions
-          recentTransactions={recentTransactions}
-          isLoading={!recentTransactions}
-          error={null}
-        />
+        <HomeOverview onSetBudget={handleSetBudget} />
       </section>
 
       <ModalBudgetSetup

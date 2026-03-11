@@ -89,3 +89,19 @@ export function getDaysRemainingInMonth(date: Date = new Date()): number {
 export function getStartOfMonth(date: Date = new Date()): Date {
   return dayjs(date).startOf('month').toDate();
 }
+
+export function getPreviousDay(date: Date): Date {
+  return dayjs(date).subtract(1, 'day').toDate();
+}
+
+export function getNextDay(date: Date): Date {
+  return dayjs(date).add(1, 'day').toDate();
+}
+
+export function isToday(date: Date): boolean {
+  return dayjs(date).isSame(dayjs(), 'day');
+}
+
+export function isYesterday(date: Date): boolean {
+  return dayjs(date).isSame(dayjs().subtract(1, 'day'), 'day');
+}
