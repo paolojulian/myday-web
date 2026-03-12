@@ -14,12 +14,9 @@ const Home: FC<HomeProps> = () => {
     setIsBudgetModalOpen(true);
   };
 
-  const handleBudgetSubmit = (amount: number) => {
-    updateBudget.mutate(amount, {
-      onSuccess: () => {
-        setIsBudgetModalOpen(false);
-      },
-    });
+  const handleBudgetSubmit = async (amount: number) => {
+    await updateBudget.execute(amount);
+    setIsBudgetModalOpen(false);
   };
 
   return (

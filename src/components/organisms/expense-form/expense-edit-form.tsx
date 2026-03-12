@@ -59,7 +59,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
       recurrence_id: null,
     };
 
-    updateExpense.mutate(formData);
+    updateExpense.execute(formData);
     navigate(-1);
   };
 
@@ -86,7 +86,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this expense?')) {
-      deleteExpense.mutate(expenseId.toString());
+      deleteExpense.execute(expenseId.toString());
       navigate(-1);
     }
   };

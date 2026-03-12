@@ -1,24 +1,23 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { categoryService } from '@/services/category-service/category.service';
-import { CATEGORIES_QUERY_KEY } from './use-categories';
 
 type CreateCategoryParams = {
   name: string;
 };
 
 export function useCreateCategory() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (params: CreateCategoryParams) => {
+  const execute = async (params: CreateCategoryParams) => {
+    setIsPending(true);
+    try {
       const { error, category } = await categoryService.add(params);
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       return category;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { execute, isPending };
 }

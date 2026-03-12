@@ -63,7 +63,7 @@ const ExpenseAdd: FC = () => {
       recurrence_id: null,
     };
 
-    createExpense.mutate(formData);
+    createExpense.execute(formData);
     navigate(-1);
   };
 
@@ -76,28 +76,22 @@ const ExpenseAdd: FC = () => {
   const handleCategoryChange = async (
     value: string,
     onChange: (value: string | null) => void
-  ) => {
+  ): Promise<void> => {
     // Check if this is a new category (not in existing options)
     const isExisting: boolean = categories.some((cat) => cat.id === value);
 
     if (!isExisting && value) {
       // Create new category - value is the category name
-      createCategory.mutate(
-        { name: value },
-        {
-          onSuccess: (newCategory) => {
-            // Set the newly created category ID
-            if (newCategory?.id) {
-              onChange(newCategory.id);
-            }
-            focusDescriptionInput();
-          },
-          onError: (error) => {
-            console.error('Failed to create category:', error);
-            onChange(null);
-          },
+      try {
+        const newCategory = await createCategory.execute({ name: value });
+        if (newCategory?.id) {
+          onChange(newCategory.id);
         }
-      );
+        focusDescriptionInput();
+      } catch (error) {
+        console.error('Failed to create category:', error);
+        onChange(null);
+      }
       return;
     }
 

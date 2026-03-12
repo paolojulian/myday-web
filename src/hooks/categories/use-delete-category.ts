@@ -1,17 +1,18 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { categoryService } from '@/services/category-service/category.service';
-import { CATEGORIES_QUERY_KEY } from './use-categories';
 
 export function useDeleteCategory() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (id: string) => {
+  const execute = async (id: string) => {
+    setIsPending(true);
+    try {
       const error = await categoryService.delete(id);
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { execute, isPending };
 }

@@ -5,9 +5,9 @@ import { useParams } from 'react-router-dom';
 
 const ExpenseEdit: FC = () => {
   const { id } = useParams();
-  const { isFetching, data } = useExpense(id);
+  const { isLoading, data } = useExpense(id);
 
-  if (isFetching || !id) {
+  if (isLoading || !id) {
     return null;
   }
 

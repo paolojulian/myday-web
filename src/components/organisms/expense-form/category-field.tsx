@@ -37,22 +37,16 @@ const CategoryField = ({
 
     if (!isExisting && value) {
       // Create new category - value is the category name
-      createCategory.mutate(
-        { name: value },
-        {
-          onSuccess: (newCategory) => {
-            // Set the newly created category ID
-            if (newCategory?.id) {
-              onChange(newCategory.id);
-            }
-            onFocusDescriptionInput();
-          },
-          onError: (error) => {
-            console.error('Failed to create category:', error);
-            onChange(null);
-          },
+      try {
+        const newCategory = await createCategory.execute({ name: value });
+        if (newCategory?.id) {
+          onChange(newCategory.id);
         }
-      );
+        onFocusDescriptionInput();
+      } catch (error) {
+        console.error('Failed to create category:', error);
+        onChange(null);
+      }
       return;
     }
 

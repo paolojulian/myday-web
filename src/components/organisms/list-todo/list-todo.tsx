@@ -2,19 +2,19 @@ import { Todo } from "../../../repository/todo.db";
 import { useTodos } from "./hooks/use-todos";
 
 export default function TodoList() {
-  const { addTodoMutation, deleteTodoMutation, todoQuery } = useTodos();
+  const { addTodo, deleteTodo, todos, isLoading } = useTodos();
 
   const handleAddTodoClicked = () => {
-    addTodoMutation.mutate({
+    addTodo.execute({
       title: "Test Initialize",
       description: "Test Description",
     });
   };
 
   const handleDeleteTodoClicked = (todoId: Todo["id"]) => () =>
-    deleteTodoMutation.mutate(todoId);
+    deleteTodo.execute(todoId);
 
-  if (todoQuery.isLoading) {
+  if (isLoading) {
     return (
       <div>
         <p>Loading...</p>
@@ -22,8 +22,7 @@ export default function TodoList() {
     );
   }
 
-  if (!todoQuery.data) {
-    // query will be in 'idle' fetchStatus while restoring from localStorage
+  if (!todos) {
     return null;
   }
 
@@ -31,7 +30,7 @@ export default function TodoList() {
     <>
       <div>
         <button onClick={handleAddTodoClicked}>Add todo</button>
-        {todoQuery.data.map((item) => (
+        {todos.map((item) => (
           <div key={item.id}>
             <p>{item.title}</p>
             {item.id !== undefined && (

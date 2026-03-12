@@ -23,6 +23,5 @@ export const useBudgetAnalysis = (date: Date = new Date()) => {
   return {
     data: analysis,
     isLoading: budgetQuery.isLoading,
-    error: budgetQuery.error,
   };
 };
