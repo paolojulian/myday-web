@@ -202,7 +202,7 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
 
             {/* Options List with Gradient */}
             <div className='relative flex-1 min-h-0'>
-              <div className='flex flex-col gap-1 h-full overflow-y-auto pb-2 pr-1'>
+              <div className='flex flex-col gap-1 h-full pb-2 pr-1'>
                 {filteredOptions.map((option) => (
                   <button
                     key={option.value}

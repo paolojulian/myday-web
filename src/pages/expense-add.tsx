@@ -15,7 +15,7 @@ import {
   clearCurrencyFormatting,
   formatCurrency,
 } from '@/lib/formatters.utils';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useMemo, useRef } from 'react';
 import { Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { AddExpenseParams } from '../services/expense-service/expense.service';
@@ -99,17 +99,6 @@ const ExpenseAdd: FC = () => {
     focusDescriptionInput();
   };
 
-  useEffect(() => {
-    // Auto-focus title input when page loads
-    const timeout = setTimeout(() => {
-      titleInputRef.current?.focus();
-    }, 100);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
-
   const handleCancel = () => {
     navigate(-1);
   };
@@ -131,35 +120,28 @@ const ExpenseAdd: FC = () => {
         onSubmit={handleSubmit(handleFormSubmit)}
         className='flex flex-col gap-2 flex-1 pb-24 px-4'
       >
-        {/* title */}
+        {/* category */}
         <section>
           <Controller
-            name='title'
+            name='category'
             control={control}
-            rules={{
-              required: 'Title is required',
-              minLength: {
-                value: 2,
-                message: 'Title must be at least 2 characters',
-              },
-              maxLength: {
-                value: 100,
-                message: 'Title must not exceed 100 characters',
-              },
-            }}
             render={({ field }) => (
-              <AppTextInput
-                id='title'
-                label='Title'
-                placeholder='Type here..'
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                ref={titleInputRef}
-                errorMessage={errors.title?.message}
-                enterKeyHint='next'
-                onSubmitEditing={() => amountInputRef.current?.focus()}
-                autoFocus
+              <AppPicker
+                ref={categoryPickerRef}
+                id='category'
+                label='Category (Optional)'
+                placeholder={
+                  isCategoriesLoading
+                    ? 'Loading...'
+                    : 'Select or create a category'
+                }
+                options={categoryOptions}
+                value={field.value !== null ? String(field.value) : undefined}
+                onChange={(value) =>
+                  handleCategoryChange(value, field.onChange)
+                }
+                allowCustom
+                searchPlaceholder='Search categories...'
               />
             )}
           />
@@ -208,28 +190,34 @@ const ExpenseAdd: FC = () => {
           />
         </section>
 
-        {/* category */}
+        {/* title */}
         <section>
           <Controller
-            name='category'
+            name='title'
             control={control}
+            rules={{
+              required: 'Title is required',
+              minLength: {
+                value: 2,
+                message: 'Title must be at least 2 characters',
+              },
+              maxLength: {
+                value: 100,
+                message: 'Title must not exceed 100 characters',
+              },
+            }}
             render={({ field }) => (
-              <AppPicker
-                ref={categoryPickerRef}
-                id='category'
-                label='Category (Optional)'
-                placeholder={
-                  isCategoriesLoading
-                    ? 'Loading...'
-                    : 'Select or create a category'
-                }
-                options={categoryOptions}
-                value={field.value !== null ? String(field.value) : undefined}
-                onChange={(value) =>
-                  handleCategoryChange(value, field.onChange)
-                }
-                allowCustom
-                searchPlaceholder='Search categories...'
+              <AppTextInput
+                id='title'
+                label='Title'
+                placeholder='Type here..'
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={titleInputRef}
+                errorMessage={errors.title?.message}
+                enterKeyHint='next'
+                onSubmitEditing={() => amountInputRef.current?.focus()}
               />
             )}
           />
