@@ -11,6 +11,11 @@ const Categories: FC = () => {
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
 
+  const handleDelete = (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"?`)) return;
+    deleteCategory.execute(id);
+  };
+
   const handleAdd = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
@@ -92,7 +97,7 @@ const Categories: FC = () => {
               </AppTypography>
             </div>
             <button
-              onClick={() => category.id && deleteCategory.execute(category.id)}
+              onClick={() => category.id && handleDelete(category.id, category.name)}
               disabled={deleteCategory.isPending}
               className='p-2 text-neutral-400 hover:text-red-500 transition-colors'
               aria-label={`Delete ${category.name}`}
