@@ -6,9 +6,10 @@ type Props = {
   onCancel: () => void;
   onSubmit: () => void;
   onDelete?: () => void;
+  submitLabel?: string;
 };
 
-const ExpenseFormFooter = ({ onCancel, onSubmit, onDelete }: Props) => {
+const ExpenseFormFooter = ({ onCancel, onSubmit, onDelete, submitLabel = 'Update Expense' }: Props) => {
   return (
     <div
       className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'
@@ -44,7 +45,7 @@ const ExpenseFormFooter = ({ onCancel, onSubmit, onDelete }: Props) => {
             className='w-fit px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
             aria-label='Save'
           >
-            <AppTypography className='text-white'>Update Expense</AppTypography>
+            <AppTypography className='text-white'>{submitLabel}</AppTypography>
           </button>
         </div>
       </div>
