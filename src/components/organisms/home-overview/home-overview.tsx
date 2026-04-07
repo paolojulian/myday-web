@@ -21,11 +21,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 type HomeOverviewProps = {
   date?: Date;
   onSetBudget?: () => void;
+  onEditBudget?: () => void;
 };
 
 const HomeOverview: FC<HomeOverviewProps> = ({
   date: initialDate = new Date(),
   onSetBudget,
+  onEditBudget,
 }) => {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [dayLimit, setDayLimit] = useState(10);
@@ -115,7 +117,19 @@ const HomeOverview: FC<HomeOverviewProps> = ({
             isLoading={budgetAnalysisQuery.isLoading}
           />
           <DashboardCard status={budgetAnalysisQuery.data.status}>
-            <div className='flex flex-col'>
+            <div className='flex flex-col relative'>
+              {onEditBudget && (
+                <button
+                  onClick={onEditBudget}
+                  className='absolute top-0 right-0 p-1 rounded-full hover:bg-black/10 active:scale-95 transition-all'
+                  aria-label='Edit budget'
+                >
+                  <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+                    <path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' />
+                    <path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' />
+                  </svg>
+                </button>
+              )}
               <AppTypography variant='small' className='text-neutral-600 mb-2'>
                 Remaining
               </AppTypography>

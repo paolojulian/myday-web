@@ -10,6 +10,7 @@ import {
 
 type ModalBudgetSetupProps = {
   onSubmit: (amount: number) => void;
+  initialAmount?: number;
 } & Omit<ComponentProps<typeof AppBottomSheet>, 'children'>;
 
 type FormData = {
@@ -19,6 +20,7 @@ type FormData = {
 const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
   onSubmit,
   isOpen,
+  initialAmount,
   ...props
 }) => {
   const {
@@ -41,7 +43,9 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
   };
 
   useEffect(() => {
-    reset();
+    reset({
+      amount: initialAmount ? formatCurrency(String(initialAmount)) : '',
+    });
 
     // Auto-focus amount input when modal opens
     if (isOpen) {
@@ -52,7 +56,7 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
         clearTimeout(timeout);
       };
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, initialAmount]);
 
   return (
     <AppBottomSheet
@@ -65,7 +69,9 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
     >
       <div className='flex flex-col -m-4'>
         <div className='px-4 pt-4 pb-2 mb-4'>
-          <AppTypography variant='heading'>Set Monthly Budget</AppTypography>
+          <AppTypography variant='heading'>
+            {initialAmount ? 'Edit Monthly Budget' : 'Set Monthly Budget'}
+          </AppTypography>
           <AppTypography variant='small' className='text-neutral-600'>
             Enter your total budget for the month to track your spending
           </AppTypography>
@@ -135,7 +141,7 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
               aria-label='Save Budget'
             >
               <AppTypography className='text-white font-semibold'>
-                Set Budget
+                {initialAmount ? 'Update Budget' : 'Set Budget'}
               </AppTypography>
             </button>
           </div>

@@ -1,14 +1,18 @@
 export const formatCurrency = (value: string): string => {
-  // Remove any existing ₱ symbols, spaces, and commas, but keep decimal point and numbers
-  const numericValue = value.replace(/[₱\s,]/g, '');
+  // Remove any existing ₱ symbols, spaces, and commas, but keep decimal point, numbers, and minus sign
+  const cleaned = value.replace(/[₱\s,]/g, '');
+
+  // Detect negative sign
+  const isNegative = cleaned.startsWith('-');
+  const numericValue = isNegative ? cleaned.slice(1) : cleaned;
 
   if (!numericValue || numericValue === '') {
-    return '';
+    return isNegative ? '-' : '';
   }
 
   // Allow typing decimal point
   if (numericValue === '.') {
-    return '₱ 0.';
+    return isNegative ? '-₱ 0.' : '₱ 0.';
   }
 
   // Check if it ends with a decimal point (user is about to type decimals)
@@ -25,7 +29,8 @@ export const formatCurrency = (value: string): string => {
     return '';
   }
 
-  let formatted = `₱ ${number.toLocaleString('en-US')}`;
+  const prefix = isNegative ? '-₱ ' : '₱ ';
+  let formatted = `${prefix}${number.toLocaleString('en-US')}`;
 
   // Add decimal point and decimal digits if present
   if (endsWithDecimal) {

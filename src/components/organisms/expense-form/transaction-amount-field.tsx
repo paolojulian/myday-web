@@ -33,8 +33,8 @@ const TransactionAmountField = ({
             if (isNaN(numValue)) {
               return 'Please enter a valid number';
             }
-            if (numValue <= 0) {
-              return 'Amount must be greater than 0';
+            if (numValue === 0) {
+              return 'Amount cannot be zero';
             }
             if (numValue >= 999999999) {
               return 'Amount must be less than 999,999,999';
