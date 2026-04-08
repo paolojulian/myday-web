@@ -6,8 +6,8 @@ import CardRemainingBudget from '@/components/molecules/card-remaining-budget';
 import DashboardCard from '@/components/molecules/dashboard-card';
 import { FilterExpenses } from '../components/organisms/filter-expenses';
 import { useBudgetAnalysis } from '@/hooks/budget/use-budget-analysis';
-import { useCategories } from '@/hooks/categories/use-categories';
 import { useExpensesWithCategoryLive } from '@/hooks/expenses/use-expenses-with-category-live';
+import { useCategorySpendingLive } from '@/hooks/expenses/use-category-spending-live';
 import { toCurrency } from '@/lib/currency.utils';
 import { FC, useMemo, useState } from 'react';
 
@@ -19,7 +19,8 @@ const Expenses: FC<ExpensesProps> = () => {
 
   const budgetAnalysisQuery = useBudgetAnalysis(transactionDate);
   const expenses = useExpensesWithCategoryLive(transactionDate);
-  const { data: categories } = useCategories();
+  const categorySpending = useCategorySpendingLive(transactionDate);
+  const maxSpending = categorySpending[0]?.total ?? 0;
 
   const hasBudget = budgetAnalysisQuery.data !== null;
 
@@ -62,36 +63,47 @@ const Expenses: FC<ExpensesProps> = () => {
         </div>
       )}
 
-      {/* Category filter pills */}
-      {categories && categories.length > 0 && (
-        <div className='flex gap-2 overflow-x-auto pb-2 mt-2 no-scrollbar'>
-          <button
-            onClick={() => setSelectedCategoryId(null)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              selectedCategoryId === null
-                ? 'bg-neutral-900 text-white'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
-          >
-            All
-          </button>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() =>
-                setSelectedCategoryId(
-                  selectedCategoryId === category.id ? null : (category.id ?? null)
-                )
-              }
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                selectedCategoryId === category.id
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
+      {/* Spending chart — also acts as category filter */}
+      {categorySpending.length > 0 && (
+        <div className='my-4'>
+          <div className='flex gap-3 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4'>
+            {categorySpending.map((item) => {
+              const isSelected = selectedCategoryId === item.categoryId;
+              return (
+                <button
+                  key={item.categoryId ?? '__uncategorized__'}
+                  onClick={() => setSelectedCategoryId(isSelected ? null : item.categoryId)}
+                  className={`flex-shrink-0 w-32 rounded-xl p-3 text-left transition-colors border ${
+                    isSelected
+                      ? 'bg-neutral-900 border-neutral-900'
+                      : 'bg-neutral-50 border-neutral-200'
+                  }`}
+                >
+                  <AppTypography
+                    variant='small'
+                    className={`truncate block mb-1 ${isSelected ? 'text-neutral-400' : 'text-neutral-500'}`}
+                  >
+                    {item.categoryName}
+                  </AppTypography>
+                  <AppTypography
+                    variant='body'
+                    className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-neutral-900'}`}
+                  >
+                    {toCurrency(item.total)}
+                  </AppTypography>
+                  <div className='mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden'>
+                    <div
+                      className='h-full rounded-full bg-orange-400'
+                      style={{ width: `${maxSpending > 0 ? (item.total / maxSpending) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <AppTypography variant='small' className='text-neutral-400 mt-1'>
+                    {item.percentage.toFixed(0)}%
+                  </AppTypography>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

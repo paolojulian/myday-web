@@ -3,13 +3,18 @@ import AppTypography from '@/components/atoms/app-typography';
 import { useCategories } from '@/hooks/categories/use-categories';
 import { useCreateCategory } from '@/hooks/categories/use-create-category';
 import { useDeleteCategory } from '@/hooks/categories/use-delete-category';
-import { FC, useState } from 'react';
+import { useCategorySpendingLive } from '@/hooks/expenses/use-category-spending-live';
+import { toCurrency } from '@/lib/currency.utils';
+import { FC, useMemo, useState } from 'react';
 
 const Categories: FC = () => {
   const [newName, setNewName] = useState('');
   const { data: categories, isLoading } = useCategories();
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
+  const currentMonth = useMemo(() => new Date(), []);
+  const categorySpending = useCategorySpendingLive(currentMonth);
+  const maxSpending = categorySpending[0]?.total ?? 0;
 
   const handleDelete = (id: string, name: string) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
@@ -30,6 +35,43 @@ const Categories: FC = () => {
   return (
     <div>
       <AppPageHeader title='My Day' description='Categories' />
+
+      {/* Spending chart — horizontal scroll */}
+      {categorySpending.length > 0 && (
+        <div className='mt-4 mb-6'>
+          <AppTypography variant='small' className='text-neutral-500 mb-2 font-medium uppercase tracking-wide'>
+            This month's spending
+          </AppTypography>
+          <div className='flex gap-3 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4'>
+            {categorySpending.map((item) => (
+              <div
+                key={item.categoryId ?? '__uncategorized__'}
+                className='flex-shrink-0 w-32 bg-neutral-50 border border-neutral-200 rounded-xl p-3'
+              >
+                <AppTypography
+                  variant='small'
+                  className='text-neutral-500 truncate block mb-1'
+                >
+                  {item.categoryName}
+                </AppTypography>
+                <AppTypography variant='body' className='font-bold text-neutral-900 text-sm'>
+                  {toCurrency(item.total)}
+                </AppTypography>
+                {/* Bar */}
+                <div className='mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden'>
+                  <div
+                    className='h-full rounded-full bg-orange-400'
+                    style={{ width: `${maxSpending > 0 ? (item.total / maxSpending) * 100 : 0}%` }}
+                  />
+                </div>
+                <AppTypography variant='small' className='text-neutral-400 mt-1'>
+                  {item.percentage.toFixed(0)}%
+                </AppTypography>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Add new category */}
       <div className='flex gap-2 mt-4 mb-6'>
