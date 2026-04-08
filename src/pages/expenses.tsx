@@ -2,10 +2,7 @@ import { AppPageHeader } from '@/components/atoms';
 import AppDelayLoader from '@/components/atoms/app-delay-loader';
 import AppTypography from '@/components/atoms/app-typography';
 import ExpenseItem from '@/components/molecules/expense-item';
-import CardRemainingBudget from '@/components/molecules/card-remaining-budget';
-import DashboardCard from '@/components/molecules/dashboard-card';
 import { FilterExpenses } from '../components/organisms/filter-expenses';
-import { useBudgetAnalysis } from '@/hooks/budget/use-budget-analysis';
 import { useExpensesWithCategoryLive } from '@/hooks/expenses/use-expenses-with-category-live';
 import { useCategorySpendingLive } from '@/hooks/expenses/use-category-spending-live';
 import { toCurrency } from '@/lib/currency.utils';
@@ -35,12 +32,9 @@ const Expenses: FC<ExpensesProps> = () => {
     setSearchParams({ month: dayjs(date).format('YYYY-MM') }, { replace: true });
   }, [setSearchParams]);
 
-  const budgetAnalysisQuery = useBudgetAnalysis(transactionDate);
   const expenses = useExpensesWithCategoryLive(transactionDate);
   const categorySpending = useCategorySpendingLive(transactionDate);
   const maxSpending = categorySpending[0]?.total ?? 0;
-
-  const hasBudget = budgetAnalysisQuery.data !== null;
 
   const filteredExpenses = useMemo(() => {
     if (!selectedCategoryId) return expenses;
@@ -52,29 +46,6 @@ const Expenses: FC<ExpensesProps> = () => {
       <section id='expenses-header'>
         <AppPageHeader title={'Xpense'} description={'Expenses'} />
       </section>
-
-      {/* Budget summary */}
-      {hasBudget && budgetAnalysisQuery.data && (
-        <div className='grid grid-cols-2 gap-2 my-4'>
-          <CardRemainingBudget
-            analysis={budgetAnalysisQuery.data}
-            isLoading={budgetAnalysisQuery.isLoading}
-          />
-          <DashboardCard status={budgetAnalysisQuery.data.status}>
-            <div className='flex flex-col'>
-              <AppTypography variant='small' className='text-neutral-600 mb-2'>
-                Remaining
-              </AppTypography>
-              <AppTypography as='h2' variant='heading' className='font-bold'>
-                {toCurrency(budgetAnalysisQuery.data.remainingBudget)}
-              </AppTypography>
-              <AppTypography variant='small' className='text-neutral-500 mt-1'>
-                of {toCurrency(budgetAnalysisQuery.data.monthlyBudget)}
-              </AppTypography>
-            </div>
-          </DashboardCard>
-        </div>
-      )}
 
       {/* Spending chart — also acts as category filter */}
       {categorySpending.length > 0 && (

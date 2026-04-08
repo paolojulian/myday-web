@@ -12,7 +12,7 @@ import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
 import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
-import { FC, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type FormData = {
@@ -41,6 +41,13 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     defaultValues: initialData,
   });
 
+  // Detect sign from initial amount (negative = refund)
+  const [isNegative, setIsNegative] = useState(() => {
+    if (!initialData?.amount) return false;
+    const n = Number(initialData.amount.toString().replace(/[^0-9.-]/g, ''));
+    return n < 0;
+  });
+
   const titleInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
   const categoryPickerRef = useRef<AppPickerRef>(null);
@@ -56,7 +63,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     const formData: UpdateExpenseParams = {
       id: expenseId,
       title,
-      amount: Number(cleanAmount),
+      amount: isNegative ? -Math.abs(Number(cleanAmount)) : Math.abs(Number(cleanAmount)),
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
@@ -95,12 +102,12 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
 
   return (
     <div className='flex flex-col h-full bg-white'>
-      <div className='px-4 pt-4 pb-4'>
-        <AppTypography variant='heading'>Edit Expense</AppTypography>
+      <div className='px-4 pt-6 pb-2'>
+        <p className='text-2xl font-bold text-neutral-900'>Edit Expense</p>
       </div>
       <form
         onSubmit={handleSubmit(handleFormSubmit)}
-        className='flex flex-col gap-2 flex-1 pb-24 px-4'
+        className='flex flex-col gap-2 flex-1 pb-24 px-4 pt-4'
       >
         {/* category */}
         <CategoryField
@@ -115,6 +122,8 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
           control={control}
           amountInputRef={amountInputRef}
           errorMessage={errors.amount?.message}
+          isNegative={isNegative}
+          onToggleSign={setIsNegative}
         />
 
         {/* title */}
