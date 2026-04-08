@@ -217,6 +217,7 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
         )}
         style={{
           height: variant === 'full' ? height : undefined,
+          minHeight: variant !== 'full' ? height : undefined,
           maxHeight: height,
           transform: sheetTransform,
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
