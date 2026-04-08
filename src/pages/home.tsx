@@ -27,7 +27,7 @@ const Home: FC<HomeProps> = () => {
   return (
     <div>
       <section id='home-header'>
-        <AppPageHeader title={'My Day'} description={''} />
+        <AppPageHeader title={'Xpense'} description={''} />
       </section>
 
       <section id='home-overview'>

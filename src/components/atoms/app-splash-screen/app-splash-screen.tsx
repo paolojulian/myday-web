@@ -14,14 +14,14 @@ const AppSplashScreen: FC<AppSplashScreenProps> = ({ isLoading = true }) => {
         <div className='relative'>
           <img
             src='/favicon-196x196.png'
-            alt='My Day'
+            alt='Xpense'
             className='h-24 w-24'
           />
         </div>
 
         {/* App Name */}
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-neutral-900'>My Day</h1>
+          <h1 className='text-2xl font-bold text-neutral-900'>Xpense</h1>
           <p className='mt-2 text-sm text-neutral-500'>Loading your data...</p>
         </div>
 

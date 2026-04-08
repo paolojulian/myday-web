@@ -72,7 +72,7 @@ export const AuthModal = ({ onAuthenticated }: AuthModalProps) => {
       <div className='w-full max-w-md rounded-lg bg-white p-6 shadow-xl'>
         <div className='mb-6 text-center'>
           <AppTypography variant='body' className='mb-2'>
-            Welcome to MyDay
+            Welcome to Xpense
           </AppTypography>
           <AppTypography variant='body2' className='text-gray-600'>
             {otpSent

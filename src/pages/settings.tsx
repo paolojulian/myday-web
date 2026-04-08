@@ -64,7 +64,7 @@ const Settings: FC = () => {
 
   return (
     <div>
-      <AppPageHeader title='My Day' description='Settings' />
+      <AppPageHeader title='Xpense' description='Settings' />
 
       {/* Sync section */}
       <div className='mt-6'>

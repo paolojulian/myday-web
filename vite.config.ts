@@ -14,9 +14,9 @@ export default defineConfig({
       },
       injectRegister: 'auto',
       manifest: {
-        name: 'My Day',
-        short_name: 'MyDay',
-        description: 'Track my expenses, todo list, etc',
+        name: 'Xpense',
+        short_name: 'Xpense',
+        description: 'Track your expenses and budget',
         theme_color: '#ffffff',
         icons: [
           {

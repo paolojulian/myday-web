@@ -1,40 +1,39 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+import { PTypography } from '@paolojulian.dev/design-system';
 import { FC, HTMLAttributes } from 'react';
 import cn from '@/utils/cn';
 
-const typographyVariants = cva('', {
-  variants: {
-    variant: {
-      heading: 'text-2xl font-bold leading-tight',
-      body: 'text-base font-normal leading-normal',
-      body2: 'text-sm font-semibold leading-relaxed',
-      small: 'text-xs font-normal leading-snug',
-    },
-  },
-  defaultVariants: {
-    variant: 'body',
-  },
-});
+type Variant = 'heading' | 'body' | 'body2' | 'small';
 
 type AppTypographyProps = {
-  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
-} & VariantProps<typeof typographyVariants> &
-  HTMLAttributes<HTMLElement>;
+  as?: React.ElementType;
+  variant?: Variant;
+} & HTMLAttributes<HTMLElement>;
+
+const variantMap: Record<Variant, { dsVariant: 'heading' | 'body' | 'body-wide' | 'heading-lg' | 'heading-xl' | 'serif'; className?: string }> = {
+  heading: { dsVariant: 'heading' },
+  body: { dsVariant: 'body' },
+  body2: { dsVariant: 'body' },
+  small: { dsVariant: 'body', className: 'text-xs' },
+};
 
 const AppTypography: FC<AppTypographyProps> = ({
-  as: Component = 'p',
-  variant,
+  as,
+  variant = 'body',
   className,
   children,
   ...props
 }) => {
+  const { dsVariant, className: variantClass } = variantMap[variant];
+
   return (
-    <Component
-      className={cn(typographyVariants({ variant }), className)}
+    <PTypography
+      as={as}
+      variant={dsVariant}
+      className={cn(variantClass, className)}
       {...props}
     >
       {children}
-    </Component>
+    </PTypography>
   );
 };
 

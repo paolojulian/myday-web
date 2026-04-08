@@ -1,24 +1,19 @@
 import { FC } from 'react';
-import { AppButton } from '@/components/atoms';
 import { useNavigate } from 'react-router-dom';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-type CreateButtonProps = {};
-
-const CreateButton: FC<CreateButtonProps> = () => {
+const CreateButton: FC = () => {
   const navigate = useNavigate();
 
-  const handleClickAdd = () => {
-    navigate('/expenses/add');
-  };
-
   return (
-    <AppButton
-      onClick={handleClickAdd}
-      className='h-full aspect-square rounded-full border border-black active:scale-95 transition-colors'
+    <button
+      onClick={() => navigate('/expenses/add')}
+      className='w-12 h-12 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-lg shadow-neutral-900/20 active:scale-95 transition-transform'
+      aria-label='Add expense'
     >
-      +
-    </AppButton>
+      <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+        <path d='M12 5v14M5 12h14' />
+      </svg>
+    </button>
   );
 };
 

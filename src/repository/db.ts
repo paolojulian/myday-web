@@ -7,9 +7,9 @@ import { Todo } from './todo.db';
 import { Budget } from './budget.db';
 import { Category } from './category.db';
 
-class MyDayDB extends Dexie {
+class XpenseDB extends Dexie {
   // Private static instance to store the single instance of the class
-  private static instance: MyDayDB;
+  private static instance: XpenseDB;
 
   todos!: DexieCloudTable<Todo, 'id'>;
   expenses!: DexieCloudTable<Expense, 'id'>;
@@ -47,11 +47,11 @@ class MyDayDB extends Dexie {
     });
   }
 
-  public static getInstance(): MyDayDB {
-    if (!MyDayDB.instance) {
-      MyDayDB.instance = new MyDayDB();
+  public static getInstance(): XpenseDB {
+    if (!XpenseDB.instance) {
+      XpenseDB.instance = new XpenseDB();
     }
-    return MyDayDB.instance;
+    return XpenseDB.instance;
   }
 
   public async checkStatus(): Promise<void> {
@@ -74,7 +74,7 @@ class MyDayDB extends Dexie {
   }
 }
 
-export const db = MyDayDB.getInstance();
+export const db = XpenseDB.getInstance();
 
 // Log database status on initialization (useful for debugging)
 if (typeof window !== 'undefined') {

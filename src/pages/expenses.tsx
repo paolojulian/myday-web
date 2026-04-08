@@ -32,7 +32,7 @@ const Expenses: FC<ExpensesProps> = () => {
   return (
     <div>
       <section id='expenses-header'>
-        <AppPageHeader title={'My Day'} description={'Expenses'} />
+        <AppPageHeader title={'Xpense'} description={'Expenses'} />
       </section>
 
       <FilterExpenses

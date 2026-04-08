@@ -1,4 +1,6 @@
-@import "tailwindcss"; 
+@import "tailwindcss";
+@import "@paolojulian.dev/design-system/fonts.css";
+@import "@paolojulian.dev/design-system/theme.css";
 
 :root {
     --black: #030712;

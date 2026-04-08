@@ -34,7 +34,7 @@ const Categories: FC = () => {
 
   return (
     <div>
-      <AppPageHeader title='My Day' description='Categories' />
+      <AppPageHeader title='Xpense' description='Categories' />
 
       {/* Spending chart — horizontal scroll */}
       {categorySpending.length > 0 && (
