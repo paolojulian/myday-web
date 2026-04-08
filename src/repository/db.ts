@@ -87,6 +87,12 @@ if (typeof window !== 'undefined') {
         '../services/category-service/category.service'
       );
       await categoryService.seedDefaultCategories();
+
+      // Populate recurring expenses for the current period
+      const { recurringExpenseService } = await import(
+        '../services/recurring-expense-service/recurring-expense.service'
+      );
+      await recurringExpenseService.populateCurrentPeriod();
     })
     .catch((error) => {
       console.error('Failed to open database:', error);

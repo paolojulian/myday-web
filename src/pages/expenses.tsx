@@ -9,6 +9,7 @@ import { toCurrency } from '@/lib/currency.utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
+import cn from '@/utils/cn';
 
 type ExpensesProps = object;
 
@@ -25,12 +26,20 @@ const Expenses: FC<ExpensesProps> = () => {
   const [transactionDate, setTransactionDateState] = useState<Date>(() =>
     parseMonthParam(searchParams.get('month'))
   );
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
-  const setTransactionDate = useCallback((date: Date) => {
-    setTransactionDateState(date);
-    setSearchParams({ month: dayjs(date).format('YYYY-MM') }, { replace: true });
-  }, [setSearchParams]);
+  const setTransactionDate = useCallback(
+    (date: Date) => {
+      setTransactionDateState(date);
+      setSearchParams(
+        { month: dayjs(date).format('YYYY-MM') },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
   const expenses = useExpensesWithCategoryLive(transactionDate);
   const categorySpending = useCategorySpendingLive(transactionDate);
@@ -56,16 +65,16 @@ const Expenses: FC<ExpensesProps> = () => {
               return (
                 <button
                   key={item.categoryId ?? '__uncategorized__'}
-                  onClick={() => setSelectedCategoryId(isSelected ? null : item.categoryId)}
-                  className={`flex-shrink-0 w-32 rounded-xl p-3 text-left transition-colors border ${
-                    isSelected
-                      ? 'bg-neutral-900 border-neutral-900'
-                      : 'bg-neutral-50 border-neutral-200'
+                  onClick={() =>
+                    setSelectedCategoryId(isSelected ? null : item.categoryId)
+                  }
+                  className={`flex-shrink-0 w-32 rounded-xl p-3 text-left transition-colors ${
+                    isSelected ? 'bg-neutral-900' : 'bg-neutral-50'
                   }`}
                 >
                   <AppTypography
                     variant='small'
-                    className={`truncate block mb-1 ${isSelected ? 'text-neutral-400' : 'text-neutral-500'}`}
+                    className={`truncate block mb-1 ${isSelected ? 'text-neutral-200' : 'text-neutral-500'}`}
                   >
                     {item.categoryName}
                   </AppTypography>
@@ -78,10 +87,18 @@ const Expenses: FC<ExpensesProps> = () => {
                   <div className='mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden'>
                     <div
                       className='h-full rounded-full bg-orange-400'
-                      style={{ width: `${maxSpending > 0 ? (item.total / maxSpending) * 100 : 0}%` }}
+                      style={{
+                        width: `${maxSpending > 0 ? (item.total / maxSpending) * 100 : 0}%`,
+                      }}
                     />
                   </div>
-                  <AppTypography variant='small' className='text-neutral-400 mt-1'>
+                  <AppTypography
+                    variant='small'
+                    className={cn('mt-1', {
+                      'text-neutral-200': isSelected,
+                      'text-neutral-400': !isSelected,
+                    })}
+                  >
                     {item.percentage.toFixed(0)}%
                   </AppTypography>
                 </button>

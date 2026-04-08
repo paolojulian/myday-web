@@ -1,8 +1,6 @@
 
 export enum ExpenseRecurrence {
-  Weekly = "weekly",
   Monthly = "monthly",
-  Yearly = "yearly",
 }
 
 export type Expense = {
