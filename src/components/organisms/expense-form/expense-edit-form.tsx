@@ -2,13 +2,14 @@ import { type AppPickerRef } from '@/components/atoms/app-picker';
 import CategoryField from '@/components/organisms/expense-form/category-field';
 import DescriptionField from '@/components/organisms/expense-form/description-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
+import { ExpenseRefundToggle } from '@/components/organisms/expense-form/expense-refund-toggle';
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
 import { useCategories } from '@/hooks/categories/use-categories';
+import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
-import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -55,14 +56,17 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
-    const title = data.title.trim() ||
+    const title =
+      data.title.trim() ||
       categories.find((c) => c.id === data.category)?.name ||
       '';
 
     const formData: UpdateExpenseParams = {
       id: expenseId,
       title,
-      amount: isNegative ? -Math.abs(Number(cleanAmount)) : Math.abs(Number(cleanAmount)),
+      amount: isNegative
+        ? -Math.abs(Number(cleanAmount))
+        : Math.abs(Number(cleanAmount)),
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
@@ -108,6 +112,11 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
         onSubmit={handleSubmit(handleFormSubmit)}
         className='flex flex-col gap-2 flex-1 pb-24 px-4 pt-4'
       >
+        <ExpenseRefundToggle
+          onToggle={(value) => setIsNegative(value === 'refund')}
+          value={isNegative ? 'refund' : 'expense'}
+        />
+
         {/* category */}
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
@@ -121,8 +130,6 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
           control={control}
           amountInputRef={amountInputRef}
           errorMessage={errors.amount?.message}
-          isNegative={isNegative}
-          onToggleSign={setIsNegative}
         />
 
         {/* title */}
