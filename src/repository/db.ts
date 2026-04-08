@@ -22,9 +22,11 @@ class MyDayDB extends Dexie {
       cache: 'immutable',
     });
 
-    // Configure Dexie Cloud
-    console.log('Configuring Dexie Cloud with URL:', DEXIE_CLOUD_CONFIG.databaseUrl);
-    this.cloud.configure(DEXIE_CLOUD_CONFIG);
+    // Only configure Dexie Cloud if the user has enabled sync in settings
+    const syncEnabled = localStorage.getItem('myday_sync_enabled') === 'true';
+    if (syncEnabled && DEXIE_CLOUD_CONFIG.databaseUrl) {
+      this.cloud.configure(DEXIE_CLOUD_CONFIG);
+    }
 
     this.version(1).stores({
       todos: '@id, created_at',

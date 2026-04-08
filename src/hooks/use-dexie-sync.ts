@@ -1,36 +1,33 @@
 import { db } from '@/repository';
 import { useEffect, useState } from 'react';
 
-export type SyncState = 'offline' | 'connecting' | 'online' | 'error';
+export type SyncState = 'offline' | 'connecting' | 'online' | 'error' | 'disabled';
 
 export const useDexieSync = () => {
-  const [syncState, setSyncState] = useState<SyncState>('connecting');
-  const [isInitialSync, setIsInitialSync] = useState(true);
+  const syncEnabled = localStorage.getItem('myday_sync_enabled') === 'true';
+
+  const [syncState, setSyncState] = useState<SyncState>(syncEnabled ? 'connecting' : 'disabled');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!syncEnabled);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Subscribe to authentication state
+    if (!syncEnabled) return;
+
     const authSubscription = db.cloud.currentUser.subscribe((user) => {
-      console.log('Dexie Auth State:', user);
       setIsAuthenticated(!!user?.userId);
       setUserEmail(user?.email || null);
     });
 
-    return () => {
-      authSubscription.unsubscribe();
-    };
-  }, []);
+    return () => authSubscription.unsubscribe();
+  }, [syncEnabled]);
 
   useEffect(() => {
-    // Subscribe to Dexie Cloud sync state
-    const subscription = db.cloud.syncState.subscribe((state) => {
-      console.log('Dexie Sync State:', state);
+    if (!syncEnabled) return;
 
+    const subscription = db.cloud.syncState.subscribe((state) => {
       if (state.phase === 'offline') {
         setSyncState('offline');
-        setIsInitialSync(false);
         setErrorMessage(null);
       } else if (
         state.phase === 'initial' ||
@@ -41,43 +38,29 @@ export const useDexieSync = () => {
         setErrorMessage(null);
       } else if (state.phase === 'in-sync') {
         setSyncState('online');
-        setIsInitialSync(false);
         setErrorMessage(null);
       } else if (state.phase === 'error') {
         setSyncState('error');
-        setIsInitialSync(false);
-
-        // Extract error details
         const error = state.error;
         if (error) {
           const errorText = error.message || error.toString();
-
-          // Check for CORS errors
-          if (
-            errorText.includes('Failed to fetch') ||
-            errorText.includes('CORS')
-          ) {
+          if (errorText.includes('Failed to fetch') || errorText.includes('CORS')) {
             setErrorMessage(
-              'CORS Error: Your domain needs to be whitelisted in Dexie Cloud dashboard. ' +
-                'Visit https://dexie.cloud to add your domain to allowed origins.'
+              'CORS Error: Your domain needs to be whitelisted in Dexie Cloud dashboard.'
             );
           } else {
             setErrorMessage(`Sync error: ${errorText}`);
           }
-
-          console.error('Dexie Cloud Sync Error:', error);
         }
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [syncEnabled]);
 
   return {
+    syncEnabled,
     syncState,
-    isInitialSync,
     errorMessage,
     isOnline: syncState === 'online',
     isConnecting: syncState === 'connecting',
