@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { Outlet } from "react-router-dom";
 import { BottomBar } from "@/components/organisms/bottom-bar";
+import { PwaInstallBanner } from "@/components/organisms/pwa-install-banner/pwa-install-banner";
 
 type MainLayoutProps = object;
 
@@ -15,6 +16,7 @@ const MainLayout: FC<MainLayoutProps> = () => {
       }}
     >
       <Outlet />
+      <PwaInstallBanner />
       <BottomBar />
     </div>
   );

@@ -1,6 +1,7 @@
 import CategoryField from '@/components/organisms/expense-form/category-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
 import { ExpenseRefundToggle } from '@/components/organisms/expense-form/expense-refund-toggle';
+import { RecurringMonthlyToggle } from '@/components/organisms/expense-form/recurring-monthly-toggle';
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
@@ -9,6 +10,7 @@ import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { AddExpenseParams } from '@/services/expense-service/expense.service';
+import { ExpenseRecurrence } from '@/repository/expense.db';
 import { FC, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +27,7 @@ const ExpenseAddForm: FC = () => {
   const createExpense = useCreateExpense();
   const { data: categories } = useCategories();
   const [isNegative, setIsNegative] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const { handleSubmit, control, errors } = useExpenseForm();
 
@@ -48,7 +51,7 @@ const ExpenseAddForm: FC = () => {
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
-      recurrence: null,
+      recurrence: isRecurring ? ExpenseRecurrence.Monthly : null,
       recurrence_id: null,
     };
 
@@ -79,13 +82,12 @@ const ExpenseAddForm: FC = () => {
           onToggle={(value) => setIsNegative(value === 'refund')}
           value={isNegative ? 'refund' : 'expense'}
         />
-        {/* category */}
+
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
           control={control}
         />
 
-        {/* transaction amount */}
         <TransactionAmountField
           onSubmitEditing={() => titleInputRef.current?.focus()}
           control={control}
@@ -93,7 +95,6 @@ const ExpenseAddForm: FC = () => {
           errorMessage={errors.amount?.message}
         />
 
-        {/* title */}
         <TitleField
           onSubmitEditing={() => descriptionInputRef.current?.focus()}
           titleInputRef={titleInputRef}
@@ -101,14 +102,12 @@ const ExpenseAddForm: FC = () => {
           control={control}
         />
 
-        {/* transaction date */}
         <TransactionDateField control={control} />
 
-        {/* description */}
-        {/* <DescriptionField
-          control={control}
-          descriptionInputRef={descriptionInputRef}
-        /> */}
+        <RecurringMonthlyToggle
+          value={isRecurring}
+          onToggle={setIsRecurring}
+        />
       </form>
 
       <ExpenseFormFooter

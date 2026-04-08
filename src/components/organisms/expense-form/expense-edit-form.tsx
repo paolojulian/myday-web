@@ -2,6 +2,7 @@ import CategoryField from '@/components/organisms/expense-form/category-field';
 import DescriptionField from '@/components/organisms/expense-form/description-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
 import { ExpenseRefundToggle } from '@/components/organisms/expense-form/expense-refund-toggle';
+import { RecurringMonthlyToggle } from '@/components/organisms/expense-form/recurring-monthly-toggle';
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
@@ -10,6 +11,7 @@ import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
+import { ExpenseRecurrence } from '@/repository/expense.db';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
 import { FC, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,11 +27,13 @@ type FormData = {
 type ExpenseEditFormProps = {
   expenseId: string;
   initialData?: FormData;
+  initialRecurrence?: ExpenseRecurrence | null;
 };
 
 const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   expenseId,
   initialData,
+  initialRecurrence,
 }) => {
   const navigate = useNavigate();
   const updateExpense = useUpdateExpense();
@@ -40,12 +44,15 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     defaultValues: initialData,
   });
 
-  // Detect sign from initial amount (negative = refund)
   const [isNegative, setIsNegative] = useState(() => {
     if (!initialData?.amount) return false;
     const n = Number(initialData.amount.toString().replace(/[^0-9.-]/g, ''));
     return n < 0;
   });
+
+  const [isRecurring, setIsRecurring] = useState(
+    initialRecurrence === ExpenseRecurrence.Monthly
+  );
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +75,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
-      recurrence: null,
+      recurrence: isRecurring ? ExpenseRecurrence.Monthly : null,
       recurrence_id: null,
     };
 
@@ -107,13 +114,11 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
           value={isNegative ? 'refund' : 'expense'}
         />
 
-        {/* category */}
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
           control={control}
         />
 
-        {/* transaction amount */}
         <TransactionAmountField
           onSubmitEditing={() => titleInputRef.current?.focus()}
           control={control}
@@ -121,7 +126,6 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
           errorMessage={errors.amount?.message}
         />
 
-        {/* title */}
         <TitleField
           onSubmitEditing={() => descriptionInputRef.current?.focus()}
           titleInputRef={titleInputRef}
@@ -129,13 +133,16 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
           control={control}
         />
 
-        {/* transaction date */}
         <TransactionDateField control={control} />
 
-        {/* description */}
         <DescriptionField
           control={control}
           descriptionInputRef={descriptionInputRef}
+        />
+
+        <RecurringMonthlyToggle
+          value={isRecurring}
+          onToggle={setIsRecurring}
         />
       </form>
 
