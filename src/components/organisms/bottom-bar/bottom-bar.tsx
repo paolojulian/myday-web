@@ -72,13 +72,15 @@ const SettingsIcon = () => (
 );
 
 const navItemClass = ({ isActive }: { isActive: boolean }) =>
-  `flex flex-col items-center justify-center gap-1 w-full h-full transition-all ${
+  `flex flex-col items-center justify-center gap-1 w-full h-full transition-transform active:scale-75 ${
     isActive ? 'text-neutral-900' : 'text-neutral-400'
   }`;
 
 const ActiveDot = () => (
   <span className='absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-neutral-900' />
 );
+
+const haptic = () => navigator.vibrate?.(8);
 
 export default function BottomBar() {
   return (
@@ -93,7 +95,7 @@ export default function BottomBar() {
     >
       <div className='grid grid-cols-5 h-16 px-2 pt-2'>
         {/* Home */}
-        <NavLink to='/' end className={navItemClass}>
+        <NavLink to='/' end className={navItemClass} onClick={haptic}>
           {({ isActive }) => (
             <span className='relative flex items-center justify-center'>
               <HomeIcon />
@@ -103,7 +105,7 @@ export default function BottomBar() {
         </NavLink>
 
         {/* Expenses */}
-        <NavLink to='/expenses' className={navItemClass}>
+        <NavLink to='/expenses' className={navItemClass} onClick={haptic}>
           {({ isActive }) => (
             <span className='relative flex items-center justify-center'>
               <ExpensesIcon />
@@ -118,7 +120,7 @@ export default function BottomBar() {
         </div>
 
         {/* Categories */}
-        <NavLink to='/categories' className={navItemClass}>
+        <NavLink to='/categories' className={navItemClass} onClick={haptic}>
           {({ isActive }) => (
             <span className='relative flex items-center justify-center'>
               <CategoriesIcon />
@@ -128,7 +130,7 @@ export default function BottomBar() {
         </NavLink>
 
         {/* Settings */}
-        <NavLink to='/settings' className={navItemClass}>
+        <NavLink to='/settings' className={navItemClass} onClick={haptic}>
           {({ isActive }) => (
             <span className='relative flex items-center justify-center'>
               <SettingsIcon />

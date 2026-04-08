@@ -76,9 +76,11 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
     }, [keyboard.isVisible, keyboard.visualViewportHeight]);
 
     useEffect(() => {
-      if (isOpen) {
+      if (!isOpen) return;
+      const timeout = setTimeout(() => {
         inputRef.current?.focus();
-      }
+      }, 520);
+      return () => clearTimeout(timeout);
     }, [isOpen]);
 
     const selectedOption = options.find((opt) => opt.value === value);

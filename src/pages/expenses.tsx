@@ -9,13 +9,31 @@ import { useBudgetAnalysis } from '@/hooks/budget/use-budget-analysis';
 import { useExpensesWithCategoryLive } from '@/hooks/expenses/use-expenses-with-category-live';
 import { useCategorySpendingLive } from '@/hooks/expenses/use-category-spending-live';
 import { toCurrency } from '@/lib/currency.utils';
-import { FC, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import dayjs from 'dayjs';
 
 type ExpensesProps = object;
 
+function parseMonthParam(param: string | null): Date {
+  if (param) {
+    const parsed = dayjs(param, 'YYYY-MM', true);
+    if (parsed.isValid()) return parsed.toDate();
+  }
+  return new Date();
+}
+
 const Expenses: FC<ExpensesProps> = () => {
-  const [transactionDate, setTransactionDate] = useState<Date>(new Date());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [transactionDate, setTransactionDateState] = useState<Date>(() =>
+    parseMonthParam(searchParams.get('month'))
+  );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  const setTransactionDate = useCallback((date: Date) => {
+    setTransactionDateState(date);
+    setSearchParams({ month: dayjs(date).format('YYYY-MM') }, { replace: true });
+  }, [setSearchParams]);
 
   const budgetAnalysisQuery = useBudgetAnalysis(transactionDate);
   const expenses = useExpensesWithCategoryLive(transactionDate);
@@ -30,15 +48,10 @@ const Expenses: FC<ExpensesProps> = () => {
   }, [expenses, selectedCategoryId]);
 
   return (
-    <div>
+    <div className='pb-44'>
       <section id='expenses-header'>
         <AppPageHeader title={'Xpense'} description={'Expenses'} />
       </section>
-
-      <FilterExpenses
-        onChangeTransactionDate={setTransactionDate}
-        transactionDate={transactionDate}
-      />
 
       {/* Budget summary */}
       {hasBudget && budgetAnalysisQuery.data && (
@@ -131,6 +144,11 @@ const Expenses: FC<ExpensesProps> = () => {
           <ExpenseItem key={expense.id} expense={expense} showDate />
         ))}
       </div>
+
+      <FilterExpenses
+        onChangeTransactionDate={setTransactionDate}
+        transactionDate={transactionDate}
+      />
     </div>
   );
 };

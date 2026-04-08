@@ -59,11 +59,13 @@ const CategoryField = ({
       <Controller
         name='category'
         control={control}
-        render={({ field }) => (
+        rules={{ required: 'Category is required' }}
+        render={({ field, fieldState }) => (
           <AppPicker
             ref={categoryPickerRef}
             id='category'
-            label='Category (Optional)'
+            label='Category'
+            errorMessage={fieldState.error?.message}
             placeholder={
               isCategoriesLoading ? 'Loading...' : 'Select or create a category'
             }

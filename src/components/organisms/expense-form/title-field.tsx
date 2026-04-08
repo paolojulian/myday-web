@@ -21,11 +21,6 @@ const TitleField = ({
         name='title'
         control={control}
         rules={{
-          required: 'Title is required',
-          minLength: {
-            value: 2,
-            message: 'Title must be at least 2 characters',
-          },
           maxLength: {
             value: 100,
             message: 'Title must not exceed 100 characters',
@@ -34,7 +29,7 @@ const TitleField = ({
         render={({ field }) => (
           <AppTextInput
             id='title'
-            label='Title'
+            label='Title (Optional)'
             placeholder='Type here..'
             value={field.value}
             onChange={field.onChange}
@@ -43,7 +38,6 @@ const TitleField = ({
             errorMessage={errorMessage}
             enterKeyHint='next'
             onSubmitEditing={onSubmitEditing}
-            autoFocus
           />
         )}
       />

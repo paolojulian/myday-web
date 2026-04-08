@@ -1,4 +1,4 @@
-import { AppPageHeader } from '@/components/atoms';
+import { AppButton, AppPageHeader } from '@/components/atoms';
 import AppTypography from '@/components/atoms/app-typography';
 import { db } from '@/repository';
 import { useDexieSync } from '@/hooks/use-dexie-sync';
@@ -109,12 +109,9 @@ const Settings: FC = () => {
                     {userEmail}
                   </AppTypography>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className='px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors'
-                >
+                <AppButton variant='danger' size='sm' onClick={handleSignOut}>
                   Sign out
-                </button>
+                </AppButton>
               </div>
             ) : !otpSent ? (
               <div className='space-y-3'>
@@ -135,13 +132,15 @@ const Settings: FC = () => {
                     {error}
                   </AppTypography>
                 )}
-                <button
+                <AppButton
+                  variant='solid'
+                  size='lg'
                   onClick={handleSendOTP}
                   disabled={isLoading || !email}
-                  className='w-full px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm font-medium disabled:opacity-40'
+                  className='w-full'
                 >
                   {isLoading ? 'Sending...' : 'Send Verification Code'}
-                </button>
+                </AppButton>
               </div>
             ) : (
               <div className='space-y-3'>
@@ -166,19 +165,23 @@ const Settings: FC = () => {
                     {error}
                   </AppTypography>
                 )}
-                <button
+                <AppButton
+                  variant='solid'
+                  size='lg'
                   onClick={handleVerifyOTP}
                   disabled={isLoading || otp.length < 6}
-                  className='w-full px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm font-medium disabled:opacity-40'
+                  className='w-full'
                 >
                   {isLoading ? 'Verifying...' : 'Verify & Sign In'}
-                </button>
-                <button
+                </AppButton>
+                <AppButton
+                  variant='ghost'
+                  size='md'
                   onClick={() => { setOtpSent(false); setOtp(''); setError(null); }}
-                  className='w-full text-sm text-neutral-500 hover:text-neutral-700'
+                  className='w-full'
                 >
                   Change email
-                </button>
+                </AppButton>
               </div>
             )}
           </div>

@@ -6,11 +6,12 @@ import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
+import { useCategories } from '@/hooks/categories/use-categories';
 import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { AddExpenseParams } from '@/services/expense-service/expense.service';
-import { FC, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type FormData = {
@@ -24,6 +25,7 @@ type FormData = {
 const ExpenseAddForm: FC = () => {
   const navigate = useNavigate();
   const createExpense = useCreateExpense();
+  const { data: categories } = useCategories();
 
   const { handleSubmit, control, errors } = useExpenseForm();
 
@@ -35,8 +37,12 @@ const ExpenseAddForm: FC = () => {
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
+    const title = data.title.trim() ||
+      categories.find((c) => c.id === data.category)?.name ||
+      '';
+
     const formData: AddExpenseParams = {
-      title: data.title,
+      title,
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
       description: data.description,
@@ -48,6 +54,13 @@ const ExpenseAddForm: FC = () => {
     createExpense.execute(formData);
     navigate(-1);
   };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      categoryPickerRef.current?.open();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const focusDescriptionInput = () => {
     return setTimeout(() => {
@@ -76,22 +89,6 @@ const ExpenseAddForm: FC = () => {
         onSubmit={handleSubmit(handleFormSubmit)}
         className='flex flex-col gap-2 flex-1 pb-24 px-4'
       >
-        {/* title */}
-        <TitleField
-          onSubmitEditing={() => amountInputRef.current?.focus()}
-          titleInputRef={titleInputRef}
-          errorMessage={errors.title?.message}
-          control={control}
-        />
-
-        {/* transaction amount */}
-        <TransactionAmountField
-          onSubmitEditing={() => categoryPickerRef.current?.open()}
-          control={control}
-          amountInputRef={amountInputRef}
-          errorMessage={errors.amount?.message}
-        />
-
         {/* category */}
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
@@ -99,11 +96,24 @@ const ExpenseAddForm: FC = () => {
           categoryPickerRef={categoryPickerRef}
         />
 
+        {/* transaction amount */}
+        <TransactionAmountField
+          onSubmitEditing={() => titleInputRef.current?.focus()}
+          control={control}
+          amountInputRef={amountInputRef}
+          errorMessage={errors.amount?.message}
+        />
+
+        {/* title */}
+        <TitleField
+          onSubmitEditing={() => descriptionInputRef.current?.focus()}
+          titleInputRef={titleInputRef}
+          errorMessage={errors.title?.message}
+          control={control}
+        />
+
         {/* transaction date */}
         <TransactionDateField control={control} />
-
-        {/* recurring */}
-        {/* <section></section> */}
 
         {/* description */}
         <DescriptionField

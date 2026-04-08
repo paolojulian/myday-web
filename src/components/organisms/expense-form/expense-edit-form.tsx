@@ -6,12 +6,13 @@ import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
+import { useCategories } from '@/hooks/categories/use-categories';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
 import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
-import { FC, useEffect, useRef } from 'react';
+import { FC, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type FormData = {
@@ -34,6 +35,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   const navigate = useNavigate();
   const updateExpense = useUpdateExpense();
   const deleteExpense = useDeleteExpense();
+  const { data: categories } = useCategories();
 
   const { handleSubmit, control, errors } = useExpenseForm({
     defaultValues: initialData,
@@ -47,9 +49,13 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
+    const title = data.title.trim() ||
+      categories.find((c) => c.id === data.category)?.name ||
+      '';
+
     const formData: UpdateExpenseParams = {
       id: expenseId,
-      title: data.title,
+      title,
       amount: Number(cleanAmount),
       transaction_date: data.transaction_date,
       description: data.description,
@@ -62,22 +68,19 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     navigate(-1);
   };
 
+  useEffect(() => {
+    if (initialData?.category) return;
+    const timeout = setTimeout(() => {
+      categoryPickerRef.current?.open();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const focusDescriptionInput = () => {
     return setTimeout(() => {
       descriptionInputRef.current?.focus();
     }, 100);
   };
-
-  useEffect(() => {
-    // Auto-focus title input when page loads
-    const timeout = setTimeout(() => {
-      titleInputRef.current?.focus();
-    }, 100);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
 
   const handleCancel = () => {
     navigate(-1);
@@ -108,7 +111,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
 
         {/* transaction amount */}
         <TransactionAmountField
-          onSubmitEditing={() => categoryPickerRef.current?.open()}
+          onSubmitEditing={() => titleInputRef.current?.focus()}
           control={control}
           amountInputRef={amountInputRef}
           errorMessage={errors.amount?.message}
@@ -116,7 +119,7 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
 
         {/* title */}
         <TitleField
-          onSubmitEditing={() => amountInputRef.current?.focus()}
+          onSubmitEditing={() => descriptionInputRef.current?.focus()}
           titleInputRef={titleInputRef}
           errorMessage={errors.title?.message}
           control={control}
@@ -125,9 +128,6 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
         {/* transaction date */}
         <TransactionDateField control={control} />
 
-        {/* recurring */}
-        {/* <section></section> */}
-
         {/* description */}
         <DescriptionField
           control={control}
@@ -135,7 +135,6 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
         />
       </form>
 
-      {/* Fixed bottom buttons with gradient */}
       <ExpenseFormFooter
         onCancel={handleCancel}
         onSubmit={handleSubmit(handleFormSubmit)}

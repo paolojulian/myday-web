@@ -6,7 +6,7 @@ const CreateButton: FC = () => {
 
   return (
     <button
-      onClick={() => navigate('/expenses/add')}
+      onClick={() => { navigator.vibrate?.(8); navigate('/expenses/add'); }}
       className='w-12 h-12 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-lg shadow-neutral-900/20 active:scale-95 transition-transform'
       aria-label='Add expense'
     >

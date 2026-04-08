@@ -140,12 +140,30 @@ const AppBottomSheet: FC<AppBottomSheetProps> = ({
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen]);
 
-  // Reset offset on open; clean up animation on unmount
+  // Reset offset on open; lock body scroll (iOS PWA-safe); clean up on unmount
   useEffect(() => {
     if (isOpen) {
       drag.current.offset = 0;
       setDragOffset(0);
+
+      // Prevent touchmove on the document — works reliably on iOS PWA.
+      // Allow touch events that originate inside the sheet's scrollable content.
+      const preventScroll = (e: TouchEvent) => {
+        if (sheetRef.current?.contains(e.target as Node)) return;
+        e.preventDefault();
+      };
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+
+      // Also lock scroll for desktop
+      document.documentElement.style.overflow = 'hidden';
+
+      return () => {
+        document.removeEventListener('touchmove', preventScroll);
+        document.documentElement.style.overflow = '';
+        cancelAnimationFrame(animFrameRef.current);
+      };
     }
+
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [isOpen]);
 

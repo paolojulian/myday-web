@@ -105,6 +105,8 @@ export const AuthModal = ({ onAuthenticated }: AuthModalProps) => {
             )}
 
             <AppButton
+              variant='solid'
+              size='lg'
               onClick={handleSendOTP}
               disabled={isLoading}
               className='w-full'
@@ -152,6 +154,8 @@ export const AuthModal = ({ onAuthenticated }: AuthModalProps) => {
 
             <div className='space-y-2'>
               <AppButton
+                variant='solid'
+                size='lg'
                 onClick={handleVerifyOTP}
                 disabled={isLoading}
                 className='w-full'

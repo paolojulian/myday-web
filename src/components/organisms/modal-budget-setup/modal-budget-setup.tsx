@@ -1,4 +1,4 @@
-import { AppBottomSheet, AppTypography } from '@/components/atoms';
+import { AppBottomSheet, AppButton, AppTypography } from '@/components/atoms';
 import AppTextInput from '@/components/atoms/app-text-input';
 import XIcon from '@/components/atoms/icons/x-icon';
 import { ComponentProps, FC, useEffect, useRef } from 'react';
@@ -126,24 +126,19 @@ const ModalBudgetSetup: FC<ModalBudgetSetupProps> = ({
         {/* Fixed bottom buttons */}
         <div className='fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-8 pb-6 px-4'>
           <div className='flex flex-row justify-between items-center gap-4'>
-            <button
-              onClick={props.onClose}
-              type='button'
-              className='w-14 h-14 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
-              aria-label='Cancel'
-            >
-              <XIcon className='w-6 h-6 text-neutral-800' />
-            </button>
-            <button
+            <AppButton variant='outlined' size='icon' onClick={props.onClose} type='button' aria-label='Cancel'>
+              <XIcon className='w-5 h-5 text-neutral-800' />
+            </AppButton>
+            <AppButton
+              variant='primary'
+              size='lg'
               onClick={handleSubmit(handleFormSubmit)}
               type='submit'
-              className='flex-1 px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-orange-500 active:scale-95 transition-all'
               aria-label='Save Budget'
+              className='flex-1'
             >
-              <AppTypography className='text-white font-semibold'>
-                {initialAmount ? 'Update Budget' : 'Set Budget'}
-              </AppTypography>
-            </button>
+              {initialAmount ? 'Update Budget' : 'Set Budget'}
+            </AppButton>
           </div>
         </div>
       </div>

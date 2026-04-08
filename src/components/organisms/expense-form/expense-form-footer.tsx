@@ -1,4 +1,4 @@
-import { AppTypography } from '@/components/atoms';
+import { AppButton } from '@/components/atoms';
 import XIcon from '@/components/atoms/icons/x-icon';
 import TrashIcon from '@/components/atoms/icons/trash-icon';
 
@@ -20,33 +20,18 @@ const ExpenseFormFooter = ({ onCancel, onSubmit, onDelete, submitLabel = 'Update
       }}
     >
       <div className='flex flex-row justify-between items-center gap-4'>
-        <button
-          onClick={onCancel}
-          type='button'
-          className='w-14 h-14 rounded-full border border-neutral-200 bg-white flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all'
-          aria-label='Cancel'
-        >
-          <XIcon className='w-6 h-6 text-neutral-800' />
-        </button>
+        <AppButton variant='outlined' size='icon' onClick={onCancel} type='button' aria-label='Cancel'>
+          <XIcon className='w-5 h-5 text-neutral-800' />
+        </AppButton>
         <div className='flex gap-3 flex-1 justify-end'>
           {onDelete && (
-            <button
-              onClick={onDelete}
-              type='button'
-              className='w-14 h-14 rounded-full border border-red-200 bg-white flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all'
-              aria-label='Delete'
-            >
-              <TrashIcon className='w-6 h-6 text-red-600' />
-            </button>
+            <AppButton variant='danger' size='icon' onClick={onDelete} type='button' aria-label='Delete'>
+              <TrashIcon className='w-5 h-5' />
+            </AppButton>
           )}
-          <button
-            onClick={onSubmit}
-            type='button'
-            className='w-fit px-6 h-14 rounded-full bg-orange-400 text-white flex items-center gap-2 justify-center hover:bg-neutral-800 active:scale-95 transition-all'
-            aria-label='Save'
-          >
-            <AppTypography className='text-white'>{submitLabel}</AppTypography>
-          </button>
+          <AppButton variant='primary' size='lg' onClick={onSubmit} type='button' aria-label='Save' className='flex-1'>
+            {submitLabel}
+          </AppButton>
         </div>
       </div>
     </div>
