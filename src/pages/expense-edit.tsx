@@ -22,6 +22,7 @@ const ExpenseEdit: FC = () => {
         transaction_date: data ? new Date(data.transaction_date) : new Date(),
       }}
       initialRecurrence={data?.recurrence ?? null}
+      initialRecurrenceId={data?.recurrence_id ?? null}
     />
   );
 };

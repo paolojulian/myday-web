@@ -28,12 +28,14 @@ type ExpenseEditFormProps = {
   expenseId: string;
   initialData?: FormData;
   initialRecurrence?: ExpenseRecurrence | null;
+  initialRecurrenceId?: string | null;
 };
 
 const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   expenseId,
   initialData,
   initialRecurrence,
+  initialRecurrenceId = null,
 }) => {
   const navigate = useNavigate();
   const updateExpense = useUpdateExpense();
@@ -76,7 +78,9 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
       description: data.description,
       category_id: data.category || null,
       recurrence: isRecurring ? ExpenseRecurrence.Monthly : null,
-      recurrence_id: null,
+      // When making it a template, it must not link to another template.
+      // Otherwise preserve the original recurrence_id (e.g. auto-generated instance).
+      recurrence_id: isRecurring ? null : initialRecurrenceId,
     };
 
     updateExpense.execute(formData);
