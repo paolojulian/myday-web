@@ -1,4 +1,3 @@
-import { type AppPickerRef } from '@/components/atoms/app-picker';
 import CategoryField from '@/components/organisms/expense-form/category-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
 import { ExpenseRefundToggle } from '@/components/organisms/expense-form/expense-refund-toggle';
@@ -10,7 +9,7 @@ import { useCreateExpense } from '@/hooks/expenses/use-create-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { AddExpenseParams } from '@/services/expense-service/expense.service';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type FormData = {
@@ -31,7 +30,6 @@ const ExpenseAddForm: FC = () => {
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
-  const categoryPickerRef = useRef<AppPickerRef>(null);
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFormSubmit = async (data: FormData) => {
@@ -57,13 +55,6 @@ const ExpenseAddForm: FC = () => {
     createExpense.execute(formData);
     navigate(-1);
   };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      categoryPickerRef.current?.open();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
 
   const focusDescriptionInput = () => {
     return setTimeout(() => {
@@ -92,7 +83,6 @@ const ExpenseAddForm: FC = () => {
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
           control={control}
-          categoryPickerRef={categoryPickerRef}
         />
 
         {/* transaction amount */}
