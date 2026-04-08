@@ -2,7 +2,6 @@ import { AppBottomSheet } from '@/components/atoms/app-bottom-sheet';
 import AppTextInput from '@/components/atoms/app-text-input';
 import AppTypography from '@/components/atoms/app-typography';
 import ChevronDownIcon from '@/components/atoms/icons/chevron-down-icon';
-import { useKeyboardVisibility } from '@/hooks/use-keyboard-visibility';
 import cn from '@/utils/cn';
 import {
   forwardRef,
@@ -29,6 +28,7 @@ type AppPickerProps = {
   errorMessage?: string;
   allowCustom?: boolean;
   searchPlaceholder?: string;
+  shouldHideHeader?: boolean;
 };
 
 export type AppPickerRef = {
@@ -48,12 +48,13 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
       errorMessage,
       allowCustom = false,
       searchPlaceholder = 'Search...',
+      shouldHideHeader = false,
     },
     ref
   ) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const keyboard = useKeyboardVisibility();
+    // const keyboard = useKeyboardVisibility();
 
     const hasValue = !!value;
     const hasError = !!errorMessage;
@@ -68,12 +69,12 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
 
     // Calculate content height
     const contentHeight = useMemo(() => {
-      if (keyboard.isVisible) {
-        // Use most of the visual viewport when keyboard is visible
-        return `${keyboard.visualViewportHeight * 0.9 - 100}px`;
-      }
+      // if (keyboard.isVisible) {
+      //   // Use most of the visual viewport when keyboard is visible
+      //   return `${keyboard.visualViewportHeight * 0.9 - 100}px`;
+      // }
       return 'calc(70vh - 100px)';
-    }, [keyboard.isVisible, keyboard.visualViewportHeight]);
+    }, []);
 
     useEffect(() => {
       if (!isOpen) return;
@@ -184,9 +185,10 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
           isOpen={isOpen}
           onClose={handleClose}
           title={label}
-          height={'50%'}
+          height={'60%'}
           variant='custom'
           zIndex={1002}
+          shouldHideHeader={shouldHideHeader}
         >
           <div
             className='flex flex-col gap-4'

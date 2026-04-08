@@ -66,6 +66,7 @@ const CategoryField = ({
             id='category'
             label='Category'
             errorMessage={fieldState.error?.message}
+            shouldHideHeader
             placeholder={
               isCategoriesLoading ? 'Loading...' : 'Select or create a category'
             }
