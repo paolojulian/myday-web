@@ -1,5 +1,4 @@
 import { type AppPickerRef } from '@/components/atoms/app-picker';
-import { AppTypography } from '@/components/atoms';
 import CategoryField from '@/components/organisms/expense-form/category-field';
 import DescriptionField from '@/components/organisms/expense-form/description-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';

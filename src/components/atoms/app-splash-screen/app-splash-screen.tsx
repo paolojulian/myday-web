@@ -27,9 +27,9 @@ const AppSplashScreen: FC<AppSplashScreenProps> = ({ isLoading = true }) => {
 
         {/* Loading Spinner */}
         <div className='flex items-center gap-2'>
-          <div className='h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.3s]'></div>
-          <div className='h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.15s]'></div>
-          <div className='h-2 w-2 animate-bounce rounded-full bg-orange-500'></div>
+          <div className='h-2 w-2 animate-bounce rounded-full bg-emerald-500 [animation-delay:-0.3s]'></div>
+          <div className='h-2 w-2 animate-bounce rounded-full bg-emerald-500 [animation-delay:-0.15s]'></div>
+          <div className='h-2 w-2 animate-bounce rounded-full bg-emerald-500'></div>
         </div>
       </div>
     </div>

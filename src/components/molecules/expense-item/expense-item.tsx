@@ -34,7 +34,7 @@ const ExpenseItem: FC<ExpenseItemProps> = ({ expense, showDate = false }) => {
             {toCurrency(expense.amount)}
           </AppTypography>
           {expense.category && (
-            <span className='mt-1 inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium'>
+            <span className='mt-1 inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium'>
               {expense.category.name}
             </span>
           )}

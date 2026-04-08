@@ -29,7 +29,7 @@ function ThreeWayDatePickerButton({
           'absolute inset-0 group-active:scale-90 transition-all -z-10',
           'rounded',
           {
-            'bg-orange-100 outline outline-orange-500': isActive,
+            'bg-emerald-50 outline outline-emerald-500': isActive,
             'bg-neutral-100': !isActive,
           }
         )}

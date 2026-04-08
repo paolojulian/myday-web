@@ -214,7 +214,7 @@ const AppPicker = forwardRef<AppPickerRef, AppPickerProps>(
                       'px-4 py-3 rounded-lg text-left transition-all',
                       'hover:bg-neutral-100 active:scale-95',
                       {
-                        'bg-orange-50 text-orange-700 font-semibold':
+                        'bg-emerald-50 text-emerald-700 font-semibold':
                           value === option.value,
                         'text-black': value !== option.value,
                       }

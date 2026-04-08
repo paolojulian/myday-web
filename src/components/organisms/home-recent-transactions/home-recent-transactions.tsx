@@ -112,7 +112,7 @@ const Item = ({
           </AppTypography>
           {category && (
             <div className='mt-1'>
-              <span className='inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium'>
+              <span className='inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium'>
                 {category}
               </span>
             </div>
