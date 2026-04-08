@@ -68,7 +68,7 @@ const Categories: FC = () => {
                 </AppTypography>
                 <div className='mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden'>
                   <div
-                    className='h-full rounded-full bg-orange-400'
+                    className='h-full rounded-full bg-red-500'
                     style={{
                       width: `${maxSpending > 0 ? (item.total / maxSpending) * 100 : 0}%`,
                     }}
