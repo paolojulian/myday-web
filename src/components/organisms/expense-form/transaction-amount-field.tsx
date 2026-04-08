@@ -11,8 +11,6 @@ type Props = {
   amountInputRef: React.RefObject<HTMLInputElement | null>;
   control: Control<ExpenseFormData>;
   errorMessage?: string;
-  isNegative?: boolean;
-  onToggleSign?: (negative: boolean) => void;
 };
 
 const TransactionAmountField = ({
@@ -20,37 +18,9 @@ const TransactionAmountField = ({
   amountInputRef,
   control,
   errorMessage,
-  isNegative = false,
-  onToggleSign,
 }: Props) => {
   return (
     <section>
-      {/* Expense / Refund toggle */}
-      <div className='flex gap-2 mb-2'>
-        <button
-          type='button'
-          onClick={() => onToggleSign?.(false)}
-          className={`flex-1 h-9 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-            !isNegative
-              ? 'bg-neutral-900 text-white'
-              : 'bg-neutral-100 text-neutral-500'
-          }`}
-        >
-          Expense
-        </button>
-        <button
-          type='button'
-          onClick={() => onToggleSign?.(true)}
-          className={`flex-1 h-9 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-            isNegative
-              ? 'bg-neutral-900 text-white'
-              : 'bg-neutral-100 text-neutral-500'
-          }`}
-        >
-          − Refund
-        </button>
-      </div>
-
       <Controller
         name='amount'
         control={control}

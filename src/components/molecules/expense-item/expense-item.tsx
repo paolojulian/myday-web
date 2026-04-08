@@ -13,7 +13,7 @@ type ExpenseItemProps = {
 const ExpenseItem: FC<ExpenseItemProps> = ({ expense, showDate = false }) => {
   return (
     <Link to={`/expenses/${expense.id}`} className='no-underline'>
-      <div className='flex flex-row items-center justify-between bg-neutral-50 border border-neutral-200 rounded-xl p-4 hover:bg-neutral-100 transition-colors'>
+      <div className='flex flex-row items-center justify-between bg-neutral-50 rounded-xl p-4 hover:bg-neutral-100 transition-colors'>
         <div className='flex-1'>
           <AppTypography variant='body' className='font-semibold text-neutral-900'>
             {expense.title}

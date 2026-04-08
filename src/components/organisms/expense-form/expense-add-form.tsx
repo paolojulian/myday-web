@@ -1,7 +1,7 @@
 import { type AppPickerRef } from '@/components/atoms/app-picker';
 import CategoryField from '@/components/organisms/expense-form/category-field';
-import DescriptionField from '@/components/organisms/expense-form/description-field';
 import ExpenseFormFooter from '@/components/organisms/expense-form/expense-form-footer';
+import { ExpenseRefundToggle } from '@/components/organisms/expense-form/expense-refund-toggle';
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
@@ -37,13 +37,16 @@ const ExpenseAddForm: FC = () => {
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
 
-    const title = data.title.trim() ||
+    const title =
+      data.title.trim() ||
       categories.find((c) => c.id === data.category)?.name ||
       '';
 
     const formData: AddExpenseParams = {
       title,
-      amount: isNegative ? -Math.abs(Number(cleanAmount)) : Math.abs(Number(cleanAmount)),
+      amount: isNegative
+        ? -Math.abs(Number(cleanAmount))
+        : Math.abs(Number(cleanAmount)),
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
@@ -81,6 +84,10 @@ const ExpenseAddForm: FC = () => {
         onSubmit={handleSubmit(handleFormSubmit)}
         className='flex flex-col gap-2 flex-1 pb-24 px-4 pt-4'
       >
+        <ExpenseRefundToggle
+          onToggle={(value) => setIsNegative(value === 'refund')}
+          value={isNegative ? 'refund' : 'expense'}
+        />
         {/* category */}
         <CategoryField
           onFocusDescriptionInput={focusDescriptionInput}
@@ -94,8 +101,6 @@ const ExpenseAddForm: FC = () => {
           control={control}
           amountInputRef={amountInputRef}
           errorMessage={errors.amount?.message}
-          isNegative={isNegative}
-          onToggleSign={setIsNegative}
         />
 
         {/* title */}
@@ -110,10 +115,10 @@ const ExpenseAddForm: FC = () => {
         <TransactionDateField control={control} />
 
         {/* description */}
-        <DescriptionField
+        {/* <DescriptionField
           control={control}
           descriptionInputRef={descriptionInputRef}
-        />
+        /> */}
       </form>
 
       <ExpenseFormFooter
