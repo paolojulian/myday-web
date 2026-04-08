@@ -11,12 +11,13 @@ import { useSpentTodayLive } from '@/hooks/expenses/use-spent-today-live';
 import { getBudgetStatusColor } from '@/lib/budget.utils';
 import { toCurrency } from '@/lib/currency.utils';
 import {
-  getHumanReadableDate,
   getNextDay,
   getPreviousDay,
+  isSameDay,
   isToday,
   isYesterday,
 } from '@/lib/dates.utils';
+import dayjs from 'dayjs';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type HomeOverviewProps = {
@@ -41,11 +42,39 @@ const HomeOverview: FC<HomeOverviewProps> = ({
 
   const isTodaySelected = isToday(selectedDate);
   const isYesterdaySelected = isYesterday(selectedDate);
-  const dateLabel = isTodaySelected ? 'Today' : isYesterdaySelected ? 'Yesterday' : getHumanReadableDate(selectedDate);
+  const dateLabel = isTodaySelected
+    ? 'Today'
+    : isYesterdaySelected
+      ? 'Yesterday'
+      : dayjs(selectedDate).isSame(dayjs(), 'year')
+        ? dayjs(selectedDate).format('MMMM D')
+        : dayjs(selectedDate).format('MMMM D, YYYY');
 
   const spentToday = useSpentTodayLive(selectedDate);
   const dayExpenses = useExpensesByDayLive(selectedDate, dayLimit);
   const recentExpenses = useRecentTransactionsBeforeDateLive(selectedDate, recentLimit);
+
+  const groupedRecentExpenses = useMemo(() => {
+    if (!recentExpenses) return undefined;
+    const groups: { key: string; label: string; expenses: typeof recentExpenses }[] = [];
+    for (const expense of recentExpenses) {
+      const d = dayjs(expense.transaction_date);
+      const key = d.format('YYYY-MM-DD');
+      const isYesterdayDate = isSameDay(d.toDate(), getPreviousDay(selectedDate));
+      const label = isYesterdayDate
+        ? 'Yesterday'
+        : d.isSame(dayjs(), 'year')
+          ? d.format('MMMM D')
+          : d.format('MMMM D, YYYY');
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup?.key === key) {
+        lastGroup.expenses.push(expense);
+      } else {
+        groups.push({ key, label, expenses: [expense] });
+      }
+    }
+    return groups;
+  }, [recentExpenses, selectedDate]);
 
   const hasBudget = budgetAnalysisQuery.data !== null;
   const isLoading = budgetAnalysisQuery.isLoading;
@@ -181,56 +210,73 @@ const HomeOverview: FC<HomeOverviewProps> = ({
       {/* ── Spent today ── */}
       <CardSpentToday amount={spentToday} date={selectedDate} isLoading={false} />
 
-      {/* ── Day expenses ── */}
-      <div className='mt-6'>
-        <PTypography variant='body-wide' className='text-neutral-400 uppercase mb-3'>
-          {isTodaySelected ? "Today's Expenses" : isYesterdaySelected ? "Yesterday's Expenses" : `Expenses on ${dateLabel}`}
-        </PTypography>
+      {/* ── Timeline: day + recent expenses ── */}
+      <div className='mt-6 relative'>
+        {/* Continuous vertical line */}
+        <div className='absolute left-[5px] top-2 bottom-0 w-0.5 bg-neutral-200 rounded-full' />
+
+        {/* Day expenses section header */}
+        <div className='relative flex items-center gap-4 pl-6 mb-3'>
+          <div className='absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-neutral-400 z-10' />
+          <PTypography variant='body-wide' className='text-neutral-400 uppercase'>
+            {isTodaySelected ? "Today's Expenses" : isYesterdaySelected ? "Yesterday's Expenses" : `Expenses on ${dateLabel}`}
+          </PTypography>
+        </div>
 
         <div className='flex flex-col gap-2'>
           {dayExpenses === undefined && (
             <AppDelayLoader>
-              <div className='text-center py-8'>
+              <div className='pl-6 py-8 text-center'>
                 <AppTypography variant='small' className='text-neutral-400'>Loading...</AppTypography>
               </div>
             </AppDelayLoader>
           )}
           {dayExpenses !== undefined && dayExpenses.length === 0 && (
-            <div className='text-center py-8'>
+            <div className='pl-6 py-8 text-center'>
               <AppTypography variant='small' className='text-neutral-400'>No expenses for this day</AppTypography>
             </div>
           )}
           {dayExpenses?.map((expense) => (
-            <ExpenseItem key={expense.id} expense={expense} />
+            <div key={expense.id} className='relative pl-6'>
+              <div className='absolute left-[2px] top-4 w-2 h-2 rounded-full bg-neutral-300 border-2 border-white z-10' />
+              <ExpenseItem expense={expense} />
+            </div>
           ))}
           <div ref={daySentinelRef} className='h-1' />
         </div>
-      </div>
 
-      {/* ── Recent expenses ── */}
-      <div className='mt-8'>
-        <PTypography variant='body-wide' className='text-neutral-400 uppercase mb-3'>
-          Recent
-        </PTypography>
-
-        <div className='flex flex-col gap-2'>
-          {recentExpenses === undefined && (
-            <AppDelayLoader>
-              <div className='text-center py-8'>
-                <AppTypography variant='small' className='text-neutral-400'>Loading...</AppTypography>
-              </div>
-            </AppDelayLoader>
-          )}
-          {recentExpenses !== undefined && recentExpenses.length === 0 && (
-            <div className='text-center py-8'>
-              <AppTypography variant='small' className='text-neutral-400'>No recent expenses</AppTypography>
+        {/* Recent expenses - grouped by date */}
+        {groupedRecentExpenses === undefined && (
+          <AppDelayLoader>
+            <div className='pl-6 py-8 text-center'>
+              <AppTypography variant='small' className='text-neutral-400'>Loading...</AppTypography>
             </div>
-          )}
-          {recentExpenses?.map((expense) => (
-            <ExpenseItem key={expense.id} expense={expense} showDate />
-          ))}
-          <div ref={recentSentinelRef} className='h-1' />
-        </div>
+          </AppDelayLoader>
+        )}
+        {groupedRecentExpenses !== undefined && groupedRecentExpenses.length === 0 && (
+          <div className='pl-6 py-8 text-center'>
+            <AppTypography variant='small' className='text-neutral-400'>No recent expenses</AppTypography>
+          </div>
+        )}
+        {groupedRecentExpenses?.map((group) => (
+          <div key={group.key}>
+            <div className='relative flex items-center gap-4 pl-6 mt-8 mb-3'>
+              <div className='absolute left-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-neutral-400 z-10' />
+              <PTypography variant='body-wide' className='text-neutral-400 uppercase'>
+                {group.label}
+              </PTypography>
+            </div>
+            <div className='flex flex-col gap-2'>
+              {group.expenses.map((expense) => (
+                <div key={expense.id} className='relative pl-6'>
+                  <div className='absolute left-[2px] top-4 w-2 h-2 rounded-full bg-neutral-300 border-2 border-white z-10' />
+                  <ExpenseItem expense={expense} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div ref={recentSentinelRef} className='h-1' />
       </div>
       {/* ── Day navigation pill ── */}
       <div
