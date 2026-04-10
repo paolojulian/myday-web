@@ -2,9 +2,11 @@ import { AppPageHeader } from '@/components/atoms';
 import AppDelayLoader from '@/components/atoms/app-delay-loader';
 import AppTypography from '@/components/atoms/app-typography';
 import ExpenseItem from '@/components/molecules/expense-item';
+import CardMonthlyBudget from '@/components/organisms/card-monthly-budget/card-monthly-budget';
 import { FilterExpenses } from '../components/organisms/filter-expenses';
 import { useExpensesWithCategoryLive } from '@/hooks/expenses/use-expenses-with-category-live';
 import { useCategorySpendingLive } from '@/hooks/expenses/use-category-spending-live';
+import { useBudgetAnalysis } from '@/hooks/budget/use-budget-analysis';
 import { toCurrency } from '@/lib/currency.utils';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -41,6 +43,7 @@ const Expenses: FC<ExpensesProps> = () => {
     [setSearchParams]
   );
 
+  const budgetAnalysis = useBudgetAnalysis(transactionDate);
   const expenses = useExpensesWithCategoryLive(transactionDate);
   const categorySpending = useCategorySpendingLive(transactionDate);
   const maxSpending = categorySpending[0]?.total ?? 0;
@@ -55,6 +58,14 @@ const Expenses: FC<ExpensesProps> = () => {
       <section id='expenses-header'>
         <AppPageHeader title={'Xpense'} description={'Expenses'} />
       </section>
+
+      {/* Monthly budget summary */}
+      <div className='mt-4'>
+        <CardMonthlyBudget
+          analysis={budgetAnalysis.data}
+          isLoading={budgetAnalysis.isLoading}
+        />
+      </div>
 
       {/* Spending chart — also acts as category filter */}
       {categorySpending.length > 0 && (
