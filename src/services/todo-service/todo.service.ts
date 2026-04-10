@@ -21,7 +21,7 @@ export class TodoService {
   public detail() {}
 
   public async add(todoToAdd: AddTodoBody): Promise<null | Error> {
-    const id = `tod${crypto.randomUUID()}`;
+    const id = `tds${crypto.randomUUID()}`;
 
     try {
       await db.todos.add({
