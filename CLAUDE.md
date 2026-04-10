@@ -60,5 +60,11 @@ No mocks or DB setup needed. Use fixed dates to avoid flakiness:
 const FIXED = new Date('2024-01-15T12:00:00'); // Jan 15, 2024
 ```
 
+### Test Sequencing
+Service test files run **sequentially** (`sequence: { concurrent: false }` in `vite.config.ts`). The DB is a singleton and its module-level async init (`db.open().then(...)` in `db.ts`) can race against concurrent test files, causing intermittent failures. Sequential execution eliminates this.
+
+### Pre-commit Hook (Husky)
+A `tsc -b --noEmit` check runs on every commit via `.husky/pre-commit`. Commits will be blocked if there are TypeScript compile errors.
+
 ### TypeScript Globals
 `vitest/globals` is included in `tsconfig.app.json` `"types"` so `describe`, `it`, `expect` etc. are available without imports. Explicit imports (`import { describe, it } from 'vitest'`) are also fine and are used in the service test files for clarity.

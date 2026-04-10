@@ -13,7 +13,7 @@ afterEach(async () => {
 
 describe('todoService.add', () => {
   it('returns null on success and persists the todo', async () => {
-    const error = await todoService.add({ title: 'Buy milk', description: null });
+    const error = await todoService.add({ title: 'Buy milk', description: '' });
 
     expect(error).toBeNull();
     const all = await db.todos.toArray();
@@ -22,14 +22,14 @@ describe('todoService.add', () => {
   });
 
   it('generates an id prefixed with "tds"', async () => {
-    await todoService.add({ title: 'Test', description: null });
+    await todoService.add({ title: 'Test', description: '' });
     const [todo] = await db.todos.toArray();
     expect(todo.id).toMatch(/^tds/);
   });
 
   it('sets created_at on the new todo', async () => {
     const before = new Date();
-    await todoService.add({ title: 'Task', description: null });
+    await todoService.add({ title: 'Task', description: '' });
     const [todo] = await db.todos.toArray();
     expect(todo.created_at.getTime()).toBeGreaterThanOrEqual(before.getTime());
   });
@@ -43,8 +43,8 @@ describe('todoService.add', () => {
 
 describe('todoService.list', () => {
   it('returns all todos as [todos, null]', async () => {
-    await todoService.add({ title: 'First', description: null });
-    await todoService.add({ title: 'Second', description: null });
+    await todoService.add({ title: 'First', description: '' });
+    await todoService.add({ title: 'Second', description: '' });
 
     const [todos, error] = await todoService.list();
     expect(error).toBeNull();
@@ -60,7 +60,7 @@ describe('todoService.list', () => {
 
 describe('todoService.delete', () => {
   it('removes the todo and returns null', async () => {
-    await todoService.add({ title: 'Delete me', description: null });
+    await todoService.add({ title: 'Delete me', description: '' });
     const [todos] = await todoService.list();
     const id = todos![0].id!;
 
@@ -77,8 +77,8 @@ describe('todoService.delete', () => {
   });
 
   it('does not affect other todos when deleting one', async () => {
-    await todoService.add({ title: 'Keep', description: null });
-    await todoService.add({ title: 'Remove', description: null });
+    await todoService.add({ title: 'Keep', description: '' });
+    await todoService.add({ title: 'Remove', description: '' });
 
     const [todos] = await todoService.list();
     const toRemove = todos!.find((t) => t.title === 'Remove')!;

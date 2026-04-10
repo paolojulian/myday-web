@@ -83,9 +83,14 @@ describe('budgetService.getBudgetByMonth', () => {
     expect(result?.amount).toBe(4500);
   });
 
-  it('returns the latest budget when add is called multiple times', async () => {
-    await budgetService.add(1000);
-    await budgetService.add(2000);
+  it('returns the latest budget when multiple budgets exist this month', async () => {
+    // Insert an older budget directly so timestamps are unambiguous
+    await db.budget.add({
+      id: 'bdgearlier',
+      amount: 1000,
+      created_at: dayjs().startOf('month').toDate(),
+    });
+    await budgetService.add(2000); // created_at = now (later)
     const result = await budgetService.getBudgetByMonth(dayjs().endOf('month').toDate());
     expect(result?.amount).toBe(2000);
   });
