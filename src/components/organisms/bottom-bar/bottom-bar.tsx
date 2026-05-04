@@ -37,7 +37,7 @@ const ExpensesIcon = () => (
   </svg>
 );
 
-const CategoriesIcon = () => (
+const InvestmentsIcon = () => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 24 24'
@@ -48,10 +48,10 @@ const CategoriesIcon = () => (
     strokeLinejoin='round'
     className={iconClass}
   >
-    <rect x='3' y='3' width='7' height='7' rx='1.5' />
-    <rect x='14' y='3' width='7' height='7' rx='1.5' />
-    <rect x='3' y='14' width='7' height='7' rx='1.5' />
-    <rect x='14' y='14' width='7' height='7' rx='1.5' />
+    <path d='M4 19V5' />
+    <path d='M4 19h16' />
+    <path d='M8 15l3-3 3 2 5-7' />
+    <path d='M16 7h3v3' />
   </svg>
 );
 
@@ -119,11 +119,11 @@ export default function BottomBar() {
           <CreateButton />
         </div>
 
-        {/* Categories */}
-        <NavLink to='/categories' className={navItemClass} onClick={haptic}>
+        {/* Investments */}
+        <NavLink to='/investments' className={navItemClass} onClick={haptic}>
           {({ isActive }) => (
             <span className='relative flex items-center justify-center'>
-              <CategoriesIcon />
+              <InvestmentsIcon />
               {isActive && <ActiveDot />}
             </span>
           )}

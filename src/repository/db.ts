@@ -6,6 +6,13 @@ import { Expense } from './expense.db';
 import { Todo } from './todo.db';
 import { Budget } from './budget.db';
 import { Category } from './category.db';
+import {
+  InvestmentAccount,
+  InvestmentGoal,
+  InvestmentHolding,
+  InvestmentPriceSnapshot,
+  InvestmentTransaction,
+} from './investment.db';
 
 class XpenseDB extends Dexie {
   // Private static instance to store the single instance of the class
@@ -15,6 +22,11 @@ class XpenseDB extends Dexie {
   expenses!: DexieCloudTable<Expense, 'id'>;
   budget!: DexieCloudTable<Budget, 'id'>;
   categories!: DexieCloudTable<Category, 'id'>;
+  investmentAccounts!: DexieCloudTable<InvestmentAccount, 'id'>;
+  investmentHoldings!: DexieCloudTable<InvestmentHolding, 'id'>;
+  investmentTransactions!: DexieCloudTable<InvestmentTransaction, 'id'>;
+  investmentGoals!: DexieCloudTable<InvestmentGoal, 'id'>;
+  investmentPriceSnapshots!: DexieCloudTable<InvestmentPriceSnapshot, 'id'>;
 
   private constructor() {
     super(DATABASE_NAME, {
@@ -33,6 +45,48 @@ class XpenseDB extends Dexie {
       expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
       budget: '@id, created_at',
       categories: '@id, name, created_at',
+    });
+
+    this.version(2).stores({
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
+      investmentAccounts: 'id, name, type, currency, created_at',
+      investmentHoldings:
+        'id, account_id, symbol, name, currency, [account_id+symbol]',
+      investmentTransactions:
+        'id, account_id, holding_id, expense_id, type, transaction_date, [transaction_date+created_at]',
+      investmentGoals: 'id, category, priority, target_date',
+      investmentPriceSnapshots: 'id, holding_id, symbol, captured_at',
+    });
+
+    this.version(3).stores({
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
+      investmentAccounts: 'id, name, type, currency, created_at',
+      investmentHoldings:
+        'id, account_id, symbol, name, currency, [account_id+symbol]',
+      investmentTransactions:
+        'id, account_id, holding_id, expense_id, type, transaction_date, [transaction_date+created_at]',
+      investmentGoals: 'id, category, priority, target_date',
+      investmentPriceSnapshots: 'id, holding_id, symbol, captured_at',
+    });
+
+    this.version(4).stores({
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
+      investmentAccounts: 'id, name, type, currency, created_at',
+      investmentHoldings:
+        'id, account_id, symbol, name, currency, [account_id+symbol]',
+      investmentTransactions:
+        'id, account_id, holding_id, expense_id, type, transaction_date, [transaction_date+created_at]',
+      investmentGoals: 'id, category, priority, target_date',
+      investmentPriceSnapshots: 'id, holding_id, symbol, captured_at',
     });
 
     // Add error handlers
@@ -60,6 +114,7 @@ class XpenseDB extends Dexie {
       const expenseCount = await this.expenses.count();
       const budgetCount = await this.budget.count();
       const categoryCount = await this.categories.count();
+      const investmentAccountCount = await this.investmentAccounts.count();
       console.log('Database Status:', {
         name: this.name,
         version: this.verno,
@@ -67,6 +122,7 @@ class XpenseDB extends Dexie {
         expenses: expenseCount,
         budgets: budgetCount,
         categories: categoryCount,
+        investmentAccounts: investmentAccountCount,
       });
     } catch (error) {
       console.error('Error checking database status:', error);

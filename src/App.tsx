@@ -9,6 +9,8 @@ import Home from './pages/home';
 import ExpenseEdit from '@/pages/expense-edit';
 import Categories from '@/pages/categories';
 import Settings from '@/pages/settings';
+import Investments from '@/pages/investments';
+import InvestmentAccounts from '@/pages/investment-accounts';
 
 function App() {
   const { isConnecting, syncEnabled } = useDexieSync();
@@ -23,7 +25,9 @@ function App() {
           <Route path='/' element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path='expenses' element={<Expenses />} />
+            <Route path='investments' element={<Investments />} />
             <Route path='categories' element={<Categories />} />
+            <Route path='investment-accounts' element={<InvestmentAccounts />} />
             <Route path='settings' element={<Settings />} />
           </Route>
           <Route path='/expenses'>

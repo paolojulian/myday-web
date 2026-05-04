@@ -3,6 +3,7 @@ import AppTypography from '@/components/atoms/app-typography';
 import { db } from '@/repository';
 import { useDexieSync } from '@/hooks/use-dexie-sync';
 import { FC, useState, ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 const Settings: FC = () => {
   const { syncEnabled, syncState, userEmail, isAuthenticated } = useDexieSync();
@@ -65,6 +66,50 @@ const Settings: FC = () => {
   return (
     <div>
       <AppPageHeader title='Xpense' description='Settings' />
+
+      <div className='mt-6'>
+        <AppTypography variant='small' className='text-neutral-500 mb-3 font-medium uppercase tracking-wide'>
+          Manage
+        </AppTypography>
+
+        <div className='flex flex-col gap-2'>
+          <Link
+            to='/categories'
+            onClick={() => navigator.vibrate?.(8)}
+            className='bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 flex items-center justify-between active:scale-[0.99] transition-transform'
+          >
+            <div>
+              <AppTypography variant='body' className='font-medium text-neutral-900'>
+                Categories
+              </AppTypography>
+              <AppTypography variant='small' className='text-neutral-500'>
+                Add, review, and remove expense categories
+              </AppTypography>
+            </div>
+            <span className='text-neutral-400' aria-hidden='true'>
+              →
+            </span>
+          </Link>
+
+          <Link
+            to='/investment-accounts'
+            onClick={() => navigator.vibrate?.(8)}
+            className='bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 flex items-center justify-between active:scale-[0.99] transition-transform'
+          >
+            <div>
+              <AppTypography variant='body' className='font-medium text-neutral-900'>
+                Investment Accounts
+              </AppTypography>
+              <AppTypography variant='small' className='text-neutral-500'>
+                Add and review IBKR, MP2, cash, and crypto accounts
+              </AppTypography>
+            </div>
+            <span className='text-neutral-400' aria-hidden='true'>
+              →
+            </span>
+          </Link>
+        </div>
+      </div>
 
       {/* Sync section */}
       <div className='mt-6'>
