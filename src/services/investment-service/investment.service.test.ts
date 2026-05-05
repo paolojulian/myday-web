@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/repository';
 import { expenseService } from '@/services/expense-service/expense.service';
 import {
@@ -48,6 +48,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   await clearInvestmentData();
 });
 
@@ -154,6 +155,20 @@ describe('investmentService.add simple balance tracking', () => {
         expenses.some((expense) => expense.id === expenseId)
       )
     ).toBe(true);
+  });
+
+  it('rolls back account, holding, and expense rows if transaction logging fails', async () => {
+    vi.spyOn(db.investmentTransactions, 'add').mockRejectedValueOnce(
+      new Error('transaction insert failed')
+    );
+
+    const result = await investmentService.add(SIMPLE_MP2_DEPOSIT);
+
+    expect(result.error).toBeInstanceOf(Error);
+    expect(await db.investmentAccounts.toArray()).toHaveLength(0);
+    expect(await db.investmentHoldings.toArray()).toHaveLength(0);
+    expect(await db.investmentTransactions.toArray()).toHaveLength(0);
+    expect(await db.expenses.toArray()).toHaveLength(0);
   });
 
   it('keeps simple investment math simple even if market-only fields are passed', async () => {
@@ -307,6 +322,139 @@ describe('investmentService holding updates', () => {
     expect(snapshots).toHaveLength(0);
   });
 
+  it('logs a simple withdrawal as money moved out, not an unrealized loss or expense', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      accountName: 'Emergency Fund',
+      accountType: InvestmentAccountType.Cash,
+      holdingName: 'Emergency Fund',
+      amount: 700000,
+      expectedAnnualReturnPercent: null,
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+    const [originalExpense] = await db.expenses.toArray();
+
+    const result = await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 100000,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+      notes: 'Moved to checking',
+    });
+
+    expect(result.error).toBeNull();
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+    const expenses = await db.expenses.toArray();
+    const transactions = await db.investmentTransactions.toArray();
+
+    expect(updatedHolding.current_value).toBe(600000);
+    expect(updatedHolding.cost_basis).toBe(600000);
+    expect(updatedHolding.current_value - updatedHolding.cost_basis).toBe(0);
+    expect(expenses).toHaveLength(1);
+    expect(expenses[0]).toMatchObject({
+      id: originalExpense.id,
+      amount: 700000,
+    });
+    expect(transactions).toHaveLength(2);
+    expect(
+      transactions.some(
+        (transaction) =>
+          transaction.type === InvestmentTransactionType.Deposit &&
+          transaction.amount === 700000
+      )
+    ).toBe(true);
+    expect(transactions.find((transaction) => transaction.type === InvestmentTransactionType.Withdrawal)).toMatchObject({
+      type: InvestmentTransactionType.Withdrawal,
+      amount: 100000,
+      expense_id: null,
+      notes: 'Moved to checking',
+    });
+  });
+
+  it('rejects simple withdrawals that are zero or above the current balance', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      accountName: 'Emergency Fund',
+      accountType: InvestmentAccountType.Cash,
+      holdingName: 'Emergency Fund',
+      amount: 700000,
+      expectedAnnualReturnPercent: null,
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+
+    const zeroResult = await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 0,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+    });
+    const tooMuchResult = await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 800000,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+    });
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+    const transactions = await db.investmentTransactions.toArray();
+    const expenses = await db.expenses.toArray();
+
+    expect(zeroResult.error).toBeInstanceOf(Error);
+    expect(tooMuchResult.error).toBeInstanceOf(Error);
+    expect(updatedHolding.current_value).toBe(700000);
+    expect(updatedHolding.cost_basis).toBe(700000);
+    expect(transactions).toHaveLength(1);
+    expect(expenses).toHaveLength(1);
+  });
+
+  it('reduces cost basis proportionally when withdrawing from an appreciated simple holding', async () => {
+    await investmentService.add(SIMPLE_MP2_DEPOSIT);
+    const [holding] = await db.investmentHoldings.toArray();
+    await investmentService.updateSimpleBalance({
+      holdingId: holding.id ?? '',
+      currentValue: 15000,
+    });
+
+    const result = await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 3000,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+    });
+
+    expect(result.error).toBeNull();
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+
+    expect(updatedHolding.current_value).toBe(12000);
+    expect(updatedHolding.cost_basis).toBeCloseTo(4000);
+  });
+
+  it('blocks withdrawals, deletes, and balance decreases while a holding is timelocked', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      timelockUntil: new Date('2031-05-04T10:30:00'),
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+
+    const withdrawResult = await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 1000,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+    });
+    const balanceDecreaseResult = await investmentService.updateSimpleBalance({
+      holdingId: holding.id ?? '',
+      currentValue: 4000,
+    });
+    const deleteResult = await investmentService.deleteHolding(holding.id ?? '');
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+
+    expect(withdrawResult.error).toBeInstanceOf(Error);
+    expect(balanceDecreaseResult.error).toBeInstanceOf(Error);
+    expect(deleteResult).toBeInstanceOf(Error);
+    expect(updatedHolding.current_value).toBe(5000);
+    expect(await db.investmentTransactions.toArray()).toHaveLength(1);
+    expect(await db.expenses.toArray()).toHaveLength(1);
+  });
+
   it('updates simple holding details without changing balance, transaction, or expense', async () => {
     await investmentService.add(SIMPLE_MP2_DEPOSIT);
     const [holding] = await db.investmentHoldings.toArray();
@@ -334,6 +482,69 @@ describe('investmentService holding updates', () => {
       title: 'Investment: MP2',
     });
     expect(transaction.amount).toBe(5000);
+  });
+
+  it('stores and updates a holding timelock without changing transaction or expense records', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      timelockUntil: new Date('2031-05-04T10:30:00'),
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+    const [originalExpense] = await db.expenses.toArray();
+
+    expect(holding.timelock_until).toEqual(new Date('2031-05-04T10:30:00'));
+
+    const result = await investmentService.updateHoldingDetails({
+      holdingId: holding.id ?? '',
+      name: 'MP2 Locked',
+      timelockUntil: new Date('2032-01-15T08:00:00'),
+    });
+
+    expect(result.error).toBeNull();
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+    const [expense] = await db.expenses.toArray();
+    const [transaction] = await db.investmentTransactions.toArray();
+
+    expect(updatedHolding.name).toBe('MP2 Locked');
+    expect(updatedHolding.timelock_until).toEqual(
+      new Date('2032-01-15T08:00:00')
+    );
+    expect(expense).toMatchObject({
+      id: originalExpense.id,
+      amount: 5000,
+    });
+    expect(transaction.amount).toBe(5000);
+  });
+
+  it('does not allow a locked holding to shorten or clear its timelock', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      timelockUntil: new Date('2031-05-04T10:30:00'),
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+
+    const clearResult = await investmentService.updateHoldingDetails({
+      holdingId: holding.id ?? '',
+      timelockUntil: null,
+    });
+    const shortenResult = await investmentService.updateHoldingDetails({
+      holdingId: holding.id ?? '',
+      timelockUntil: new Date('2030-01-01T00:00:00'),
+    });
+    const extendResult = await investmentService.updateHoldingDetails({
+      holdingId: holding.id ?? '',
+      timelockUntil: new Date('2032-01-01T00:00:00'),
+    });
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+
+    expect(clearResult.error).toBeInstanceOf(Error);
+    expect(shortenResult.error).toBeInstanceOf(Error);
+    expect(extendResult.error).toBeNull();
+    expect(updatedHolding.timelock_until).toEqual(
+      new Date('2032-01-01T00:00:00')
+    );
   });
 
   it('updates a market holding price without rewriting the original transaction or expense', async () => {

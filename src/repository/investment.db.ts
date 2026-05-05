@@ -45,6 +45,7 @@ export type InvestmentHolding = {
   current_price: number;
   current_value: number;
   expected_annual_return_percent?: number | null;
+  timelock_until?: Date | null;
   currency: InvestmentCurrency;
   price_source: 'manual' | 'api';
   price_updated_at: Date;

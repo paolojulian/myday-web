@@ -28,6 +28,7 @@ export type AddInvestmentParams = {
   fees?: number | null;
   usdToPhp?: number | null;
   expectedAnnualReturnPercent?: number | null;
+  timelockUntil?: Date | null;
   transactionDate: Date;
   notes?: string | null;
 };
@@ -43,6 +44,7 @@ export type UpdateInvestmentHoldingDetailsParams = {
   name?: string | null;
   symbol?: string | null;
   expectedAnnualReturnPercent?: number | null;
+  timelockUntil?: Date | null;
 };
 
 export type UpdateInvestmentMarketPriceParams = {
@@ -53,6 +55,13 @@ export type UpdateInvestmentMarketPriceParams = {
 export type UpdateInvestmentSimpleBalanceParams = {
   holdingId: string;
   currentValue: number;
+};
+
+export type WithdrawInvestmentParams = {
+  holdingId: string;
+  amount: number;
+  transactionDate: Date;
+  notes?: string | null;
 };
 
 const INVESTMENT_CATEGORY_NAME = 'Investments';
@@ -66,45 +75,60 @@ class InvestmentService {
     const dateNow = new Date();
 
     try {
-      const account = await this.ensureAccount(params, dateNow);
-      const holding = await this.upsertHolding(account, params, dateNow);
-      const expenseId = await this.createExpenseMirror(params, holding);
-      const transaction: InvestmentTransaction = {
-        id: generateInvestmentId(),
-        account_id: account.id ?? '',
-        holding_id: holding?.id ?? null,
-        expense_id: expenseId,
-        type: params.transactionType,
-        transaction_date: params.transactionDate,
-        symbol: normalizeSymbol(params.symbol),
-        quantity: params.quantity ?? null,
-        price_per_unit: params.pricePerUnit ?? null,
-        amount: params.amount,
-        fees: params.fees ?? null,
-        currency: params.currency,
-        notes: params.notes ?? null,
-        created_at: dateNow,
-        updated_at: dateNow,
-      };
+      let transaction: InvestmentTransaction | undefined;
 
-      await db.investmentTransactions.add(transaction);
+      await db.transaction(
+        'rw',
+        [
+          db.investmentAccounts,
+          db.investmentHoldings,
+          db.investmentTransactions,
+          db.investmentPriceSnapshots,
+          db.expenses,
+          db.categories,
+        ],
+        async () => {
+          const account = await this.ensureAccount(params, dateNow);
+          const holding = await this.upsertHolding(account, params, dateNow);
+          const expenseId = await this.createExpenseMirror(params, holding);
+          transaction = {
+            id: generateInvestmentId(),
+            account_id: account.id ?? '',
+            holding_id: holding?.id ?? null,
+            expense_id: expenseId,
+            type: params.transactionType,
+            transaction_date: params.transactionDate,
+            symbol: normalizeSymbol(params.symbol),
+            quantity: params.quantity ?? null,
+            price_per_unit: params.pricePerUnit ?? null,
+            amount: params.amount,
+            fees: params.fees ?? null,
+            currency: params.currency,
+            notes: params.notes ?? null,
+            created_at: dateNow,
+            updated_at: dateNow,
+          };
 
-      if (
-        holding?.id &&
-        isMarketAccountType(account.type) &&
-        params.pricePerUnit &&
-        params.pricePerUnit > 0
-      ) {
-        await db.investmentPriceSnapshots.add({
-          id: generateInvestmentId(),
-          holding_id: holding.id,
-          symbol: normalizeSymbol(params.symbol),
-          price: params.pricePerUnit,
-          currency: params.currency,
-          source: 'manual',
-          captured_at: dateNow,
-        });
-      }
+          await db.investmentTransactions.add(transaction);
+
+          if (
+            holding?.id &&
+            isMarketAccountType(account.type) &&
+            params.pricePerUnit &&
+            params.pricePerUnit > 0
+          ) {
+            await db.investmentPriceSnapshots.add({
+              id: generateInvestmentId(),
+              holding_id: holding.id,
+              symbol: normalizeSymbol(params.symbol),
+              price: params.pricePerUnit,
+              currency: params.currency,
+              source: 'manual',
+              captured_at: dateNow,
+            });
+          }
+        }
+      );
 
       return { error: null, transaction };
     } catch (e) {
@@ -222,12 +246,24 @@ class InvestmentService {
         : params.expectedAnnualReturnPercent ??
           holding.expected_annual_return_percent ??
           null;
+      const nextTimelockUntil =
+        params.timelockUntil === undefined
+          ? holding.timelock_until ?? null
+          : params.timelockUntil;
+      if (
+        isHoldingLocked(holding, dateNow) &&
+        params.timelockUntil !== undefined &&
+        !isTimelockExtension(holding.timelock_until, params.timelockUntil)
+      ) {
+        return { error: new DBError('Investment holding is timelocked') };
+      }
 
       const updatedHolding: InvestmentHolding = {
         ...holding,
         name: nextName,
         symbol: nextSymbol,
         expected_annual_return_percent: nextExpectedAnnualReturnPercent,
+        timelock_until: nextTimelockUntil,
         updated_at: dateNow,
       };
 
@@ -236,6 +272,7 @@ class InvestmentService {
         symbol: updatedHolding.symbol,
         expected_annual_return_percent:
           updatedHolding.expected_annual_return_percent,
+        timelock_until: updatedHolding.timelock_until,
         updated_at: updatedHolding.updated_at,
       });
 
@@ -328,9 +365,19 @@ class InvestmentService {
       }
 
       const currentValue = Math.max(0, params.currentValue);
+      if (isHoldingLocked(holding, dateNow) && currentValue < holding.current_value) {
+        return { error: new DBError('Investment holding is timelocked') };
+      }
+
+      const costBasis =
+        account.type === InvestmentAccountType.Cash ||
+        currentValue < holding.cost_basis
+          ? currentValue
+          : holding.cost_basis;
       const updatedHolding: InvestmentHolding = {
         ...holding,
         quantity: 1,
+        cost_basis: costBasis,
         current_price: currentValue,
         current_value: currentValue,
         price_source: 'manual',
@@ -340,6 +387,7 @@ class InvestmentService {
 
       await db.investmentHoldings.update(params.holdingId, {
         quantity: updatedHolding.quantity,
+        cost_basis: updatedHolding.cost_basis,
         current_price: updatedHolding.current_price,
         current_value: updatedHolding.current_value,
         price_source: updatedHolding.price_source,
@@ -355,6 +403,85 @@ class InvestmentService {
     }
   }
 
+  public async withdraw(
+    params: WithdrawInvestmentParams
+  ): Promise<{ error: Error | null; transaction?: InvestmentTransaction }> {
+    const dateNow = new Date();
+
+    try {
+      const holding = await db.investmentHoldings.get(params.holdingId);
+      if (!holding) {
+        return { error: new DBError('Investment holding not found') };
+      }
+
+      const account = await db.investmentAccounts.get(holding.account_id);
+      if (!account || isMarketAccountType(account.type)) {
+        return { error: new DBError('Investment balance holding not found') };
+      }
+
+      const amount = params.amount;
+      if (amount <= 0) {
+        return { error: new DBError('Withdrawal amount must be greater than zero') };
+      }
+      if (amount > holding.current_value) {
+        return { error: new DBError('Withdrawal exceeds current balance') };
+      }
+      if (isHoldingLocked(holding, dateNow)) {
+        return { error: new DBError('Investment holding is timelocked') };
+      }
+
+      const nextValue = Math.max(0, holding.current_value - amount);
+      const basisReduction = calculateWithdrawalBasisReduction({
+        accountType: account.type,
+        currentValue: holding.current_value,
+        costBasis: holding.cost_basis,
+        amount,
+      });
+      const nextCostBasis = Math.max(0, holding.cost_basis - basisReduction);
+      const transaction: InvestmentTransaction = {
+        id: generateInvestmentId(),
+        account_id: account.id ?? '',
+        holding_id: holding.id ?? null,
+        expense_id: null,
+        type: InvestmentTransactionType.Withdrawal,
+        transaction_date: params.transactionDate,
+        symbol: null,
+        quantity: null,
+        price_per_unit: null,
+        amount,
+        fees: null,
+        currency: holding.currency,
+        notes: params.notes ?? null,
+        created_at: dateNow,
+        updated_at: dateNow,
+      };
+
+      await db.transaction(
+        'rw',
+        db.investmentHoldings,
+        db.investmentTransactions,
+        async () => {
+          await db.investmentHoldings.update(params.holdingId, {
+            quantity: 1,
+            cost_basis: nextCostBasis,
+            current_price: nextValue,
+            current_value: nextValue,
+            price_source: 'manual',
+            price_updated_at: dateNow,
+            updated_at: dateNow,
+          });
+          await db.investmentTransactions.add(transaction);
+        }
+      );
+
+      return { error: null, transaction };
+    } catch (e) {
+      return {
+        error: handleError(e, new DBError('Unable to withdraw investment')),
+      };
+    }
+  }
+
   public async deleteHolding(
     holdingId: InvestmentHolding['id']
   ): Promise<Error | null> {
@@ -366,6 +493,9 @@ class InvestmentService {
       const holding = await db.investmentHoldings.get(holdingId);
       if (!holding) {
         return new DBError('Investment holding not found');
+      }
+      if (isHoldingLocked(holding)) {
+        return new DBError('Investment holding is timelocked');
       }
 
       await db.transaction(
@@ -478,6 +608,10 @@ class InvestmentService {
             params.expectedAnnualReturnPercent ??
             existing.expected_annual_return_percent ??
             null,
+          timelock_until:
+            params.timelockUntil === undefined
+              ? existing.timelock_until ?? null
+              : params.timelockUntil,
           price_source: 'manual',
           price_updated_at: dateNow,
           updated_at: dateNow,
@@ -493,6 +627,10 @@ class InvestmentService {
             params.expectedAnnualReturnPercent ??
             existing.expected_annual_return_percent ??
             null,
+          timelock_until:
+            params.timelockUntil === undefined
+              ? existing.timelock_until ?? null
+              : params.timelockUntil,
           price_source: 'manual',
           price_updated_at: dateNow,
           updated_at: dateNow,
@@ -509,6 +647,7 @@ class InvestmentService {
         current_price: nextValue,
         current_value: nextValue,
         expected_annual_return_percent: params.expectedAnnualReturnPercent ?? null,
+        timelock_until: params.timelockUntil ?? null,
         currency: params.currency,
         price_source: 'manual',
         price_updated_at: dateNow,
@@ -547,13 +686,17 @@ class InvestmentService {
         quantity: nextQuantity,
         cost_basis: nextCostBasis,
         current_price: currentPrice,
-        current_value: currentValue,
-        expected_annual_return_percent:
-          params.expectedAnnualReturnPercent ??
-          existing.expected_annual_return_percent ??
-          null,
-        price_source: 'manual',
-        price_updated_at: dateNow,
+          current_value: currentValue,
+          expected_annual_return_percent:
+            params.expectedAnnualReturnPercent ??
+            existing.expected_annual_return_percent ??
+            null,
+          timelock_until:
+            params.timelockUntil === undefined
+              ? existing.timelock_until ?? null
+              : params.timelockUntil,
+          price_source: 'manual',
+          price_updated_at: dateNow,
         updated_at: dateNow,
       });
 
@@ -562,13 +705,17 @@ class InvestmentService {
         quantity: nextQuantity,
         cost_basis: nextCostBasis,
         current_price: currentPrice,
-        current_value: currentValue,
-        expected_annual_return_percent:
-          params.expectedAnnualReturnPercent ??
-          existing.expected_annual_return_percent ??
-          null,
-        price_source: 'manual',
-        price_updated_at: dateNow,
+          current_value: currentValue,
+          expected_annual_return_percent:
+            params.expectedAnnualReturnPercent ??
+            existing.expected_annual_return_percent ??
+            null,
+          timelock_until:
+            params.timelockUntil === undefined
+              ? existing.timelock_until ?? null
+              : params.timelockUntil,
+          price_source: 'manual',
+          price_updated_at: dateNow,
         updated_at: dateNow,
       };
     }
@@ -589,6 +736,7 @@ class InvestmentService {
         ? calculateHoldingValue(quantity, currentPrice)
         : params.amount,
       expected_annual_return_percent: params.expectedAnnualReturnPercent ?? null,
+      timelock_until: params.timelockUntil ?? null,
       currency: params.currency,
       price_source: 'manual',
       price_updated_at: dateNow,
@@ -727,6 +875,37 @@ function calculateCostBasisDelta(
   }
 
   return 0;
+}
+
+function calculateWithdrawalBasisReduction(params: {
+  accountType: InvestmentAccountType;
+  currentValue: number;
+  costBasis: number;
+  amount: number;
+}): number {
+  if (params.accountType === InvestmentAccountType.Cash) {
+    return Math.min(params.costBasis, params.amount);
+  }
+
+  if (params.currentValue <= 0) {
+    return Math.min(params.costBasis, params.amount);
+  }
+
+  const withdrawalRatio = Math.min(params.amount / params.currentValue, 1);
+  return Math.min(params.costBasis, params.costBasis * withdrawalRatio);
+}
+
+function isHoldingLocked(holding: InvestmentHolding, now = new Date()): boolean {
+  if (!holding.timelock_until) return false;
+  return new Date(holding.timelock_until).getTime() > now.getTime();
+}
+
+function isTimelockExtension(
+  currentTimelock: Date | null | undefined,
+  nextTimelock: Date | null
+): boolean {
+  if (!currentTimelock || !nextTimelock) return false;
+  return new Date(nextTimelock).getTime() >= new Date(currentTimelock).getTime();
 }
 
 export const investmentService = new InvestmentService();

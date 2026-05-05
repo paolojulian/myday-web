@@ -53,6 +53,11 @@ const currencyOptions = [
   { label: 'USD', value: InvestmentCurrency.USD },
 ];
 
+const timelockOptions = [
+  { label: 'No timelock', value: 'none' },
+  { label: 'Lock until date', value: 'locked' },
+];
+
 const chartColors = [
   '#111827',
   '#2563eb',
@@ -74,6 +79,8 @@ type InvestmentFormState = {
   fees: string;
   usdToPhp: string;
   expectedAnnualReturnPercent: string;
+  timelockMode: TimelockMode;
+  timelockUntil: string;
   transactionDate: string;
   notes: string;
 };
@@ -89,11 +96,15 @@ const initialFormState: InvestmentFormState = {
   fees: '',
   usdToPhp: '58',
   expectedAnnualReturnPercent: '',
+  timelockMode: 'none',
+  timelockUntil: '',
   transactionDate: dayjs().format('YYYY-MM-DD'),
   notes: '',
 };
 
 const horizonOptions = [5, 10, 15, 20];
+type HoldingActionMode = 'actions' | 'details' | 'price' | 'withdraw' | 'balance';
+type TimelockMode = 'none' | 'locked';
 
 const Investments = () => {
   const investmentData = useInvestmentsLive();
@@ -102,13 +113,19 @@ const Investments = () => {
   const deleteHolding = useDeleteInvestmentHolding();
   const [isAdding, setIsAdding] = useState(false);
   const [editingHoldingId, setEditingHoldingId] = useState<string | null>(null);
+  const [editActionMode, setEditActionMode] =
+    useState<HoldingActionMode>('actions');
   const [editForm, setEditForm] = useState({
     name: '',
     symbol: '',
     quantity: '',
     currentPrice: '',
     currentValue: '',
+    withdrawalAmount: '',
+    withdrawalDate: dayjs().format('YYYY-MM-DD'),
     expectedAnnualReturnPercent: '',
+    timelockMode: 'none' as TimelockMode,
+    timelockUntil: '',
   });
   const [form, setForm] = useState<InvestmentFormState>(initialFormState);
   const [projectionYears, setProjectionYears] = useState(10);
@@ -144,8 +161,11 @@ const Investments = () => {
     ? !!resolvedAccount.accountName &&
       !!form.symbol.trim() &&
       toNumber(form.quantity) > 0 &&
-      toNumber(form.pricePerUnit) > 0
-    : !!resolvedAccount.accountName && toNumber(form.amount) > 0;
+      toNumber(form.pricePerUnit) > 0 &&
+      hasValidTimelock(form.timelockMode, form.timelockUntil)
+    : !!resolvedAccount.accountName &&
+      toNumber(form.amount) > 0 &&
+      hasValidTimelock(form.timelockMode, form.timelockUntil);
   const projectionRate = overview?.expectedAnnualReturnPercent ?? 7;
 
   const projection = useMemo(() => {
@@ -236,6 +256,10 @@ const Investments = () => {
       expectedAnnualReturnPercent: isMarketType
         ? null
         : toOptionalNumber(form.expectedAnnualReturnPercent),
+      timelockUntil:
+        form.timelockMode === 'locked'
+          ? toOptionalDate(form.timelockUntil)
+          : null,
       transactionDate: dayjs(form.transactionDate).toDate(),
       notes: form.notes || null,
     });
@@ -247,26 +271,35 @@ const Investments = () => {
   const startEditHolding = (holding: InvestmentHolding) => {
     setIsAdding(false);
     setEditingHoldingId(holding.id ?? null);
+    setEditActionMode('actions');
     setEditForm({
       name: holding.name,
       symbol: holding.symbol ?? '',
       quantity: String(holding.quantity),
       currentPrice: String(holding.current_price),
       currentValue: String(holding.current_value),
+      withdrawalAmount: '',
+      withdrawalDate: dayjs().format('YYYY-MM-DD'),
       expectedAnnualReturnPercent:
         holding.expected_annual_return_percent !== null &&
         holding.expected_annual_return_percent !== undefined
           ? String(holding.expected_annual_return_percent)
           : '',
+      timelockMode: holding.timelock_until ? 'locked' : 'none',
+      timelockUntil: holding.timelock_until
+        ? dayjs(holding.timelock_until).format('YYYY-MM-DD')
+        : '',
     });
   };
 
   const cancelEditHolding = () => {
     setEditingHoldingId(null);
+    setEditActionMode('actions');
   };
 
   const closeEditHolding = () => {
     setEditingHoldingId(null);
+    setEditActionMode('actions');
   };
 
   const submitHoldingDetails = async (
@@ -283,6 +316,10 @@ const Investments = () => {
       expectedAnnualReturnPercent: isMarket
         ? null
         : toOptionalNumber(editForm.expectedAnnualReturnPercent),
+      timelockUntil:
+        editForm.timelockMode === 'locked'
+          ? toOptionalDate(editForm.timelockUntil)
+          : null,
     });
     closeEditHolding();
   };
@@ -309,6 +346,21 @@ const Investments = () => {
     await updateHolding.updateSimpleBalance({
       holdingId: holding.id ?? '',
       currentValue: toNumber(editForm.currentValue),
+    });
+    closeEditHolding();
+  };
+
+  const submitSimpleWithdrawal = async (
+    event: FormEvent<HTMLFormElement>,
+    holding: InvestmentHolding
+  ) => {
+    event.preventDefault();
+
+    await updateHolding.withdraw({
+      holdingId: holding.id ?? '',
+      amount: toNumber(editForm.withdrawalAmount),
+      transactionDate: dayjs(editForm.withdrawalDate).toDate(),
+      notes: 'Investment withdrawal',
     });
     closeEditHolding();
   };
@@ -507,6 +559,27 @@ const Investments = () => {
               }
               required
             />
+
+            <AppPicker
+              id='investment-timelock-mode'
+              label='Timelock'
+              options={timelockOptions}
+              value={form.timelockMode}
+              onChange={(value) =>
+                handleChange('timelockMode', value as TimelockMode)
+              }
+            />
+
+            {form.timelockMode === 'locked' && (
+              <TimelockDateInput
+                id='investment-timelock-until'
+                label='Timelock date'
+                value={form.timelockUntil}
+                onChangeText={(value) =>
+                  handleChange('timelockUntil', String(value || ''))
+                }
+              />
+            )}
 
             <AppTextInput
               id='investment-notes'
@@ -728,8 +801,10 @@ const Investments = () => {
                     <HoldingEditForm
                       holding={holding}
                       isMarket={isMarket}
+                      mode={editActionMode}
                       form={editForm}
                       isPending={updateHolding.isPending || deleteHolding.isPending}
+                      onModeChange={setEditActionMode}
                       onChange={(key, value) =>
                         setEditForm((current) => ({
                           ...current,
@@ -746,6 +821,9 @@ const Investments = () => {
                       }
                       onSubmitSimpleBalance={(event) =>
                         submitSimpleBalance(event, holding)
+                      }
+                      onSubmitSimpleWithdrawal={(event) =>
+                        submitSimpleWithdrawal(event, holding)
                       }
                     />
                   )}
@@ -858,6 +936,10 @@ const HoldingRow = ({
   const costBasisPhp = toPhpValue(holding.cost_basis, holding.currency);
   const gain = currentValuePhp - costBasisPhp;
   const returnPercent = calculateReturnPercent(currentValuePhp, costBasisPhp);
+  const timelockUntil = holding.timelock_until
+    ? dayjs(holding.timelock_until)
+    : null;
+  const isLocked = timelockUntil ? timelockUntil.isAfter(dayjs()) : false;
 
   return (
     <div className='rounded-lg bg-neutral-50 p-3'>
@@ -885,14 +967,27 @@ const HoldingRow = ({
         </div>
       </div>
       <div className='mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400'>
-        <span>
-          {isMarket
-            ? `${holding.quantity.toLocaleString()} units`
-            : holding.expected_annual_return_percent !== null &&
-                holding.expected_annual_return_percent !== undefined
-              ? `Expected ${holding.expected_annual_return_percent.toFixed(1)}% / yr`
-              : 'Balance tracked manually'}
-        </span>
+        <div className='min-w-0'>
+          <span className='block truncate'>
+            {isMarket
+              ? `${holding.quantity.toLocaleString()} units`
+              : holding.expected_annual_return_percent !== null &&
+                  holding.expected_annual_return_percent !== undefined
+                ? `Expected ${holding.expected_annual_return_percent.toFixed(1)}% / yr`
+                : 'Balance tracked manually'}
+          </span>
+          {timelockUntil && (
+            <span
+              className={cn('block truncate font-semibold', {
+                'text-amber-600': isLocked,
+                'text-neutral-400': !isLocked,
+              })}
+            >
+              {isLocked ? 'Locked until' : 'Unlocked'}{' '}
+              {timelockUntil.format('MMM D, YYYY')}
+            </span>
+          )}
+        </div>
         <div className='flex items-center gap-2'>
           <span>Updated {dayjs(holding.price_updated_at).format('MMM D')}</span>
           <button
@@ -914,36 +1009,99 @@ type HoldingEditFormState = {
   quantity: string;
   currentPrice: string;
   currentValue: string;
+  withdrawalAmount: string;
+  withdrawalDate: string;
   expectedAnnualReturnPercent: string;
+  timelockMode: TimelockMode;
+  timelockUntil: string;
 };
 
 type HoldingEditFormProps = {
   holding: InvestmentHolding;
   isMarket: boolean;
+  mode: HoldingActionMode;
   form: HoldingEditFormState;
   isPending: boolean;
+  onModeChange: (mode: HoldingActionMode) => void;
   onChange: (key: keyof HoldingEditFormState, value: string) => void;
   onCancel: () => void;
   onDelete: () => void;
   onSubmitDetails: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitMarketPrice: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSimpleBalance: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSimpleWithdrawal: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 const HoldingEditForm = ({
   holding,
   isMarket,
+  mode,
   form,
   isPending,
+  onModeChange,
   onChange,
   onCancel,
   onDelete,
   onSubmitDetails,
   onSubmitMarketPrice,
   onSubmitSimpleBalance,
-}: HoldingEditFormProps) => (
-  <div className='mt-2 rounded-lg border border-neutral-200 bg-white p-3'>
-    <form onSubmit={onSubmitDetails} className='grid grid-cols-1 gap-3'>
+  onSubmitSimpleWithdrawal,
+}: HoldingEditFormProps) => {
+  const isLocked = isHoldingTimelocked(holding);
+
+  return (
+    <div className='mt-2 rounded-lg border border-neutral-200 bg-white p-3'>
+      {mode === 'actions' && (
+        <div className='grid grid-cols-2 gap-2'>
+          <AppButton
+            type='button'
+            size='sm'
+            variant='outlined'
+            onClick={() => onModeChange('details')}
+          >
+            Details
+          </AppButton>
+          <AppButton
+            type='button'
+            size='sm'
+            variant='outlined'
+            onClick={() => onModeChange(isMarket ? 'price' : 'withdraw')}
+          >
+            {isMarket ? 'Price' : 'Withdraw'}
+          </AppButton>
+          {!isMarket && (
+            <AppButton
+              type='button'
+              size='sm'
+              variant='outlined'
+              onClick={() => onModeChange('balance')}
+            >
+              Correct
+            </AppButton>
+          )}
+          <AppButton
+            type='button'
+            variant='danger'
+            size='sm'
+            onClick={onDelete}
+            disabled={isPending || isLocked}
+          >
+            Delete
+          </AppButton>
+          <AppButton
+            type='button'
+            variant='outlined'
+            size='sm'
+            className='col-span-2'
+            onClick={onCancel}
+          >
+            Cancel
+          </AppButton>
+        </div>
+      )}
+
+      {mode === 'details' && (
+        <form onSubmit={onSubmitDetails} className='grid grid-cols-1 gap-3'>
       <AppTextInput
         id={`edit-holding-name-${holding.id}`}
         label='Name'
@@ -954,13 +1112,13 @@ const HoldingEditForm = ({
 
       {isMarket ? (
         <>
-            <AppTextInput
-              id={`edit-holding-symbol-${holding.id}`}
-              label='Investment'
+          <AppTextInput
+            id={`edit-holding-symbol-${holding.id}`}
+            label='Investment'
             value={form.symbol}
             onChangeText={(value) => onChange('symbol', String(value || ''))}
-              required
-            />
+            required
+          />
         </>
       ) : (
         <AppTextInput
@@ -975,12 +1133,60 @@ const HoldingEditForm = ({
         />
       )}
 
-      <AppButton type='submit' size='sm' disabled={isPending || !form.name.trim()}>
+      {isLocked ? (
+        <TimelockDateInput
+          id={`edit-holding-timelock-${holding.id}`}
+          label='Extend timelock date'
+          value={form.timelockUntil}
+          onChangeText={(value) =>
+            onChange('timelockUntil', String(value || ''))
+          }
+        />
+      ) : (
+        <>
+          <AppPicker
+            id={`edit-holding-timelock-mode-${holding.id}`}
+            label='Timelock'
+            options={timelockOptions}
+            value={form.timelockMode}
+            onChange={(value) => onChange('timelockMode', value)}
+          />
+          {form.timelockMode === 'locked' && (
+            <TimelockDateInput
+              id={`edit-holding-timelock-${holding.id}`}
+              label='Timelock date'
+              value={form.timelockUntil}
+              onChangeText={(value) =>
+                onChange('timelockUntil', String(value || ''))
+              }
+            />
+          )}
+        </>
+      )}
+
+      <AppButton
+        type='submit'
+        size='sm'
+        disabled={
+          isPending ||
+          !form.name.trim() ||
+          !hasValidTimelock(form.timelockMode, form.timelockUntil)
+        }
+      >
         Save Details
       </AppButton>
+      <AppButton
+        type='button'
+        variant='outlined'
+        size='sm'
+        onClick={() => onModeChange('actions')}
+      >
+        Back
+      </AppButton>
     </form>
+      )}
 
-    {isMarket ? (
+      {mode === 'price' && isMarket && (
       <form onSubmit={onSubmitMarketPrice} className='mt-3 grid grid-cols-1 gap-3'>
         <AppTextInput
           id={`edit-holding-price-${holding.id}`}
@@ -999,52 +1205,100 @@ const HoldingEditForm = ({
         >
           Update Price
         </AppButton>
-      </form>
-    ) : (
-      <form onSubmit={onSubmitSimpleBalance} className='mt-3 grid grid-cols-1 gap-3'>
-        <AppTextInput
-          id={`edit-holding-value-${holding.id}`}
-          label='Current balance'
-          inputMode='decimal'
-          value={form.currentValue}
-          onChangeText={(value) =>
-            onChange('currentValue', String(value || ''))
-          }
-          required
-        />
         <AppButton
-          type='submit'
+          type='button'
+          variant='outlined'
           size='sm'
-          disabled={isPending || toNumber(form.currentValue) <= 0}
+          onClick={() => onModeChange('actions')}
         >
-          Update Balance
+          Back
         </AppButton>
       </form>
-    )}
+      )}
 
-    <div className='mt-3 flex gap-2'>
-      <AppButton
-        type='button'
-        variant='danger'
-        size='sm'
-        className='flex-1'
-        onClick={onDelete}
-        disabled={isPending}
-      >
-        Delete
-      </AppButton>
-      <AppButton
-        type='button'
-        variant='outlined'
-        size='sm'
-        className='flex-1'
-        onClick={onCancel}
-      >
-        Cancel
-      </AppButton>
+      {mode === 'withdraw' && !isMarket && (
+        <form onSubmit={onSubmitSimpleWithdrawal} className='mt-3 grid grid-cols-1 gap-3'>
+          <div className='grid grid-cols-2 gap-3'>
+            <AppTextInput
+              id={`edit-holding-withdrawal-${holding.id}`}
+              label='Withdraw'
+              inputMode='decimal'
+              value={form.withdrawalAmount}
+              onChangeText={(value) =>
+                onChange('withdrawalAmount', String(value || ''))
+              }
+              required
+            />
+            <AppTextInput
+              id={`edit-holding-withdrawal-date-${holding.id}`}
+              label='Date'
+              type='date'
+              value={form.withdrawalDate}
+              onChangeText={(value) =>
+                onChange('withdrawalDate', String(value || ''))
+              }
+              required
+            />
+          </div>
+          <AppButton
+            type='submit'
+            size='sm'
+            disabled={
+              isPending ||
+              isLocked ||
+              toNumber(form.withdrawalAmount) <= 0 ||
+              toNumber(form.withdrawalAmount) > holding.current_value
+            }
+        >
+          Log Withdrawal
+        </AppButton>
+          <AppButton
+            type='button'
+            variant='outlined'
+            size='sm'
+            onClick={() => onModeChange('actions')}
+          >
+            Back
+          </AppButton>
+      </form>
+      )}
+
+      {mode === 'balance' && !isMarket && (
+        <form onSubmit={onSubmitSimpleBalance} className='mt-3 grid grid-cols-1 gap-3'>
+          <AppTextInput
+            id={`edit-holding-value-${holding.id}`}
+            label='Correct balance'
+            inputMode='decimal'
+            value={form.currentValue}
+            onChangeText={(value) =>
+              onChange('currentValue', String(value || ''))
+            }
+            required
+          />
+          <AppButton
+            type='submit'
+            size='sm'
+            disabled={
+              isPending ||
+              toNumber(form.currentValue) <= 0 ||
+              (isLocked && toNumber(form.currentValue) < holding.current_value)
+            }
+          >
+            Save Balance Correction
+          </AppButton>
+          <AppButton
+            type='button'
+            variant='outlined'
+            size='sm'
+            onClick={() => onModeChange('actions')}
+          >
+            Back
+          </AppButton>
+        </form>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const EmptyCopy = ({ text }: { text: string }) => (
   <div className='rounded-lg bg-neutral-50 p-4 text-center'>
@@ -1054,6 +1308,34 @@ const EmptyCopy = ({ text }: { text: string }) => (
   </div>
 );
 
+type TimelockDateInputProps = {
+  id: string;
+  label: string;
+  value: string;
+  onChangeText: (value?: string | number) => void;
+};
+
+const TimelockDateInput = ({
+  id,
+  label,
+  value,
+  onChangeText,
+}: TimelockDateInputProps) => {
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <AppTextInput
+      id={id}
+      label={label}
+      type={isFocused || !!value ? 'date' : 'text'}
+      value={value}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      onChangeText={onChangeText}
+    />
+  );
+};
+
 function toNumber(value: string): number {
   const parsed = Number(value.replace(/,/g, ''));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -1062,6 +1344,21 @@ function toNumber(value: string): number {
 function toOptionalNumber(value: string): number | null {
   if (!value.trim()) return null;
   return toNumber(value);
+}
+
+function toOptionalDate(value: string): Date | null {
+  if (!value.trim()) return null;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.startOf('day').toDate() : null;
+}
+
+function isHoldingTimelocked(holding: InvestmentHolding): boolean {
+  if (!holding.timelock_until) return false;
+  return dayjs(holding.timelock_until).isAfter(dayjs());
+}
+
+function hasValidTimelock(mode: TimelockMode, value: string): boolean {
+  return mode === 'none' || !!value.trim();
 }
 
 export default Investments;
