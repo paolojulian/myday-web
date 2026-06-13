@@ -1,1 +1,3 @@
 tsc -b --noEmit
+cargo check
+cargo test
