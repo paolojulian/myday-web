@@ -1,9 +1,9 @@
-import { DBError } from '@/config/errors.constants';
-import { handleError } from '@/lib/handle-error.utils';
+import { DBError } from "@/config/errors.constants";
+import { handleError } from "@/lib/handle-error.utils";
 import {
   calculateHoldingValue,
   getTransactionCashImpact,
-} from '@/lib/investment.utils';
+} from "@/lib/investment.utils";
 import {
   db,
   InvestmentAccount,
@@ -12,8 +12,8 @@ import {
   InvestmentHolding,
   InvestmentTransaction,
   InvestmentTransactionType,
-} from '@/repository';
-import { categoryService } from '@/services/category-service/category.service';
+} from "@/repository";
+import { categoryService } from "@/services/category-service/category.service";
 
 export type AddInvestmentParams = {
   accountName: string;
@@ -64,13 +64,13 @@ export type WithdrawInvestmentParams = {
   notes?: string | null;
 };
 
-const INVESTMENT_CATEGORY_NAME = 'Investments';
+const INVESTMENT_CATEGORY_NAME = "Investments";
 const generateInvestmentId = () => `inv${crypto.randomUUID()}`;
 const generateExpenseId = () => `exp${crypto.randomUUID()}`;
 
 class InvestmentService {
   public async add(
-    params: AddInvestmentParams
+    params: AddInvestmentParams,
   ): Promise<{ error: Error | null; transaction?: InvestmentTransaction }> {
     const dateNow = new Date();
 
@@ -78,7 +78,7 @@ class InvestmentService {
       let transaction: InvestmentTransaction | undefined;
 
       await db.transaction(
-        'rw',
+        "rw",
         [
           db.investmentAccounts,
           db.investmentHoldings,
@@ -93,7 +93,7 @@ class InvestmentService {
           const expenseId = await this.createExpenseMirror(params, holding);
           transaction = {
             id: generateInvestmentId(),
-            account_id: account.id ?? '',
+            account_id: account.id ?? "",
             holding_id: holding?.id ?? null,
             expense_id: expenseId,
             type: params.transactionType,
@@ -123,44 +123,44 @@ class InvestmentService {
               symbol: normalizeSymbol(params.symbol),
               price: params.pricePerUnit,
               currency: params.currency,
-              source: 'manual',
+              source: "manual",
               captured_at: dateNow,
             });
           }
-        }
+        },
       );
 
       return { error: null, transaction };
     } catch (e) {
       return {
-        error: handleError(e, new DBError('Unable to add investment')),
+        error: handleError(e, new DBError("Unable to add investment")),
       };
     }
   }
 
   public async listAccounts(): Promise<InvestmentAccount[]> {
-    return db.investmentAccounts.orderBy('name').toArray();
+    return db.investmentAccounts.orderBy("name").toArray();
   }
 
   public async listHoldings(): Promise<InvestmentHolding[]> {
-    return db.investmentHoldings.orderBy('updated_at').reverse().toArray();
+    return db.investmentHoldings.orderBy("updated_at").reverse().toArray();
   }
 
   public async listTransactions(): Promise<InvestmentTransaction[]> {
     return db.investmentTransactions
-      .orderBy('transaction_date')
+      .orderBy("transaction_date")
       .reverse()
       .toArray();
   }
 
   public async createAccount(
-    params: CreateInvestmentAccountParams
+    params: CreateInvestmentAccountParams,
   ): Promise<{ error: Error | null; account?: InvestmentAccount }> {
     const dateNow = new Date();
     const name = params.name.trim();
 
     if (!name) {
-      return { error: new DBError('Investment account name is required') };
+      return { error: new DBError("Investment account name is required") };
     }
 
     try {
@@ -169,7 +169,7 @@ class InvestmentService {
           (account) =>
             account.name.toLowerCase() === name.toLowerCase() &&
             account.type === params.type &&
-            account.currency === params.currency
+            account.currency === params.currency,
         )
         .first();
 
@@ -191,49 +191,52 @@ class InvestmentService {
       return { error: null, account };
     } catch (e) {
       return {
-        error: handleError(e, new DBError('Unable to create investment account')),
+        error: handleError(
+          e,
+          new DBError("Unable to create investment account"),
+        ),
       };
     }
   }
 
   public async deleteAccount(
-    accountId: InvestmentAccount['id']
+    accountId: InvestmentAccount["id"],
   ): Promise<Error | null> {
     if (!accountId) {
-      return new DBError('Investment account ID is required');
+      return new DBError("Investment account ID is required");
     }
 
     try {
       const holdingsCount = await db.investmentHoldings
-        .where('account_id')
+        .where("account_id")
         .equals(accountId)
         .count();
 
       if (holdingsCount > 0) {
-        return new DBError('Delete holdings before deleting this account');
+        return new DBError("Delete holdings before deleting this account");
       }
 
       await db.investmentAccounts.delete(accountId);
       return null;
     } catch (e) {
-      return handleError(e, new DBError('Unable to delete investment account'));
+      return handleError(e, new DBError("Unable to delete investment account"));
     }
   }
 
   public async updateHoldingDetails(
-    params: UpdateInvestmentHoldingDetailsParams
+    params: UpdateInvestmentHoldingDetailsParams,
   ): Promise<{ error: Error | null; holding?: InvestmentHolding }> {
     const dateNow = new Date();
 
     try {
       const holding = await db.investmentHoldings.get(params.holdingId);
       if (!holding) {
-        return { error: new DBError('Investment holding not found') };
+        return { error: new DBError("Investment holding not found") };
       }
 
       const account = await db.investmentAccounts.get(holding.account_id);
       if (!account) {
-        return { error: new DBError('Investment account not found') };
+        return { error: new DBError("Investment account not found") };
       }
 
       const isMarket = isMarketAccountType(account.type);
@@ -242,20 +245,20 @@ class InvestmentService {
         ? normalizeSymbol(params.symbol ?? holding.symbol)
         : null;
       const nextExpectedAnnualReturnPercent = isMarket
-        ? holding.expected_annual_return_percent ?? null
-        : params.expectedAnnualReturnPercent ??
+        ? (holding.expected_annual_return_percent ?? null)
+        : (params.expectedAnnualReturnPercent ??
           holding.expected_annual_return_percent ??
-          null;
+          null);
       const nextTimelockUntil =
         params.timelockUntil === undefined
-          ? holding.timelock_until ?? null
+          ? (holding.timelock_until ?? null)
           : params.timelockUntil;
       if (
         isHoldingLocked(holding, dateNow) &&
         params.timelockUntil !== undefined &&
         !isTimelockExtension(holding.timelock_until, params.timelockUntil)
       ) {
-        return { error: new DBError('Investment holding is timelocked') };
+        return { error: new DBError("Investment holding is timelocked") };
       }
 
       const updatedHolding: InvestmentHolding = {
@@ -281,26 +284,26 @@ class InvestmentService {
       return {
         error: handleError(
           e,
-          new DBError('Unable to update investment holding details')
+          new DBError("Unable to update investment holding details"),
         ),
       };
     }
   }
 
   public async updateMarketPrice(
-    params: UpdateInvestmentMarketPriceParams
+    params: UpdateInvestmentMarketPriceParams,
   ): Promise<{ error: Error | null; holding?: InvestmentHolding }> {
     const dateNow = new Date();
 
     try {
       const holding = await db.investmentHoldings.get(params.holdingId);
       if (!holding) {
-        return { error: new DBError('Investment holding not found') };
+        return { error: new DBError("Investment holding not found") };
       }
 
       const account = await db.investmentAccounts.get(holding.account_id);
       if (!account || !isMarketAccountType(account.type)) {
-        return { error: new DBError('Investment market holding not found') };
+        return { error: new DBError("Investment market holding not found") };
       }
 
       const currentPrice = Math.max(0, params.currentPrice);
@@ -308,13 +311,13 @@ class InvestmentService {
         ...holding,
         current_price: currentPrice,
         current_value: calculateHoldingValue(holding.quantity, currentPrice),
-        price_source: 'manual',
+        price_source: "manual",
         price_updated_at: dateNow,
         updated_at: dateNow,
       };
 
       await db.transaction(
-        'rw',
+        "rw",
         db.investmentHoldings,
         db.investmentPriceSnapshots,
         async () => {
@@ -329,44 +332,47 @@ class InvestmentService {
           if (updatedHolding.current_price > 0) {
             await db.investmentPriceSnapshots.add({
               id: generateInvestmentId(),
-              holding_id: updatedHolding.id ?? '',
+              holding_id: updatedHolding.id ?? "",
               symbol: updatedHolding.symbol,
               price: updatedHolding.current_price,
               currency: updatedHolding.currency,
-              source: 'manual',
+              source: "manual",
               captured_at: dateNow,
             });
           }
-        }
+        },
       );
 
       return { error: null, holding: updatedHolding };
     } catch (e) {
       return {
-        error: handleError(e, new DBError('Unable to update investment price')),
+        error: handleError(e, new DBError("Unable to update investment price")),
       };
     }
   }
 
   public async updateSimpleBalance(
-    params: UpdateInvestmentSimpleBalanceParams
+    params: UpdateInvestmentSimpleBalanceParams,
   ): Promise<{ error: Error | null; holding?: InvestmentHolding }> {
     const dateNow = new Date();
 
     try {
       const holding = await db.investmentHoldings.get(params.holdingId);
       if (!holding) {
-        return { error: new DBError('Investment holding not found') };
+        return { error: new DBError("Investment holding not found") };
       }
 
       const account = await db.investmentAccounts.get(holding.account_id);
       if (!account || isMarketAccountType(account.type)) {
-        return { error: new DBError('Investment balance holding not found') };
+        return { error: new DBError("Investment balance holding not found") };
       }
 
       const currentValue = Math.max(0, params.currentValue);
-      if (isHoldingLocked(holding, dateNow) && currentValue < holding.current_value) {
-        return { error: new DBError('Investment holding is timelocked') };
+      if (
+        isHoldingLocked(holding, dateNow) &&
+        currentValue < holding.current_value
+      ) {
+        return { error: new DBError("Investment holding is timelocked") };
       }
 
       const costBasis =
@@ -380,7 +386,7 @@ class InvestmentService {
         cost_basis: costBasis,
         current_price: currentValue,
         current_value: currentValue,
-        price_source: 'manual',
+        price_source: "manual",
         price_updated_at: dateNow,
         updated_at: dateNow,
       };
@@ -398,36 +404,41 @@ class InvestmentService {
       return { error: null, holding: updatedHolding };
     } catch (e) {
       return {
-        error: handleError(e, new DBError('Unable to update investment balance')),
+        error: handleError(
+          e,
+          new DBError("Unable to update investment balance"),
+        ),
       };
     }
   }
 
   public async withdraw(
-    params: WithdrawInvestmentParams
+    params: WithdrawInvestmentParams,
   ): Promise<{ error: Error | null; transaction?: InvestmentTransaction }> {
     const dateNow = new Date();
 
     try {
       const holding = await db.investmentHoldings.get(params.holdingId);
       if (!holding) {
-        return { error: new DBError('Investment holding not found') };
+        return { error: new DBError("Investment holding not found") };
       }
 
       const account = await db.investmentAccounts.get(holding.account_id);
       if (!account || isMarketAccountType(account.type)) {
-        return { error: new DBError('Investment balance holding not found') };
+        return { error: new DBError("Investment balance holding not found") };
       }
 
       const amount = params.amount;
       if (amount <= 0) {
-        return { error: new DBError('Withdrawal amount must be greater than zero') };
+        return {
+          error: new DBError("Withdrawal amount must be greater than zero"),
+        };
       }
       if (amount > holding.current_value) {
-        return { error: new DBError('Withdrawal exceeds current balance') };
+        return { error: new DBError("Withdrawal exceeds current balance") };
       }
       if (isHoldingLocked(holding, dateNow)) {
-        return { error: new DBError('Investment holding is timelocked') };
+        return { error: new DBError("Investment holding is timelocked") };
       }
 
       const nextValue = Math.max(0, holding.current_value - amount);
@@ -440,7 +451,7 @@ class InvestmentService {
       const nextCostBasis = Math.max(0, holding.cost_basis - basisReduction);
       const transaction: InvestmentTransaction = {
         id: generateInvestmentId(),
-        account_id: account.id ?? '',
+        account_id: account.id ?? "",
         holding_id: holding.id ?? null,
         expense_id: null,
         type: InvestmentTransactionType.Withdrawal,
@@ -457,7 +468,7 @@ class InvestmentService {
       };
 
       await db.transaction(
-        'rw',
+        "rw",
         db.investmentHoldings,
         db.investmentTransactions,
         async () => {
@@ -466,47 +477,47 @@ class InvestmentService {
             cost_basis: nextCostBasis,
             current_price: nextValue,
             current_value: nextValue,
-            price_source: 'manual',
+            price_source: "manual",
             price_updated_at: dateNow,
             updated_at: dateNow,
           });
           await db.investmentTransactions.add(transaction);
-        }
+        },
       );
 
       return { error: null, transaction };
     } catch (e) {
       return {
-        error: handleError(e, new DBError('Unable to withdraw investment')),
+        error: handleError(e, new DBError("Unable to withdraw investment")),
       };
     }
   }
 
   public async deleteHolding(
-    holdingId: InvestmentHolding['id']
+    holdingId: InvestmentHolding["id"],
   ): Promise<Error | null> {
     if (!holdingId) {
-      return new DBError('Investment holding ID is required');
+      return new DBError("Investment holding ID is required");
     }
 
     try {
       const holding = await db.investmentHoldings.get(holdingId);
       if (!holding) {
-        return new DBError('Investment holding not found');
+        return new DBError("Investment holding not found");
       }
       if (isHoldingLocked(holding)) {
-        return new DBError('Investment holding is timelocked');
+        return new DBError("Investment holding is timelocked");
       }
 
       await db.transaction(
-        'rw',
+        "rw",
         db.investmentHoldings,
         db.investmentTransactions,
         db.investmentPriceSnapshots,
         db.expenses,
         async () => {
           const transactions = await db.investmentTransactions
-            .where('holding_id')
+            .where("holding_id")
             .equals(holdingId)
             .toArray();
           const expenseIds = transactions
@@ -516,29 +527,29 @@ class InvestmentService {
           await Promise.all([
             db.investmentHoldings.delete(holdingId),
             db.investmentTransactions
-              .where('holding_id')
+              .where("holding_id")
               .equals(holdingId)
               .delete(),
             db.investmentPriceSnapshots
-              .where('holding_id')
+              .where("holding_id")
               .equals(holdingId)
               .delete(),
             expenseIds.length > 0
               ? db.expenses.bulkDelete(expenseIds)
               : Promise.resolve(),
           ]);
-        }
+        },
       );
 
       return null;
     } catch (e) {
-      return handleError(e, new DBError('Unable to delete investment holding'));
+      return handleError(e, new DBError("Unable to delete investment holding"));
     }
   }
 
   private async ensureAccount(
     params: AddInvestmentParams,
-    dateNow: Date
+    dateNow: Date,
   ): Promise<InvestmentAccount> {
     const trimmedName = params.accountName.trim();
     const existing = await db.investmentAccounts
@@ -546,7 +557,7 @@ class InvestmentService {
         (account) =>
           account.name.toLowerCase() === trimmedName.toLowerCase() &&
           account.type === params.accountType &&
-          account.currency === params.currency
+          account.currency === params.currency,
       )
       .first();
 
@@ -569,7 +580,7 @@ class InvestmentService {
   private async upsertHolding(
     account: InvestmentAccount,
     params: AddInvestmentParams,
-    dateNow: Date
+    dateNow: Date,
   ): Promise<InvestmentHolding | null> {
     const normalizedSymbol = normalizeSymbol(params.symbol);
     const holdingName = params.holdingName.trim() || params.accountName.trim();
@@ -581,7 +592,7 @@ class InvestmentService {
           holding.account_id === account.id &&
           (shouldMatchBySymbol
             ? holding.symbol === normalizedSymbol
-            : holding.name.toLowerCase() === holdingName.toLowerCase())
+            : holding.name.toLowerCase() === holdingName.toLowerCase()),
       )
       .first();
 
@@ -595,11 +606,17 @@ class InvestmentService {
         amount: params.amount,
         fees: params.fees,
       });
-      const nextValue = Math.max(0, (existing?.current_value ?? 0) + cashImpact);
-      const nextCostBasis = Math.max(0, (existing?.cost_basis ?? 0) + cashImpact);
+      const nextValue = Math.max(
+        0,
+        (existing?.current_value ?? 0) + cashImpact,
+      );
+      const nextCostBasis = Math.max(
+        0,
+        (existing?.cost_basis ?? 0) + cashImpact,
+      );
 
       if (existing) {
-        await db.investmentHoldings.update(existing.id ?? '', {
+        await db.investmentHoldings.update(existing.id ?? "", {
           quantity: 1,
           cost_basis: nextCostBasis,
           current_price: nextValue,
@@ -610,9 +627,9 @@ class InvestmentService {
             null,
           timelock_until:
             params.timelockUntil === undefined
-              ? existing.timelock_until ?? null
+              ? (existing.timelock_until ?? null)
               : params.timelockUntil,
-          price_source: 'manual',
+          price_source: "manual",
           price_updated_at: dateNow,
           updated_at: dateNow,
         });
@@ -629,9 +646,9 @@ class InvestmentService {
             null,
           timelock_until:
             params.timelockUntil === undefined
-              ? existing.timelock_until ?? null
+              ? (existing.timelock_until ?? null)
               : params.timelockUntil,
-          price_source: 'manual',
+          price_source: "manual",
           price_updated_at: dateNow,
           updated_at: dateNow,
         };
@@ -639,17 +656,18 @@ class InvestmentService {
 
       const holding: InvestmentHolding = {
         id: generateInvestmentId(),
-        account_id: account.id ?? '',
+        account_id: account.id ?? "",
         name: holdingName,
         symbol: null,
         quantity: 1,
         cost_basis: nextCostBasis,
         current_price: nextValue,
         current_value: nextValue,
-        expected_annual_return_percent: params.expectedAnnualReturnPercent ?? null,
+        expected_annual_return_percent:
+          params.expectedAnnualReturnPercent ?? null,
         timelock_until: params.timelockUntil ?? null,
         currency: params.currency,
-        price_source: 'manual',
+        price_source: "manual",
         price_updated_at: dateNow,
         created_at: dateNow,
         updated_at: dateNow,
@@ -662,8 +680,9 @@ class InvestmentService {
     const currentPrice =
       params.pricePerUnit && params.pricePerUnit > 0
         ? params.pricePerUnit
-        : existing?.current_price ?? params.amount;
-    const quantityDelta = params.quantity ?? (currentPrice > 0 ? params.amount / currentPrice : 0);
+        : (existing?.current_price ?? params.amount);
+    const quantityDelta =
+      params.quantity ?? (currentPrice > 0 ? params.amount / currentPrice : 0);
     const cashImpact = getTransactionCashImpact({
       type: params.transactionType,
       amount: params.amount,
@@ -674,29 +693,30 @@ class InvestmentService {
       const nextQuantity = calculateNextQuantity(
         existing.quantity,
         quantityDelta,
-        params.transactionType
+        params.transactionType,
       );
       const nextCostBasis = Math.max(
         0,
-        existing.cost_basis + calculateCostBasisDelta(cashImpact, params.transactionType)
+        existing.cost_basis +
+          calculateCostBasisDelta(cashImpact, params.transactionType),
       );
       const currentValue = calculateHoldingValue(nextQuantity, currentPrice);
 
-      await db.investmentHoldings.update(existing.id ?? '', {
+      await db.investmentHoldings.update(existing.id ?? "", {
         quantity: nextQuantity,
         cost_basis: nextCostBasis,
         current_price: currentPrice,
-          current_value: currentValue,
-          expected_annual_return_percent:
-            params.expectedAnnualReturnPercent ??
-            existing.expected_annual_return_percent ??
-            null,
-          timelock_until:
-            params.timelockUntil === undefined
-              ? existing.timelock_until ?? null
-              : params.timelockUntil,
-          price_source: 'manual',
-          price_updated_at: dateNow,
+        current_value: currentValue,
+        expected_annual_return_percent:
+          params.expectedAnnualReturnPercent ??
+          existing.expected_annual_return_percent ??
+          null,
+        timelock_until:
+          params.timelockUntil === undefined
+            ? (existing.timelock_until ?? null)
+            : params.timelockUntil,
+        price_source: "manual",
+        price_updated_at: dateNow,
         updated_at: dateNow,
       });
 
@@ -705,17 +725,17 @@ class InvestmentService {
         quantity: nextQuantity,
         cost_basis: nextCostBasis,
         current_price: currentPrice,
-          current_value: currentValue,
-          expected_annual_return_percent:
-            params.expectedAnnualReturnPercent ??
-            existing.expected_annual_return_percent ??
-            null,
-          timelock_until:
-            params.timelockUntil === undefined
-              ? existing.timelock_until ?? null
-              : params.timelockUntil,
-          price_source: 'manual',
-          price_updated_at: dateNow,
+        current_value: currentValue,
+        expected_annual_return_percent:
+          params.expectedAnnualReturnPercent ??
+          existing.expected_annual_return_percent ??
+          null,
+        timelock_until:
+          params.timelockUntil === undefined
+            ? (existing.timelock_until ?? null)
+            : params.timelockUntil,
+        price_source: "manual",
+        price_updated_at: dateNow,
         updated_at: dateNow,
       };
     }
@@ -723,10 +743,13 @@ class InvestmentService {
     const quantity = shouldTrackQuantity(params.transactionType)
       ? quantityDelta
       : 1;
-    const costBasis = Math.max(0, calculateCostBasisDelta(cashImpact, params.transactionType));
+    const costBasis = Math.max(
+      0,
+      calculateCostBasisDelta(cashImpact, params.transactionType),
+    );
     const holding: InvestmentHolding = {
       id: generateInvestmentId(),
-      account_id: account.id ?? '',
+      account_id: account.id ?? "",
       name: holdingName,
       symbol: normalizedSymbol,
       quantity,
@@ -735,10 +758,11 @@ class InvestmentService {
       current_value: shouldTrackQuantity(params.transactionType)
         ? calculateHoldingValue(quantity, currentPrice)
         : params.amount,
-      expected_annual_return_percent: params.expectedAnnualReturnPercent ?? null,
+      expected_annual_return_percent:
+        params.expectedAnnualReturnPercent ?? null,
       timelock_until: params.timelockUntil ?? null,
       currency: params.currency,
-      price_source: 'manual',
+      price_source: "manual",
       price_updated_at: dateNow,
       created_at: dateNow,
       updated_at: dateNow,
@@ -750,7 +774,7 @@ class InvestmentService {
 
   private async createExpenseMirror(
     params: AddInvestmentParams,
-    holding: InvestmentHolding | null
+    holding: InvestmentHolding | null,
   ): Promise<string | null> {
     const cashImpact = getTransactionCashImpact({
       type: params.transactionType,
@@ -786,7 +810,8 @@ class InvestmentService {
     const existing = await db.categories
       .filter(
         (category) =>
-          category.name.toLowerCase() === INVESTMENT_CATEGORY_NAME.toLowerCase()
+          category.name.toLowerCase() ===
+          INVESTMENT_CATEGORY_NAME.toLowerCase(),
       )
       .first();
 
@@ -837,7 +862,7 @@ function isMarketAccountType(type: InvestmentAccountType): boolean {
 function calculateNextQuantity(
   currentQuantity: number,
   quantityDelta: number,
-  type: InvestmentTransactionType
+  type: InvestmentTransactionType,
 ): number {
   if (
     type === InvestmentTransactionType.Sell ||
@@ -858,7 +883,7 @@ function calculateNextQuantity(
 
 function calculateCostBasisDelta(
   cashImpact: number,
-  type: InvestmentTransactionType
+  type: InvestmentTransactionType,
 ): number {
   if (
     type === InvestmentTransactionType.Buy ||
@@ -895,24 +920,29 @@ function calculateWithdrawalBasisReduction(params: {
   return Math.min(params.costBasis, params.costBasis * withdrawalRatio);
 }
 
-function isHoldingLocked(holding: InvestmentHolding, now = new Date()): boolean {
+function isHoldingLocked(
+  holding: InvestmentHolding,
+  now = new Date(),
+): boolean {
   if (!holding.timelock_until) return false;
   return new Date(holding.timelock_until).getTime() > now.getTime();
 }
 
 function isTimelockExtension(
   currentTimelock: Date | null | undefined,
-  nextTimelock: Date | null
+  nextTimelock: Date | null,
 ): boolean {
   if (!currentTimelock || !nextTimelock) return false;
-  return new Date(nextTimelock).getTime() >= new Date(currentTimelock).getTime();
+  return (
+    new Date(nextTimelock).getTime() >= new Date(currentTimelock).getTime()
+  );
 }
 
 export const investmentService = new InvestmentService();
 
 function toExpensePhpAmount(
   cashImpact: number,
-  params: Pick<AddInvestmentParams, 'currency' | 'usdToPhp'>
+  params: Pick<AddInvestmentParams, "currency" | "usdToPhp">,
 ): number {
   if (params.currency === InvestmentCurrency.PHP) return cashImpact;
   return cashImpact * (params.usdToPhp || 58);
