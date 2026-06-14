@@ -12,3 +12,4 @@ export {
   type InvestmentPriceSnapshot,
   type InvestmentTransaction,
 } from './investment.db'
+export { WarrantyUploadStatus, type Warranty } from './warranty.db'

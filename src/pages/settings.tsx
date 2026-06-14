@@ -108,6 +108,24 @@ const Settings: FC = () => {
               →
             </span>
           </Link>
+
+          <Link
+            to='/warranties'
+            onClick={() => navigator.vibrate?.(8)}
+            className='bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 flex items-center justify-between active:scale-[0.99] transition-transform'
+          >
+            <div>
+              <AppTypography variant='body' className='font-medium text-neutral-900'>
+                Warranties
+              </AppTypography>
+              <AppTypography variant='small' className='text-neutral-500'>
+                Receipts and warranty expiration dates
+              </AppTypography>
+            </div>
+            <span className='text-neutral-400' aria-hidden='true'>
+              →
+            </span>
+          </Link>
         </div>
       </div>
 

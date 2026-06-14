@@ -6,14 +6,21 @@ import { RecurringMonthlyToggle } from '@/components/organisms/expense-form/recu
 import TitleField from '@/components/organisms/expense-form/title-field';
 import TransactionAmountField from '@/components/organisms/expense-form/transaction-amount-field';
 import TransactionDateField from '@/components/organisms/expense-form/transaction-date-field';
+import WarrantyField from '@/components/organisms/expense-form/warranty-field';
 import { useCategories } from '@/hooks/categories/use-categories';
+import { useCancelRecurrence } from '@/hooks/expenses/use-cancel-recurrence';
 import { useDeleteExpense } from '@/hooks/expenses/use-delete-expense';
 import { useExpenseForm } from '@/hooks/expenses/use-expense-form';
 import { useUpdateExpense } from '@/hooks/expenses/use-update-expense';
+import { useCreateWarranty } from '@/hooks/warranties/use-create-warranty';
+import { useUpdateWarranty } from '@/hooks/warranties/use-update-warranty';
+import { useDeleteWarranty } from '@/hooks/warranties/use-delete-warranty';
+import { useWarrantyLive } from '@/hooks/warranties/use-warranty-live';
 import { clearCurrencyFormatting } from '@/lib/formatters.utils';
 import { ExpenseRecurrence } from '@/repository/expense.db';
 import { UpdateExpenseParams } from '@/services/expense-service/expense.service';
-import { FC, useRef, useState } from 'react';
+import { resolveRecurrenceFields } from '@/services/recurring-expense-service/recurring-expense.service';
+import { FC, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type FormData = {
@@ -29,6 +36,7 @@ type ExpenseEditFormProps = {
   initialData?: FormData;
   initialRecurrence?: ExpenseRecurrence | null;
   initialRecurrenceId?: string | null;
+  initialWarrantyId?: string | null;
 };
 
 const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
@@ -36,11 +44,31 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
   initialData,
   initialRecurrence,
   initialRecurrenceId = null,
+  initialWarrantyId = null,
 }) => {
   const navigate = useNavigate();
   const updateExpense = useUpdateExpense();
   const deleteExpense = useDeleteExpense();
+  const cancelRecurrence = useCancelRecurrence();
+  const createWarranty = useCreateWarranty();
+  const updateWarranty = useUpdateWarranty();
+  const deleteWarranty = useDeleteWarranty();
+  const { data: existingWarranty } = useWarrantyLive(initialWarrantyId);
   const { data: categories } = useCategories();
+
+  const [warrantyImage, setWarrantyImage] = useState<File | null>(null);
+  const [warrantyExpiration, setWarrantyExpiration] = useState<Date | null>(
+    null
+  );
+  const [warrantyRemoved, setWarrantyRemoved] = useState(false);
+
+  // Seed the expiration from the loaded warranty exactly once.
+  const didSeedWarranty = useRef(false);
+  useEffect(() => {
+    if (didSeedWarranty.current || !existingWarranty) return;
+    didSeedWarranty.current = true;
+    setWarrantyExpiration(existingWarranty.expiration_date ?? null);
+  }, [existingWarranty]);
 
   const { handleSubmit, control, errors } = useExpenseForm({
     defaultValues: initialData,
@@ -52,13 +80,48 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
     return n < 0;
   });
 
+  // An auto-generated instance carries `recurrence_id` but no `recurrence`, so
+  // both signals must be checked for the toggle to reflect a recurring expense.
+  const isInstance = !!initialRecurrenceId;
   const [isRecurring, setIsRecurring] = useState(
-    initialRecurrence === ExpenseRecurrence.Monthly
+    initialRecurrence === ExpenseRecurrence.Monthly || isInstance
   );
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Resolves the warranty link based on what the user did:
+  //  - picked a new image  → replace (delete old) and create a fresh warranty
+  //  - removed the receipt → delete and unlink
+  //  - only changed expiry → update the existing warranty in place
+  const resolveWarranty = async (title: string): Promise<string | null> => {
+    if (warrantyImage) {
+      if (existingWarranty?.id) await deleteWarranty.execute(existingWarranty.id);
+      const warranty = await createWarranty.execute({
+        title,
+        expiration_date: warrantyExpiration,
+        imageFile: warrantyImage,
+      });
+      return warranty.id ?? null;
+    }
+
+    if (warrantyRemoved) {
+      if (existingWarranty?.id) await deleteWarranty.execute(existingWarranty.id);
+      return null;
+    }
+
+    if (existingWarranty?.id) {
+      await updateWarranty.execute({
+        id: existingWarranty.id,
+        title,
+        expiration_date: warrantyExpiration,
+      });
+      return existingWarranty.id;
+    }
+
+    return initialWarrantyId;
+  };
 
   const handleFormSubmit = async (data: FormData) => {
     const cleanAmount = clearCurrencyFormatting(data.amount);
@@ -67,6 +130,13 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
       data.title.trim() ||
       categories.find((c) => c.id === data.category)?.name ||
       '';
+
+    const { recurrence, recurrence_id } = resolveRecurrenceFields({
+      isRecurring,
+      recurrenceId: initialRecurrenceId,
+    });
+
+    const warranty_id = await resolveWarranty(title);
 
     const formData: UpdateExpenseParams = {
       id: expenseId,
@@ -77,13 +147,19 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
       transaction_date: data.transaction_date,
       description: data.description,
       category_id: data.category || null,
-      recurrence: isRecurring ? ExpenseRecurrence.Monthly : null,
-      // When making it a template, it must not link to another template.
-      // Otherwise preserve the original recurrence_id (e.g. auto-generated instance).
-      recurrence_id: isRecurring ? null : initialRecurrenceId,
+      recurrence,
+      recurrence_id,
+      warranty_id,
     };
 
-    updateExpense.execute(formData);
+    await updateExpense.execute(formData);
+
+    // Cancelling recurrence on an instance must also stop its parent template,
+    // otherwise the series keeps generating new instances next period.
+    if (!isRecurring && isInstance && initialRecurrenceId) {
+      await cancelRecurrence.execute(initialRecurrenceId);
+    }
+
     navigate(-1);
   };
 
@@ -147,6 +223,24 @@ const ExpenseEditForm: FC<ExpenseEditFormProps> = ({
         <RecurringMonthlyToggle
           value={isRecurring}
           onToggle={setIsRecurring}
+          description={
+            isInstance
+              ? 'Part of a monthly series — turn off to stop it recurring'
+              : undefined
+          }
+        />
+
+        <WarrantyField
+          imageFile={warrantyImage}
+          expirationDate={warrantyExpiration}
+          existingImageUrl={warrantyRemoved ? null : existingWarranty?.image_url}
+          existingImageBlob={warrantyRemoved ? null : existingWarranty?.image_blob}
+          onImageChange={(file) => {
+            setWarrantyImage(file);
+            if (file) setWarrantyRemoved(false);
+          }}
+          onExpirationChange={setWarrantyExpiration}
+          onRemove={() => setWarrantyRemoved(true)}
         />
       </form>
 

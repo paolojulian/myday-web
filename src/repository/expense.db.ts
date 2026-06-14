@@ -12,6 +12,7 @@ export type Expense = {
   category_id?: string | null; // Dynamic, users can create a category
   recurrence?: ExpenseRecurrence | null;
   recurrence_id?: string | null; // The parent recurrence of this expense, this is also an expense
+  warranty_id?: string | null; // Optional link to a Warranty record (receipt + expiration)
   created_at: Date;
   updated_at: Date;
 };

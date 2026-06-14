@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/repository';
 import { ExpenseRecurrence } from '@/repository/expense.db';
 import { expenseService } from '@/services/expense-service/expense.service';
-import { recurringExpenseService } from './recurring-expense.service';
+import {
+  recurringExpenseService,
+  resolveRecurrenceFields,
+} from './recurring-expense.service';
 
 beforeEach(async () => {
   await db.open();
@@ -157,6 +160,38 @@ describe('recurringExpenseService.populateCurrentPeriod', () => {
     expect(all).toHaveLength(1); // unchanged
   });
 
+  it('stops generating after the series is cancelled', async () => {
+    await expenseService.add({
+      title: 'Netflix',
+      amount: 15,
+      transaction_date: dayjs().subtract(1, 'month').toDate(),
+      description: null,
+      category_id: null,
+      recurrence: ExpenseRecurrence.Monthly,
+      recurrence_id: null,
+    });
+
+    await recurringExpenseService.populateCurrentPeriod();
+
+    const beforeCancel = await db.expenses.toArray();
+    const template = beforeCancel.find(
+      (e) => e.recurrence === ExpenseRecurrence.Monthly
+    );
+    expect(template?.id).toBeDefined();
+
+    // Cancel the series, then clear the instance so we can detect re-generation.
+    await recurringExpenseService.cancelRecurrence(template!.id!);
+    const instance = beforeCancel.find((e) => !!e.recurrence_id);
+    await db.expenses.delete(instance!.id!);
+
+    await recurringExpenseService.populateCurrentPeriod();
+
+    const afterCancel = await db.expenses.toArray();
+    expect(afterCancel).toHaveLength(1); // only the (now plain) former template
+    expect(afterCancel[0].recurrence).toBeNull();
+    expect(afterCancel.some((e) => !!e.recurrence_id)).toBe(false);
+  });
+
   it('handles multiple templates independently', async () => {
     const lastMonth = dayjs().subtract(1, 'month').toDate();
 
@@ -188,5 +223,31 @@ describe('recurringExpenseService.populateCurrentPeriod', () => {
     const instances = all.filter((e) => !!e.recurrence_id);
     expect(instances).toHaveLength(2);
     expect(instances.map((i) => i.title).sort()).toEqual(['Gym', 'Rent']);
+  });
+});
+
+describe('resolveRecurrenceFields', () => {
+  it('turns a plain expense into a template when toggled on', () => {
+    expect(
+      resolveRecurrenceFields({ isRecurring: true, recurrenceId: null })
+    ).toEqual({ recurrence: ExpenseRecurrence.Monthly, recurrence_id: null });
+  });
+
+  it('keeps an instance as an instance — never promotes it to a template', () => {
+    expect(
+      resolveRecurrenceFields({ isRecurring: true, recurrenceId: 'exp-tmpl' })
+    ).toEqual({ recurrence: null, recurrence_id: 'exp-tmpl' });
+  });
+
+  it('detaches the record when toggled off (template case)', () => {
+    expect(
+      resolveRecurrenceFields({ isRecurring: false, recurrenceId: null })
+    ).toEqual({ recurrence: null, recurrence_id: null });
+  });
+
+  it('detaches an instance when toggled off', () => {
+    expect(
+      resolveRecurrenceFields({ isRecurring: false, recurrenceId: 'exp-tmpl' })
+    ).toEqual({ recurrence: null, recurrence_id: null });
   });
 });

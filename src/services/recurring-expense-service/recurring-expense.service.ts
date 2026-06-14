@@ -1,7 +1,41 @@
 import dayjs from 'dayjs';
+import { DBError } from '../../config/errors.constants';
+import { handleError } from '../../lib/handle-error.utils';
 import { db, type Expense } from '../../repository';
 import { ExpenseRecurrence } from '../../repository/expense.db';
 import { expenseService } from '../expense-service/expense.service';
+
+export type RecurrenceFields = {
+  recurrence: ExpenseRecurrence | null;
+  recurrence_id: string | null;
+};
+
+/**
+ * Resolves the recurrence fields to persist for an edited expense, based on the
+ * toggle state and what the expense originally was.
+ *
+ * Rules:
+ * - An instance (one with `recurrenceId`) stays an instance while recurring —
+ *   it is never promoted to a template, which would spawn a duplicate series.
+ * - A plain expense / template turned on becomes a template.
+ * - Turning recurrence off always detaches this record. When the record was an
+ *   instance, the caller must also stop the parent template via
+ *   `cancelRecurrence` so no further instances are generated.
+ */
+export function resolveRecurrenceFields(params: {
+  isRecurring: boolean;
+  recurrenceId: string | null;
+}): RecurrenceFields {
+  if (!params.isRecurring) {
+    return { recurrence: null, recurrence_id: null };
+  }
+
+  if (params.recurrenceId) {
+    return { recurrence: null, recurrence_id: params.recurrenceId };
+  }
+
+  return { recurrence: ExpenseRecurrence.Monthly, recurrence_id: null };
+}
 
 class RecurringExpenseService {
   /**
@@ -19,6 +53,23 @@ class RecurringExpenseService {
     await Promise.all(
       templates.map((template) => this.populateTemplate(template))
     );
+  }
+
+  /**
+   * Stops a recurring series so no further instances are generated. Clears the
+   * template's `recurrence`; the template and any already-generated instances
+   * stay intact as ordinary historical expenses.
+   */
+  async cancelRecurrence(templateId: string): Promise<Error | null> {
+    try {
+      await db.expenses.update(templateId, {
+        recurrence: null,
+        updated_at: new Date(),
+      });
+      return null;
+    } catch (e) {
+      return handleError(e, new DBError('Unable to cancel recurrence'));
+    }
   }
 
   private async populateTemplate(template: Expense): Promise<void> {

@@ -13,6 +13,7 @@ import {
   InvestmentPriceSnapshot,
   InvestmentTransaction,
 } from './investment.db';
+import { Warranty } from './warranty.db';
 
 class XpenseDB extends Dexie {
   // Private static instance to store the single instance of the class
@@ -27,6 +28,7 @@ class XpenseDB extends Dexie {
   investmentTransactions!: DexieCloudTable<InvestmentTransaction, 'id'>;
   investmentGoals!: DexieCloudTable<InvestmentGoal, 'id'>;
   investmentPriceSnapshots!: DexieCloudTable<InvestmentPriceSnapshot, 'id'>;
+  warranties!: DexieCloudTable<Warranty, 'id'>;
 
   private constructor() {
     super(DATABASE_NAME, {
@@ -89,6 +91,24 @@ class XpenseDB extends Dexie {
       investmentPriceSnapshots: 'id, holding_id, symbol, captured_at',
     });
 
+    this.version(5).stores({
+      todos: '@id, created_at',
+      expenses: '@id, category_id, transaction_date, [transaction_date+created_at]',
+      budget: '@id, created_at',
+      categories: '@id, name, created_at',
+      investmentAccounts: 'id, name, type, currency, created_at',
+      investmentHoldings:
+        'id, account_id, symbol, name, currency, [account_id+symbol]',
+      investmentTransactions:
+        'id, account_id, holding_id, expense_id, type, transaction_date, [transaction_date+created_at]',
+      investmentGoals: 'id, category, priority, target_date',
+      investmentPriceSnapshots: 'id, holding_id, symbol, captured_at',
+      // Warranties use a plain `id` (manually assigned `wrt` uuid) like the
+      // investment tables. upload_status is indexed so the sync service can
+      // cheaply find pending uploads.
+      warranties: 'id, expiration_date, upload_status, created_at',
+    });
+
     // Add error handlers
     this.on('blocked', () => {
       console.warn(
@@ -132,8 +152,10 @@ class XpenseDB extends Dexie {
 
 export const db = XpenseDB.getInstance();
 
-// Log database status on initialization (useful for debugging)
-if (typeof window !== 'undefined') {
+// Log database status on initialization (useful for debugging).
+// Skipped under test: the deferred populateCurrentPeriod() would otherwise race
+// against per-test DB setup and leak stray recurring instances between tests.
+if (typeof window !== 'undefined' && import.meta.env.MODE !== 'test') {
   db.open()
     .then(async () => {
       db.checkStatus();

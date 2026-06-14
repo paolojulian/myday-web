@@ -3,17 +3,27 @@ import cn from '@/utils/cn';
 type Props = {
   value: boolean;
   onToggle: (value: boolean) => void;
+  description?: string;
 };
 
-export const RecurringMonthlyToggle = ({ value, onToggle }: Props) => {
+export const RecurringMonthlyToggle = ({
+  value,
+  onToggle,
+  description,
+}: Props) => {
   return (
     <button
       type='button'
       onClick={() => onToggle(!value)}
       className='flex items-center justify-between w-full px-4 py-3 bg-neutral-100 rounded-md active:scale-95 transition-all'
     >
-      <span className='text-sm font-medium text-neutral-700'>
-        Monthly Recurring
+      <span className='flex flex-col items-start'>
+        <span className='text-sm font-medium text-neutral-700'>
+          Monthly Recurring
+        </span>
+        {description && (
+          <span className='text-xs text-neutral-500'>{description}</span>
+        )}
       </span>
 
       {/* Toggle switch */}

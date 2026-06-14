@@ -138,7 +138,8 @@ export type AddExpenseParams = Pick<
   | 'category_id'
   | 'recurrence'
   | 'recurrence_id'
->;
+> &
+  Partial<Pick<Expense, 'warranty_id'>>;
 
 export type UpdateExpenseParams = Pick<
   Expense,
@@ -150,7 +151,8 @@ export type UpdateExpenseParams = Pick<
   | 'category_id'
   | 'recurrence'
   | 'recurrence_id'
->;
+> &
+  Partial<Pick<Expense, 'warranty_id'>>;
 
 export type ListFilter = {
   filterType: ExpenseRecurrence;
