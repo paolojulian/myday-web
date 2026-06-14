@@ -123,9 +123,9 @@ fn cloudinary_uploader(
 async fn upload_to_cloudinary(
     store_warranty_receipt_request: &StoreWarrantyReceiptRequest,
 ) -> Result<CloudinaryResponse, Error> {
-    let cloud_name = env::var("CLOUDINARY_CLOUD_NAME")?;
-    let api_key = env::var("CLOUDINARY_API_KEY")?;
-    let api_secret = env::var("CLOUDINARY_API_SECRET")?;
+    let cloud_name = env::var("CLOUDINARY_CLOUD_NAME").expect("CLOUDINARY_CLOUD_NAME not set");
+    let api_key = env::var("CLOUDINARY_API_KEY").expect("CLOUDINARY_API_KEY not set");
+    let api_secret = env::var("CLOUDINARY_API_SECRET").expect("CLOUDINARY_API_SECRET not set");
 
     let folder = format!("myday-web/{}", store_warranty_receipt_request.user_id);
 

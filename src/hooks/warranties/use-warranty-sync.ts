@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { warrantySyncService } from '@/services/warranty-service/warranty-sync.service';
+import { useEffect } from "react";
+import { warrantySyncService } from "@/services/warranty-service/warranty-sync.service";
 
 /**
  * Drains queued warranty receipt uploads on mount and whenever the device comes
@@ -10,7 +10,7 @@ export const useWarrantySync = () => {
     void warrantySyncService.drainQueue();
 
     const handleOnline = () => void warrantySyncService.drainQueue();
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
   }, []);
 };

@@ -93,6 +93,38 @@ class WarrantyService {
       .toArray();
   }
 
+  /**
+   * Revives receipts that were permanently parked after exhausting their upload
+   * attempts (>= MAX_UPLOAD_ATTEMPTS). Intended to run after a successful upload:
+   * a success proves the server is reachable/configured again, so failures that
+   * were likely transient (e.g. a server-side 5xx) deserve a fresh pass instead
+   * of staying stuck forever. Returns the revived warranties (with reset fields).
+   */
+  public async resetCappedFailures(): Promise<Warranty[]> {
+    const capped = await db.warranties
+      .where('upload_status')
+      .equals(WarrantyUploadStatus.Failed)
+      .and((w) => (w.upload_attempts ?? 0) >= MAX_UPLOAD_ATTEMPTS)
+      .toArray();
+
+    const updatedAt = new Date();
+    for (const warranty of capped) {
+      if (!warranty.id) continue;
+      await db.warranties.update(warranty.id, {
+        upload_status: WarrantyUploadStatus.Pending,
+        upload_attempts: 0,
+        updated_at: updatedAt,
+      });
+    }
+
+    return capped.map((w) => ({
+      ...w,
+      upload_status: WarrantyUploadStatus.Pending,
+      upload_attempts: 0,
+      updated_at: updatedAt,
+    }));
+  }
+
   public async markSynced(
     id: string,
     result: { image_url: string; image_public_id: string }
