@@ -5,7 +5,7 @@ import {
   InvestmentHolding,
   InvestmentTransaction,
   InvestmentTransactionType,
-} from '@/repository';
+} from "@/repository";
 
 export const DEFAULT_USD_TO_PHP = 58;
 
@@ -22,7 +22,7 @@ export type AllocationItem = {
 
 export type InvestmentInsight = {
   id: string;
-  tone: 'danger' | 'warning' | 'success' | 'neutral';
+  tone: "danger" | "warning" | "success" | "neutral";
   title: string;
   description: string;
 };
@@ -50,7 +50,7 @@ export type ProjectionResult = {
 };
 
 export type ProjectionScenario = ProjectionResult & {
-  id: 'conservative' | 'planned' | 'optimistic';
+  id: "conservative" | "planned" | "optimistic";
   label: string;
   annualReturnPercent: number;
 };
@@ -58,7 +58,7 @@ export type ProjectionScenario = ProjectionResult & {
 export function toPhpValue(
   amount: number,
   currency: InvestmentCurrency,
-  usdToPhp = DEFAULT_USD_TO_PHP
+  usdToPhp = DEFAULT_USD_TO_PHP,
 ): number {
   return currency === InvestmentCurrency.USD ? amount * usdToPhp : amount;
 }
@@ -70,14 +70,14 @@ export function calculateHoldingValue(quantity: number, price: number): number {
 
 export function calculateReturnPercent(
   currentValue: number,
-  costBasis: number
+  costBasis: number,
 ): number {
   if (costBasis <= 0) return 0;
   return ((currentValue - costBasis) / costBasis) * 100;
 }
 
 export function getTransactionCashImpact(
-  transaction: Pick<InvestmentTransaction, 'type' | 'amount' | 'fees'>
+  transaction: Pick<InvestmentTransaction, "type" | "amount" | "fees">,
 ): number {
   const fees = transaction.fees ?? 0;
 
@@ -116,12 +116,12 @@ export function buildPortfolioOverview(params: {
   const totalValuePhp = holdings.reduce(
     (sum, holding) =>
       sum + toPhpValue(holding.current_value, holding.currency, usdToPhp),
-    0
+    0,
   );
   const totalCostBasisPhp = holdings.reduce(
     (sum, holding) =>
       sum + toPhpValue(holding.cost_basis, holding.currency, usdToPhp),
-    0
+    0,
   );
   const cashValuePhp = holdings.reduce((sum, holding) => {
     const account = accountMap.get(holding.account_id);
@@ -144,11 +144,14 @@ export function buildPortfolioOverview(params: {
   }, 0);
   const expectedAnnualReturnPercent = calculateWeightedExpectedReturn(
     holdings,
-    usdToPhp
+    usdToPhp,
   );
 
   const allocationMap = new Map<string, { label: string; value: number }>();
-  const accountBreakdownMap = new Map<string, { label: string; value: number }>();
+  const accountBreakdownMap = new Map<
+    string,
+    { label: string; value: number }
+  >();
 
   holdings.forEach((holding) => {
     const account = accountMap.get(holding.account_id);
@@ -164,7 +167,7 @@ export function buildPortfolioOverview(params: {
     const accountKey = account?.id ?? holding.account_id;
     const currentAccount = accountBreakdownMap.get(accountKey);
     accountBreakdownMap.set(accountKey, {
-      label: account?.name ?? 'Unassigned',
+      label: account?.name ?? "Unassigned",
       value: (currentAccount?.value ?? 0) + value,
     });
   });
@@ -177,14 +180,17 @@ export function buildPortfolioOverview(params: {
     const date = new Date(transaction.transaction_date);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
       2,
-      '0'
+      "0",
     )}`;
     const value = toPhpValue(impact, transaction.currency, usdToPhp);
     contributionMap.set(key, (contributionMap.get(key) ?? 0) + value);
   });
 
   const allocation = toAllocationItems(allocationMap, totalValuePhp);
-  const accountBreakdown = toAllocationItems(accountBreakdownMap, totalValuePhp);
+  const accountBreakdown = toAllocationItems(
+    accountBreakdownMap,
+    totalValuePhp,
+  );
   const contributionHistory = Array.from(contributionMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-6)
@@ -220,7 +226,7 @@ export function buildPortfolioOverview(params: {
 
 function calculateWeightedExpectedReturn(
   holdings: InvestmentHolding[],
-  usdToPhp: number
+  usdToPhp: number,
 ): number | null {
   const hasUnratedPositiveHolding = holdings.some((holding) => {
     const value = toPhpValue(holding.current_value, holding.currency, usdToPhp);
@@ -238,13 +244,17 @@ function calculateWeightedExpectedReturn(
       const rate = holding.expected_annual_return_percent;
       if (rate === null || rate === undefined) return result;
 
-      const value = toPhpValue(holding.current_value, holding.currency, usdToPhp);
+      const value = toPhpValue(
+        holding.current_value,
+        holding.currency,
+        usdToPhp,
+      );
       return {
         value: result.value + value,
         weightedRate: result.weightedRate + value * rate,
       };
     },
-    { value: 0, weightedRate: 0 }
+    { value: 0, weightedRate: 0 },
   );
 
   if (weighted.value <= 0) return null;
@@ -285,18 +295,18 @@ export function buildInvestmentProjectionScenarios(params: {
   const conservativeRate = Math.max(0, params.annualReturnPercent - 2);
   const scenarios = [
     {
-      id: 'conservative' as const,
-      label: 'Conservative',
+      id: "conservative" as const,
+      label: "Conservative",
       annualReturnPercent: conservativeRate,
     },
     {
-      id: 'planned' as const,
-      label: 'Planned',
+      id: "planned" as const,
+      label: "Planned",
       annualReturnPercent: params.annualReturnPercent,
     },
     {
-      id: 'optimistic' as const,
-      label: 'Optimistic',
+      id: "optimistic" as const,
+      label: "Optimistic",
       annualReturnPercent: params.annualReturnPercent + 2,
     },
   ];
@@ -314,14 +324,14 @@ export function buildInvestmentProjectionScenarios(params: {
 
 export function formatAccountType(type: InvestmentAccountType): string {
   const labels: Record<InvestmentAccountType, string> = {
-    [InvestmentAccountType.Cash]: 'Cash',
-    [InvestmentAccountType.Stocks]: 'Stocks',
-    [InvestmentAccountType.Crypto]: 'Crypto',
-    [InvestmentAccountType.MP2]: 'MP2',
-    [InvestmentAccountType.PSE]: 'PSE/FMETF',
-    [InvestmentAccountType.Compound]: 'Compounding',
-    [InvestmentAccountType.RealEstate]: 'Real Estate',
-    [InvestmentAccountType.Other]: 'Other',
+    [InvestmentAccountType.Cash]: "Cash",
+    [InvestmentAccountType.Stocks]: "Stocks",
+    [InvestmentAccountType.Crypto]: "Crypto",
+    [InvestmentAccountType.MP2]: "MP2",
+    [InvestmentAccountType.PSE]: "PSE/FMETF",
+    [InvestmentAccountType.Compound]: "Compounding",
+    [InvestmentAccountType.RealEstate]: "Real Estate",
+    [InvestmentAccountType.Other]: "Other",
   };
 
   return labels[type];
@@ -329,7 +339,7 @@ export function formatAccountType(type: InvestmentAccountType): string {
 
 function toAllocationItems(
   values: Map<string, { label: string; value: number }>,
-  total: number
+  total: number,
 ): AllocationItem[] {
   return Array.from(values.entries())
     .map(([key, item]) => ({
@@ -349,44 +359,48 @@ function buildInsights(params: {
 }): InvestmentInsight[] {
   const insights: InvestmentInsight[] = [];
   const cashRatio =
-    params.totalValuePhp > 0 ? (params.cashValuePhp / params.totalValuePhp) * 100 : 0;
+    params.totalValuePhp > 0
+      ? (params.cashValuePhp / params.totalValuePhp) * 100
+      : 0;
   const crypto = params.allocation.find(
-    (item) => item.key === InvestmentAccountType.Crypto
+    (item) => item.key === InvestmentAccountType.Crypto,
   );
 
   if (cashRatio > 45) {
     insights.push({
-      id: 'cash-heavy',
-      tone: 'warning',
-      title: 'Cash is above target',
+      id: "cash-heavy",
+      tone: "warning",
+      title: "Cash is above target",
       description: `${cashRatio.toFixed(0)}% of tracked assets are in cash. Check whether excess cash should stay liquid or move into your plan.`,
     });
   }
 
   if (crypto && crypto.percentage > 10) {
     insights.push({
-      id: 'crypto-high',
-      tone: 'warning',
-      title: 'Crypto allocation is elevated',
+      id: "crypto-high",
+      tone: "warning",
+      title: "Crypto allocation is elevated",
       description: `${crypto.percentage.toFixed(0)}% is in crypto. Review this against your target allocation before adding more.`,
     });
   }
 
   if (params.monthlyContributionsPhp <= 0) {
     insights.push({
-      id: 'no-monthly-contribution',
-      tone: 'neutral',
-      title: 'No contribution logged this month',
-      description: 'Add a buy or deposit transaction to track progress against your monthly plan.',
+      id: "no-monthly-contribution",
+      tone: "neutral",
+      title: "No contribution logged this month",
+      description:
+        "Add a buy or deposit transaction to track progress against your monthly plan.",
     });
   }
 
   if (insights.length === 0) {
     insights.push({
-      id: 'on-track',
-      tone: 'success',
-      title: 'Portfolio looks balanced',
-      description: 'Tracked assets and contributions do not show any major drift right now.',
+      id: "on-track",
+      tone: "success",
+      title: "Portfolio looks balanced",
+      description:
+        "Tracked assets and contributions do not show any major drift right now.",
     });
   }
 

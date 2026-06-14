@@ -1,38 +1,39 @@
-import { AppPageHeader } from '@/components/atoms';
-import { AppButton } from '@/components/atoms/app-button';
-import { AppPicker } from '@/components/atoms/app-picker';
-import AppTextInput from '@/components/atoms/app-text-input';
-import AppTypography from '@/components/atoms/app-typography';
-import { useCreateInvestment } from '@/hooks/investments/use-create-investment';
-import { useDeleteInvestmentHolding } from '@/hooks/investments/use-delete-investment-holding';
-import { useInvestmentsLive } from '@/hooks/investments/use-investments-live';
-import { useUpdateInvestmentHolding } from '@/hooks/investments/use-update-investment-holding';
-import { toCurrency } from '@/lib/currency.utils';
+import { AppPageHeader } from "@/components/atoms";
+import { AppButton } from "@/components/atoms/app-button";
+import { AppPicker } from "@/components/atoms/app-picker";
+import AppTextInput from "@/components/atoms/app-text-input";
+import AppTypography from "@/components/atoms/app-typography";
+import { UpdatePrice } from "@/components/organisms/update-price";
+import { useCreateInvestment } from "@/hooks/investments/use-create-investment";
+import { useDeleteInvestmentHolding } from "@/hooks/investments/use-delete-investment-holding";
+import { useInvestmentsLive } from "@/hooks/investments/use-investments-live";
+import { useUpdateInvestmentHolding } from "@/hooks/investments/use-update-investment-holding";
+import { toCurrency } from "@/lib/currency.utils";
 import {
   getInvestmentAccountOptions,
   isMarketInvestmentType,
   resolveInvestmentAccountSelection,
-} from '@/lib/investment-form.utils';
+} from "@/lib/investment-form.utils";
+import {
+  getSavedProjectionMonthlyAdd,
+  saveProjectionMonthlyAdd,
+} from "@/lib/investment-settings.utils";
 import {
   buildInvestmentProjectionScenarios,
   calculateInvestmentProjection,
   calculateReturnPercent,
   formatAccountType,
   toPhpValue,
-} from '@/lib/investment.utils';
-import {
-  getSavedProjectionMonthlyAdd,
-  saveProjectionMonthlyAdd,
-} from '@/lib/investment-settings.utils';
+} from "@/lib/investment.utils";
 import {
   InvestmentAccountType,
   InvestmentCurrency,
   InvestmentHolding,
   InvestmentTransactionType,
-} from '@/repository';
-import cn from '@/utils/cn';
-import dayjs from 'dayjs';
-import { FormEvent, useMemo, useState } from 'react';
+} from "@/repository";
+import cn from "@/utils/cn";
+import dayjs from "dayjs";
+import { FormEvent, useMemo, useState } from "react";
 
 const accountTypeOptions = [
   InvestmentAccountType.Stocks,
@@ -49,23 +50,23 @@ const accountTypeOptions = [
 }));
 
 const currencyOptions = [
-  { label: 'PHP', value: InvestmentCurrency.PHP },
-  { label: 'USD', value: InvestmentCurrency.USD },
+  { label: "PHP", value: InvestmentCurrency.PHP },
+  { label: "USD", value: InvestmentCurrency.USD },
 ];
 
 const timelockOptions = [
-  { label: 'No timelock', value: 'none' },
-  { label: 'Lock until date', value: 'locked' },
+  { label: "No timelock", value: "none" },
+  { label: "Lock until date", value: "locked" },
 ];
 
 const chartColors = [
-  '#111827',
-  '#2563eb',
-  '#16a34a',
-  '#f59e0b',
-  '#dc2626',
-  '#7c3aed',
-  '#0891b2',
+  "#111827",
+  "#2563eb",
+  "#16a34a",
+  "#f59e0b",
+  "#dc2626",
+  "#7c3aed",
+  "#0891b2",
 ];
 
 type InvestmentFormState = {
@@ -86,25 +87,30 @@ type InvestmentFormState = {
 };
 
 const initialFormState: InvestmentFormState = {
-  accountValue: '',
+  accountValue: "",
   accountType: InvestmentAccountType.MP2,
   currency: InvestmentCurrency.PHP,
-  symbol: '',
-  quantity: '',
-  pricePerUnit: '',
-  amount: '',
-  fees: '',
-  usdToPhp: '58',
-  expectedAnnualReturnPercent: '',
-  timelockMode: 'none',
-  timelockUntil: '',
-  transactionDate: dayjs().format('YYYY-MM-DD'),
-  notes: '',
+  symbol: "",
+  quantity: "",
+  pricePerUnit: "",
+  amount: "",
+  fees: "",
+  usdToPhp: "58",
+  expectedAnnualReturnPercent: "",
+  timelockMode: "none",
+  timelockUntil: "",
+  transactionDate: dayjs().format("YYYY-MM-DD"),
+  notes: "",
 };
 
 const horizonOptions = [5, 10, 15, 20];
-type HoldingActionMode = 'actions' | 'details' | 'price' | 'withdraw' | 'balance';
-type TimelockMode = 'none' | 'locked';
+type HoldingActionMode =
+  | "actions"
+  | "details"
+  | "price"
+  | "withdraw"
+  | "balance";
+type TimelockMode = "none" | "locked";
 
 const Investments = () => {
   const investmentData = useInvestmentsLive();
@@ -114,23 +120,23 @@ const Investments = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingHoldingId, setEditingHoldingId] = useState<string | null>(null);
   const [editActionMode, setEditActionMode] =
-    useState<HoldingActionMode>('actions');
+    useState<HoldingActionMode>("actions");
   const [editForm, setEditForm] = useState({
-    name: '',
-    symbol: '',
-    quantity: '',
-    currentPrice: '',
-    currentValue: '',
-    withdrawalAmount: '',
-    withdrawalDate: dayjs().format('YYYY-MM-DD'),
-    expectedAnnualReturnPercent: '',
-    timelockMode: 'none' as TimelockMode,
-    timelockUntil: '',
+    name: "",
+    symbol: "",
+    quantity: "",
+    currentPrice: "",
+    currentValue: "",
+    withdrawalAmount: "",
+    withdrawalDate: dayjs().format("YYYY-MM-DD"),
+    expectedAnnualReturnPercent: "",
+    timelockMode: "none" as TimelockMode,
+    timelockUntil: "",
   });
   const [form, setForm] = useState<InvestmentFormState>(initialFormState);
   const [projectionYears, setProjectionYears] = useState(10);
   const [projectionContribution, setProjectionContribution] = useState(() =>
-    getSavedProjectionMonthlyAdd(window.localStorage)
+    getSavedProjectionMonthlyAdd(window.localStorage),
   );
 
   const overview = investmentData?.overview;
@@ -138,11 +144,11 @@ const Investments = () => {
   const holdings = investmentData?.holdings ?? [];
   const accountById = useMemo(
     () => new Map((accounts ?? []).map((account) => [account.id, account])),
-    [accounts]
+    [accounts],
   );
   const accountOptions = useMemo(
     () => getInvestmentAccountOptions(accounts ?? []),
-    [accounts]
+    [accounts],
   );
   const resolvedAccount = useMemo(
     () =>
@@ -152,11 +158,12 @@ const Investments = () => {
         fallbackType: form.accountType,
         fallbackCurrency: form.currency,
       }),
-    [accounts, form.accountType, form.accountValue, form.currency]
+    [accounts, form.accountType, form.accountValue, form.currency],
   );
   const isExistingAccount = resolvedAccount.isExistingAccount;
   const isMarketType = isMarketInvestmentType(resolvedAccount.accountType);
-  const shouldShowFxRate = isMarketType && resolvedAccount.currency === InvestmentCurrency.USD;
+  const shouldShowFxRate =
+    isMarketType && resolvedAccount.currency === InvestmentCurrency.USD;
   const canSubmit = isMarketType
     ? !!resolvedAccount.accountName &&
       !!form.symbol.trim() &&
@@ -197,7 +204,7 @@ const Investments = () => {
 
   const allocationGradient = useMemo(() => {
     if (!overview || overview.allocation.length === 0) {
-      return '#f5f5f5';
+      return "#f5f5f5";
     }
 
     let cursor = 0;
@@ -207,12 +214,12 @@ const Investments = () => {
       return `${chartColors[index % chartColors.length]} ${start}% ${cursor}%`;
     });
 
-    return `conic-gradient(${parts.join(', ')})`;
+    return `conic-gradient(${parts.join(", ")})`;
   }, [overview]);
 
   const handleChange = <Key extends keyof InvestmentFormState>(
     key: Key,
-    value: InvestmentFormState[Key]
+    value: InvestmentFormState[Key],
   ) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
@@ -257,7 +264,7 @@ const Investments = () => {
         ? null
         : toOptionalNumber(form.expectedAnnualReturnPercent),
       timelockUntil:
-        form.timelockMode === 'locked'
+        form.timelockMode === "locked"
           ? toOptionalDate(form.timelockUntil)
           : null,
       transactionDate: dayjs(form.transactionDate).toDate(),
@@ -271,53 +278,53 @@ const Investments = () => {
   const startEditHolding = (holding: InvestmentHolding) => {
     setIsAdding(false);
     setEditingHoldingId(holding.id ?? null);
-    setEditActionMode('actions');
+    setEditActionMode("actions");
     setEditForm({
       name: holding.name,
-      symbol: holding.symbol ?? '',
+      symbol: holding.symbol ?? "",
       quantity: String(holding.quantity),
       currentPrice: String(holding.current_price),
       currentValue: String(holding.current_value),
-      withdrawalAmount: '',
-      withdrawalDate: dayjs().format('YYYY-MM-DD'),
+      withdrawalAmount: "",
+      withdrawalDate: dayjs().format("YYYY-MM-DD"),
       expectedAnnualReturnPercent:
         holding.expected_annual_return_percent !== null &&
         holding.expected_annual_return_percent !== undefined
           ? String(holding.expected_annual_return_percent)
-          : '',
-      timelockMode: holding.timelock_until ? 'locked' : 'none',
+          : "",
+      timelockMode: holding.timelock_until ? "locked" : "none",
       timelockUntil: holding.timelock_until
-        ? dayjs(holding.timelock_until).format('YYYY-MM-DD')
-        : '',
+        ? dayjs(holding.timelock_until).format("YYYY-MM-DD")
+        : "",
     });
   };
 
   const cancelEditHolding = () => {
     setEditingHoldingId(null);
-    setEditActionMode('actions');
+    setEditActionMode("actions");
   };
 
   const closeEditHolding = () => {
     setEditingHoldingId(null);
-    setEditActionMode('actions');
+    setEditActionMode("actions");
   };
 
   const submitHoldingDetails = async (
     event: FormEvent<HTMLFormElement>,
     holding: InvestmentHolding,
-    isMarket: boolean
+    isMarket: boolean,
   ) => {
     event.preventDefault();
 
     await updateHolding.updateDetails({
-      holdingId: holding.id ?? '',
+      holdingId: holding.id ?? "",
       name: editForm.name,
       symbol: isMarket ? editForm.symbol : null,
       expectedAnnualReturnPercent: isMarket
         ? null
         : toOptionalNumber(editForm.expectedAnnualReturnPercent),
       timelockUntil:
-        editForm.timelockMode === 'locked'
+        editForm.timelockMode === "locked"
           ? toOptionalDate(editForm.timelockUntil)
           : null,
     });
@@ -326,12 +333,12 @@ const Investments = () => {
 
   const submitMarketPrice = async (
     event: FormEvent<HTMLFormElement>,
-    holding: InvestmentHolding
+    holding: InvestmentHolding,
   ) => {
     event.preventDefault();
 
     await updateHolding.updateMarketPrice({
-      holdingId: holding.id ?? '',
+      holdingId: holding.id ?? "",
       currentPrice: toNumber(editForm.currentPrice),
     });
     closeEditHolding();
@@ -339,12 +346,12 @@ const Investments = () => {
 
   const submitSimpleBalance = async (
     event: FormEvent<HTMLFormElement>,
-    holding: InvestmentHolding
+    holding: InvestmentHolding,
   ) => {
     event.preventDefault();
 
     await updateHolding.updateSimpleBalance({
-      holdingId: holding.id ?? '',
+      holdingId: holding.id ?? "",
       currentValue: toNumber(editForm.currentValue),
     });
     closeEditHolding();
@@ -352,21 +359,23 @@ const Investments = () => {
 
   const submitSimpleWithdrawal = async (
     event: FormEvent<HTMLFormElement>,
-    holding: InvestmentHolding
+    holding: InvestmentHolding,
   ) => {
     event.preventDefault();
 
     await updateHolding.withdraw({
-      holdingId: holding.id ?? '',
+      holdingId: holding.id ?? "",
       amount: toNumber(editForm.withdrawalAmount),
       transactionDate: dayjs(editForm.withdrawalDate).toDate(),
-      notes: 'Investment withdrawal',
+      notes: "Investment withdrawal",
     });
     closeEditHolding();
   };
 
   const handleDeleteHolding = async (holdingId: string) => {
-    if (!window.confirm('Delete this investment holding and its linked expenses?')) {
+    if (
+      !window.confirm("Delete this investment holding and its linked expenses?")
+    ) {
       return;
     }
 
@@ -375,60 +384,63 @@ const Investments = () => {
   };
 
   const handleProjectionContributionChange = (value: string) => {
-    const nextValue = String(value || '');
+    const nextValue = String(value || "");
     setProjectionContribution(nextValue);
     saveProjectionMonthlyAdd(window.localStorage, nextValue);
   };
 
   return (
-    <div className='pb-44'>
-      <section id='investments-header'>
-        <AppPageHeader title='Xpense' description='Investments' />
+    <div className="pb-44">
+      <section id="investments-header">
+        <AppPageHeader title="Xpense" description="Investments" />
       </section>
 
-      <div className='mt-4 flex items-center justify-between gap-3'>
+      <div className="mt-4 flex items-center justify-between gap-3">
         <div>
-          <AppTypography variant='body' className='font-semibold text-neutral-900'>
+          <AppTypography
+            variant="body"
+            className="font-semibold text-neutral-900"
+          >
             Portfolio
           </AppTypography>
-          <AppTypography variant='small' className='text-neutral-400'>
+          <AppTypography variant="small" className="text-neutral-400">
             Balances and manual market buys
           </AppTypography>
         </div>
         <AppButton
-          type='button'
-          size='sm'
+          type="button"
+          size="sm"
           onClick={() => setIsAdding((value) => !value)}
         >
-          {isAdding ? 'Close' : 'Add'}
+          {isAdding ? "Close" : "Add"}
         </AppButton>
       </div>
 
       {isAdding && (
         <form
           onSubmit={handleSubmit}
-          className='mt-4 rounded-lg border border-neutral-100 bg-white p-4 shadow-sm shadow-neutral-900/5'
+          className="mt-4 rounded-lg border border-neutral-100 bg-white p-4 shadow-sm shadow-neutral-900/5"
         >
-          <div className='grid grid-cols-1 gap-3'>
+          <div className="grid grid-cols-1 gap-3">
             <AppPicker
-              id='investment-account-name'
-              label='Account'
-              placeholder='IBKR, MP2, Seabank'
+              id="investment-account-name"
+              label="Account"
+              placeholder="IBKR, MP2, Seabank"
               options={accountOptions}
               value={form.accountValue}
               onChange={handleAccountChange}
               allowCustom
-              searchPlaceholder='Search or create account'
+              searchPlaceholder="Search or create account"
             />
 
             {!isExistingAccount && (
               <AppPicker
-                id='investment-account-type'
-                label='Type'
+                id="investment-account-type"
+                label="Type"
                 options={accountTypeOptions}
                 value={form.accountType}
                 onChange={(value) =>
-                  handleChange('accountType', value as InvestmentAccountType)
+                  handleChange("accountType", value as InvestmentAccountType)
                 }
               />
             )}
@@ -437,47 +449,47 @@ const Investments = () => {
               <>
                 {!isExistingAccount && (
                   <AppPicker
-                    id='investment-currency'
-                    label='Currency'
+                    id="investment-currency"
+                    label="Currency"
                     options={currencyOptions}
                     value={form.currency}
                     onChange={(value) =>
-                      handleChange('currency', value as InvestmentCurrency)
+                      handleChange("currency", value as InvestmentCurrency)
                     }
                   />
                 )}
 
                 <AppTextInput
-                  id='investment-symbol'
-                  label='Investment'
-                  placeholder='QQQ, BTC'
+                  id="investment-symbol"
+                  label="Investment"
+                  placeholder="QQQ, BTC"
                   value={form.symbol}
                   onChangeText={(value) =>
-                    handleChange('symbol', String(value || ''))
+                    handleChange("symbol", String(value || ""))
                   }
                   required
                 />
 
-                <div className='grid grid-cols-2 gap-3'>
+                <div className="grid grid-cols-2 gap-3">
                   <AppTextInput
-                    id='investment-quantity'
-                    label='Shares / units'
-                    inputMode='decimal'
-                    placeholder='0'
+                    id="investment-quantity"
+                    label="Shares / units"
+                    inputMode="decimal"
+                    placeholder="0"
                     value={form.quantity}
                     onChangeText={(value) =>
-                      handleChange('quantity', String(value || ''))
+                      handleChange("quantity", String(value || ""))
                     }
                     required
                   />
                   <AppTextInput
-                    id='investment-price'
-                    label='Buy price'
-                    inputMode='decimal'
-                    placeholder='0'
+                    id="investment-price"
+                    label="Buy price"
+                    inputMode="decimal"
+                    placeholder="0"
                     value={form.pricePerUnit}
                     onChangeText={(value) =>
-                      handleChange('pricePerUnit', String(value || ''))
+                      handleChange("pricePerUnit", String(value || ""))
                     }
                     required
                   />
@@ -485,29 +497,29 @@ const Investments = () => {
 
                 <div
                   className={cn(
-                    'grid gap-3',
-                    shouldShowFxRate ? 'grid-cols-2' : 'grid-cols-1'
+                    "grid gap-3",
+                    shouldShowFxRate ? "grid-cols-2" : "grid-cols-1",
                   )}
                 >
                   <AppTextInput
-                    id='investment-fees'
-                    label='Fees'
-                    inputMode='decimal'
-                    placeholder='0'
+                    id="investment-fees"
+                    label="Fees"
+                    inputMode="decimal"
+                    placeholder="0"
                     value={form.fees}
                     onChangeText={(value) =>
-                      handleChange('fees', String(value || ''))
+                      handleChange("fees", String(value || ""))
                     }
                   />
                   {shouldShowFxRate && (
                     <AppTextInput
-                      id='investment-fx'
-                      label='USD to PHP'
-                      inputMode='decimal'
-                      placeholder='58'
+                      id="investment-fx"
+                      label="USD to PHP"
+                      inputMode="decimal"
+                      placeholder="58"
                       value={form.usdToPhp}
                       onChangeText={(value) =>
-                        handleChange('usdToPhp', String(value || ''))
+                        handleChange("usdToPhp", String(value || ""))
                       }
                     />
                   )}
@@ -518,31 +530,31 @@ const Investments = () => {
             {!isMarketType && (
               <>
                 <AppTextInput
-                  id='investment-amount'
-                  label='Balance / contribution'
-                  inputMode='decimal'
-                  placeholder='0'
+                  id="investment-amount"
+                  label="Balance / contribution"
+                  inputMode="decimal"
+                  placeholder="0"
                   value={form.amount}
                   onChangeText={(value) =>
-                    handleChange('amount', String(value || ''))
+                    handleChange("amount", String(value || ""))
                   }
                   required
                 />
 
                 <AppTextInput
-                  id='investment-expected-rate'
+                  id="investment-expected-rate"
                   label={
                     resolvedAccount.accountType === InvestmentAccountType.MP2
-                      ? 'Expected dividend %'
-                      : 'Expected annual %'
+                      ? "Expected dividend %"
+                      : "Expected annual %"
                   }
-                  inputMode='decimal'
-                  placeholder='Optional'
+                  inputMode="decimal"
+                  placeholder="Optional"
                   value={form.expectedAnnualReturnPercent}
                   onChangeText={(value) =>
                     handleChange(
-                      'expectedAnnualReturnPercent',
-                      String(value || '')
+                      "expectedAnnualReturnPercent",
+                      String(value || ""),
                     )
                   }
                 />
@@ -550,58 +562,60 @@ const Investments = () => {
             )}
 
             <AppTextInput
-              id='investment-date'
-              label='Date'
-              type='date'
+              id="investment-date"
+              label="Date"
+              type="date"
               value={form.transactionDate}
               onChangeText={(value) =>
-                handleChange('transactionDate', String(value || ''))
+                handleChange("transactionDate", String(value || ""))
               }
               required
             />
 
             <AppPicker
-              id='investment-timelock-mode'
-              label='Timelock'
+              id="investment-timelock-mode"
+              label="Timelock"
               options={timelockOptions}
               value={form.timelockMode}
               onChange={(value) =>
-                handleChange('timelockMode', value as TimelockMode)
+                handleChange("timelockMode", value as TimelockMode)
               }
             />
 
-            {form.timelockMode === 'locked' && (
+            {form.timelockMode === "locked" && (
               <TimelockDateInput
-                id='investment-timelock-until'
-                label='Timelock date'
+                id="investment-timelock-until"
+                label="Timelock date"
                 value={form.timelockUntil}
                 onChangeText={(value) =>
-                  handleChange('timelockUntil', String(value || ''))
+                  handleChange("timelockUntil", String(value || ""))
                 }
               />
             )}
 
             <AppTextInput
-              id='investment-notes'
-              label='Notes'
-              placeholder='Monthly DCA'
+              id="investment-notes"
+              label="Notes"
+              placeholder="Monthly DCA"
               value={form.notes}
-              onChangeText={(value) => handleChange('notes', String(value || ''))}
+              onChangeText={(value) =>
+                handleChange("notes", String(value || ""))
+              }
             />
           </div>
 
-          <div className='mt-4 flex gap-2'>
+          <div className="mt-4 flex gap-2">
             <AppButton
-              type='button'
-              variant='outlined'
-              className='flex-1'
+              type="button"
+              variant="outlined"
+              className="flex-1"
               onClick={() => setIsAdding(false)}
             >
               Cancel
             </AppButton>
             <AppButton
-              type='submit'
-              className='flex-1'
+              type="submit"
+              className="flex-1"
               disabled={createInvestment.isPending || !canSubmit}
             >
               Add Investment
@@ -610,44 +624,49 @@ const Investments = () => {
         </form>
       )}
 
-      <section className='mt-4 grid grid-cols-2 gap-3'>
+      <section className="mt-4 grid grid-cols-2 gap-3">
         <MetricCard
-          label='Portfolio Value'
+          label="Portfolio Value"
           value={toCurrency(overview?.totalValuePhp ?? 0)}
         />
         <MetricCard
-          label='Unrealized'
+          label="Unrealized"
           value={toCurrency(overview?.unrealizedGainPhp ?? 0)}
-          tone={(overview?.unrealizedGainPhp ?? 0) >= 0 ? 'positive' : 'negative'}
+          tone={
+            (overview?.unrealizedGainPhp ?? 0) >= 0 ? "positive" : "negative"
+          }
         />
         <MetricCard
-          label='Monthly Added'
+          label="Monthly Added"
           value={toCurrency(overview?.monthlyContributionsPhp ?? 0)}
         />
         <MetricCard
-          label='Return'
+          label="Return"
           value={`${(overview?.returnPercent ?? 0).toFixed(1)}%`}
-          tone={(overview?.returnPercent ?? 0) >= 0 ? 'positive' : 'negative'}
+          tone={(overview?.returnPercent ?? 0) >= 0 ? "positive" : "negative"}
         />
       </section>
 
-      <section className='mt-4 rounded-lg border border-neutral-100 bg-white p-4'>
-        <div className='flex items-center justify-between gap-4'>
+      <section className="mt-4 rounded-lg border border-neutral-100 bg-white p-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <AppTypography variant='body' className='font-semibold text-neutral-900'>
+            <AppTypography
+              variant="body"
+              className="font-semibold text-neutral-900"
+            >
               Allocation
             </AppTypography>
-            <AppTypography variant='small' className='text-neutral-400'>
+            <AppTypography variant="small" className="text-neutral-400">
               Based on latest saved prices
             </AppTypography>
           </div>
           <div
-            className='h-24 w-24 rounded-full'
+            className="h-24 w-24 rounded-full"
             style={{ background: allocationGradient }}
           />
         </div>
 
-        <div className='mt-4 flex flex-col gap-2'>
+        <div className="mt-4 flex flex-col gap-2">
           {overview?.allocation.length ? (
             overview.allocation.map((item, index) => (
               <ChartRow
@@ -659,42 +678,45 @@ const Investments = () => {
               />
             ))
           ) : (
-            <EmptyCopy text='Add an investment to see your allocation.' />
+            <EmptyCopy text="Add an investment to see your allocation." />
           )}
         </div>
       </section>
 
-      <section className='mt-4 rounded-lg border border-neutral-100 bg-white p-4'>
-        <div className='flex items-start justify-between gap-3'>
+      <section className="mt-4 rounded-lg border border-neutral-100 bg-white p-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <AppTypography variant='body' className='font-semibold text-neutral-900'>
+            <AppTypography
+              variant="body"
+              className="font-semibold text-neutral-900"
+            >
               Future Value
             </AppTypography>
-            <AppTypography variant='small' className='text-neutral-400'>
+            <AppTypography variant="small" className="text-neutral-400">
               Starting from today, with monthly additions.
             </AppTypography>
           </div>
-          <div className='text-right'>
-            <AppTypography variant='small' className='text-neutral-400'>
+          <div className="text-right">
+            <AppTypography variant="small" className="text-neutral-400">
               Base rate
             </AppTypography>
-            <p className='text-sm font-bold tabular-nums text-neutral-900'>
+            <p className="text-sm font-bold tabular-nums text-neutral-900">
               {projectionRate.toFixed(1)}%
             </p>
           </div>
         </div>
 
-        <div className='mt-4 grid grid-cols-4 gap-2'>
+        <div className="mt-4 grid grid-cols-4 gap-2">
           {horizonOptions.map((years) => (
             <button
               key={years}
-              type='button'
+              type="button"
               onClick={() => setProjectionYears(years)}
               className={cn(
-                'h-10 rounded-lg border text-sm font-semibold transition-all active:scale-95',
+                "h-10 rounded-lg border text-sm font-semibold transition-all active:scale-95",
                 projectionYears === years
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-200 bg-white text-neutral-600'
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 bg-white text-neutral-600",
               )}
             >
               {years}y
@@ -702,76 +724,79 @@ const Investments = () => {
           ))}
         </div>
 
-        <div className='mt-3 grid grid-cols-2 gap-3'>
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <AppTextInput
-            id='projection-contribution'
-            label='Monthly add'
-            inputMode='decimal'
+            id="projection-contribution"
+            label="Monthly add"
+            inputMode="decimal"
             value={projectionContribution}
             onChangeText={(value) =>
-              handleProjectionContributionChange(String(value || ''))
+              handleProjectionContributionChange(String(value || ""))
             }
           />
-          <div className='rounded bg-neutral-50 px-4 py-3'>
-            <AppTypography variant='small' className='text-neutral-400'>
+          <div className="rounded bg-neutral-50 px-4 py-3">
+            <AppTypography variant="small" className="text-neutral-400">
               Assumption
             </AppTypography>
-            <p className='mt-1 text-sm font-semibold text-neutral-900'>
+            <p className="mt-1 text-sm font-semibold text-neutral-900">
               {overview?.expectedAnnualReturnPercent
-                ? 'Uses tracked rates'
-                : 'Uses 7% default'}
+                ? "Uses tracked rates"
+                : "Uses 7% default"}
             </p>
           </div>
         </div>
 
-        <div className='mt-4 rounded-lg bg-neutral-950 p-4 text-white'>
-          <AppTypography variant='small' className='text-neutral-400'>
+        <div className="mt-4 rounded-lg bg-neutral-950 p-4 text-white">
+          <AppTypography variant="small" className="text-neutral-400">
             Planned value in {projection.years} years
           </AppTypography>
-          <p className='mt-1 text-3xl font-bold tabular-nums'>
+          <p className="mt-1 text-3xl font-bold tabular-nums">
             {toCurrency(projection.futureValue)}
           </p>
-          <div className='mt-3 grid grid-cols-2 gap-3'>
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <AppTypography variant='small' className='text-neutral-400'>
+              <AppTypography variant="small" className="text-neutral-400">
                 New contributions
               </AppTypography>
-              <p className='text-sm font-semibold tabular-nums'>
+              <p className="text-sm font-semibold tabular-nums">
                 {toCurrency(projection.totalContributions)}
               </p>
             </div>
             <div>
-              <AppTypography variant='small' className='text-neutral-400'>
+              <AppTypography variant="small" className="text-neutral-400">
                 Estimated growth
               </AppTypography>
-              <p className='text-sm font-semibold tabular-nums'>
+              <p className="text-sm font-semibold tabular-nums">
                 {toCurrency(projection.estimatedGrowth)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className='mt-3 flex flex-col gap-2'>
+        <div className="mt-3 flex flex-col gap-2">
           {projectionScenarios.map((scenario) => (
             <div
               key={scenario.id}
               className={cn(
-                'flex items-center justify-between rounded-lg px-3 py-2',
+                "flex items-center justify-between rounded-lg px-3 py-2",
                 {
-                  'bg-neutral-50': scenario.id !== 'planned',
-                  'bg-blue-50': scenario.id === 'planned',
-                }
+                  "bg-neutral-50": scenario.id !== "planned",
+                  "bg-blue-50": scenario.id === "planned",
+                },
               )}
             >
               <div>
-                <AppTypography variant='small' className='font-semibold text-neutral-900'>
+                <AppTypography
+                  variant="small"
+                  className="font-semibold text-neutral-900"
+                >
                   {scenario.label}
                 </AppTypography>
-                <AppTypography variant='small' className='text-neutral-400'>
+                <AppTypography variant="small" className="text-neutral-400">
                   {scenario.annualReturnPercent.toFixed(1)}% / yr
                 </AppTypography>
               </div>
-              <p className='text-sm font-bold tabular-nums text-neutral-900'>
+              <p className="text-sm font-bold tabular-nums text-neutral-900">
                 {toCurrency(scenario.futureValue)}
               </p>
             </div>
@@ -779,21 +804,29 @@ const Investments = () => {
         </div>
       </section>
 
-      <section className='mt-4 rounded-lg border border-neutral-100 bg-white p-4'>
-        <AppTypography variant='body' className='font-semibold text-neutral-900'>
-          Holdings
-        </AppTypography>
+      <section className="mt-4 rounded-lg border border-neutral-100 bg-white p-4">
+        <div className="flex items-center justify-between">
+          <AppTypography
+            variant="body"
+            className="font-semibold text-neutral-900"
+          >
+            Holdings
+          </AppTypography>
+          <UpdatePrice />
+        </div>
 
-        <div className='mt-3 flex flex-col gap-2'>
+        <div className="mt-3 flex flex-col gap-2">
           {holdings.length ? (
             holdings.map((holding) => {
               const account = accountById.get(holding.account_id);
-              const isMarket = account ? isMarketInvestmentType(account.type) : false;
+              const isMarket = account
+                ? isMarketInvestmentType(account.type)
+                : false;
               return (
                 <div key={holding.id}>
                   <HoldingRow
                     holding={holding}
-                    accountName={account?.name ?? 'Investment'}
+                    accountName={account?.name ?? "Investment"}
                     isMarket={isMarket}
                     onEdit={() => startEditHolding(holding)}
                   />
@@ -803,7 +836,9 @@ const Investments = () => {
                       isMarket={isMarket}
                       mode={editActionMode}
                       form={editForm}
-                      isPending={updateHolding.isPending || deleteHolding.isPending}
+                      isPending={
+                        updateHolding.isPending || deleteHolding.isPending
+                      }
                       onModeChange={setEditActionMode}
                       onChange={(key, value) =>
                         setEditForm((current) => ({
@@ -812,7 +847,7 @@ const Investments = () => {
                         }))
                       }
                       onCancel={cancelEditHolding}
-                      onDelete={() => handleDeleteHolding(holding.id ?? '')}
+                      onDelete={() => handleDeleteHolding(holding.id ?? "")}
                       onSubmitDetails={(event) =>
                         submitHoldingDetails(event, holding, isMarket)
                       }
@@ -831,30 +866,36 @@ const Investments = () => {
               );
             })
           ) : (
-            <EmptyCopy text='No investments tracked yet.' />
+            <EmptyCopy text="No investments tracked yet." />
           )}
         </div>
       </section>
 
-      <section className='mt-4 rounded-lg border border-neutral-100 bg-white p-4'>
-        <AppTypography variant='body' className='font-semibold text-neutral-900'>
+      <section className="mt-4 rounded-lg border border-neutral-100 bg-white p-4">
+        <AppTypography
+          variant="body"
+          className="font-semibold text-neutral-900"
+        >
           Insights
         </AppTypography>
-        <div className='mt-3 flex flex-col gap-2'>
+        <div className="mt-3 flex flex-col gap-2">
           {overview?.insights.map((insight) => (
             <div
               key={insight.id}
-              className={cn('rounded-lg border p-3', {
-                'border-emerald-100 bg-emerald-50': insight.tone === 'success',
-                'border-amber-100 bg-amber-50': insight.tone === 'warning',
-                'border-red-100 bg-red-50': insight.tone === 'danger',
-                'border-neutral-100 bg-neutral-50': insight.tone === 'neutral',
+              className={cn("rounded-lg border p-3", {
+                "border-emerald-100 bg-emerald-50": insight.tone === "success",
+                "border-amber-100 bg-amber-50": insight.tone === "warning",
+                "border-red-100 bg-red-50": insight.tone === "danger",
+                "border-neutral-100 bg-neutral-50": insight.tone === "neutral",
               })}
             >
-              <AppTypography variant='body' className='font-semibold text-neutral-900'>
+              <AppTypography
+                variant="body"
+                className="font-semibold text-neutral-900"
+              >
                 {insight.title}
               </AppTypography>
-              <AppTypography variant='small' className='text-neutral-500'>
+              <AppTypography variant="small" className="text-neutral-500">
                 {insight.description}
               </AppTypography>
             </div>
@@ -868,18 +909,18 @@ const Investments = () => {
 type MetricCardProps = {
   label: string;
   value: string;
-  tone?: 'positive' | 'negative';
+  tone?: "positive" | "negative";
 };
 
 const MetricCard = ({ label, value, tone }: MetricCardProps) => (
-  <div className='rounded-lg border border-neutral-100 bg-white p-4 shadow-sm shadow-neutral-900/5'>
-    <AppTypography variant='small' className='text-neutral-400'>
+  <div className="rounded-lg border border-neutral-100 bg-white p-4 shadow-sm shadow-neutral-900/5">
+    <AppTypography variant="small" className="text-neutral-400">
       {label}
     </AppTypography>
     <p
-      className={cn('mt-1 text-xl font-bold tabular-nums text-neutral-900', {
-        'text-emerald-600': tone === 'positive',
-        'text-red-600': tone === 'negative',
+      className={cn("mt-1 text-xl font-bold tabular-nums text-neutral-900", {
+        "text-emerald-600": tone === "positive",
+        "text-red-600": tone === "negative",
       })}
     >
       {value}
@@ -896,24 +937,27 @@ type ChartRowProps = {
 
 const ChartRow = ({ label, value, percentage, color }: ChartRowProps) => (
   <div>
-    <div className='flex items-center justify-between gap-3'>
-      <div className='flex min-w-0 items-center gap-2'>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
         <span
-          className='h-2.5 w-2.5 rounded-full'
+          className="h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: color }}
         />
-        <AppTypography variant='small' className='truncate text-neutral-600'>
+        <AppTypography variant="small" className="truncate text-neutral-600">
           {label}
         </AppTypography>
       </div>
-      <AppTypography variant='small' className='text-neutral-900'>
+      <AppTypography variant="small" className="text-neutral-900">
         {value} · {percentage.toFixed(0)}%
       </AppTypography>
     </div>
-    <div className='mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100'>
+    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100">
       <div
-        className='h-full rounded-full'
-        style={{ width: `${Math.min(percentage, 100)}%`, backgroundColor: color }}
+        className="h-full rounded-full"
+        style={{
+          width: `${Math.min(percentage, 100)}%`,
+          backgroundColor: color,
+        }}
       />
     </div>
   </div>
@@ -942,58 +986,61 @@ const HoldingRow = ({
   const isLocked = timelockUntil ? timelockUntil.isAfter(dayjs()) : false;
 
   return (
-    <div className='rounded-lg bg-neutral-50 p-3'>
-      <div className='flex items-start justify-between gap-3'>
-        <div className='min-w-0'>
-          <AppTypography variant='body' className='truncate font-semibold text-neutral-900'>
+    <div className="rounded-lg bg-neutral-50 p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <AppTypography
+            variant="body"
+            className="truncate font-semibold text-neutral-900"
+          >
             {holding.symbol || holding.name}
           </AppTypography>
-          <AppTypography variant='small' className='truncate text-neutral-400'>
+          <AppTypography variant="small" className="truncate text-neutral-400">
             {accountName} · {holding.currency}
           </AppTypography>
         </div>
-        <div className='text-right'>
-          <p className='text-sm font-bold tabular-nums text-neutral-900'>
+        <div className="text-right">
+          <p className="text-sm font-bold tabular-nums text-neutral-900">
             {toCurrency(currentValuePhp)}
           </p>
           <p
-            className={cn('text-xs font-semibold tabular-nums', {
-              'text-emerald-600': gain >= 0,
-              'text-red-600': gain < 0,
+            className={cn("text-xs font-semibold tabular-nums", {
+              "text-emerald-600": gain >= 0,
+              "text-red-600": gain < 0,
             })}
           >
             {toCurrency(gain)} · {returnPercent.toFixed(1)}%
           </p>
         </div>
       </div>
-      <div className='mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400'>
-        <div className='min-w-0'>
-          <span className='block truncate'>
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-neutral-400">
+        <div className="min-w-0">
+          <span className="block truncate">
             {isMarket
               ? `${holding.quantity.toLocaleString()} units`
               : holding.expected_annual_return_percent !== null &&
                   holding.expected_annual_return_percent !== undefined
                 ? `Expected ${holding.expected_annual_return_percent.toFixed(1)}% / yr`
-                : 'Balance tracked manually'}
+                : "Balance tracked manually"}
           </span>
           {timelockUntil && (
             <span
-              className={cn('block truncate font-semibold', {
-                'text-amber-600': isLocked,
-                'text-neutral-400': !isLocked,
+              className={cn("block truncate font-semibold", {
+                "text-amber-600": isLocked,
+                "text-neutral-400": !isLocked,
               })}
             >
-              {isLocked ? 'Locked until' : 'Unlocked'}{' '}
-              {timelockUntil.format('MMM D, YYYY')}
+              {isLocked ? "Locked until" : "Unlocked"}{" "}
+              {timelockUntil.format("MMM D, YYYY")}
             </span>
           )}
         </div>
-        <div className='flex items-center gap-2'>
-          <span>Updated {dayjs(holding.price_updated_at).format('MMM D')}</span>
+        <div className="flex items-center gap-2">
+          <span>Updated {dayjs(holding.price_updated_at).format("MMM D")}</span>
           <button
-            type='button'
+            type="button"
             onClick={onEdit}
-            className='font-semibold text-neutral-900 active:scale-95'
+            className="font-semibold text-neutral-900 active:scale-95"
           >
             Edit
           </button>
@@ -1050,49 +1097,49 @@ const HoldingEditForm = ({
   const isLocked = isHoldingTimelocked(holding);
 
   return (
-    <div className='mt-2 rounded-lg border border-neutral-200 bg-white p-3'>
-      {mode === 'actions' && (
-        <div className='grid grid-cols-2 gap-2'>
+    <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-3">
+      {mode === "actions" && (
+        <div className="grid grid-cols-2 gap-2">
           <AppButton
-            type='button'
-            size='sm'
-            variant='outlined'
-            onClick={() => onModeChange('details')}
+            type="button"
+            size="sm"
+            variant="outlined"
+            onClick={() => onModeChange("details")}
           >
             Details
           </AppButton>
           <AppButton
-            type='button'
-            size='sm'
-            variant='outlined'
-            onClick={() => onModeChange(isMarket ? 'price' : 'withdraw')}
+            type="button"
+            size="sm"
+            variant="outlined"
+            onClick={() => onModeChange(isMarket ? "price" : "withdraw")}
           >
-            {isMarket ? 'Price' : 'Withdraw'}
+            {isMarket ? "Price" : "Withdraw"}
           </AppButton>
           {!isMarket && (
             <AppButton
-              type='button'
-              size='sm'
-              variant='outlined'
-              onClick={() => onModeChange('balance')}
+              type="button"
+              size="sm"
+              variant="outlined"
+              onClick={() => onModeChange("balance")}
             >
               Correct
             </AppButton>
           )}
           <AppButton
-            type='button'
-            variant='danger'
-            size='sm'
+            type="button"
+            variant="danger"
+            size="sm"
             onClick={onDelete}
             disabled={isPending || isLocked}
           >
             Delete
           </AppButton>
           <AppButton
-            type='button'
-            variant='outlined'
-            size='sm'
-            className='col-span-2'
+            type="button"
+            variant="outlined"
+            size="sm"
+            className="col-span-2"
             onClick={onCancel}
           >
             Cancel
@@ -1100,184 +1147,195 @@ const HoldingEditForm = ({
         </div>
       )}
 
-      {mode === 'details' && (
-        <form onSubmit={onSubmitDetails} className='grid grid-cols-1 gap-3'>
-      <AppTextInput
-        id={`edit-holding-name-${holding.id}`}
-        label='Name'
-        value={form.name}
-        onChangeText={(value) => onChange('name', String(value || ''))}
-        required
-      />
-
-      {isMarket ? (
-        <>
+      {mode === "details" && (
+        <form onSubmit={onSubmitDetails} className="grid grid-cols-1 gap-3">
           <AppTextInput
-            id={`edit-holding-symbol-${holding.id}`}
-            label='Investment'
-            value={form.symbol}
-            onChangeText={(value) => onChange('symbol', String(value || ''))}
+            id={`edit-holding-name-${holding.id}`}
+            label="Name"
+            value={form.name}
+            onChangeText={(value) => onChange("name", String(value || ""))}
             required
           />
-        </>
-      ) : (
-        <AppTextInput
-          id={`edit-holding-rate-${holding.id}`}
-          label='Expected annual %'
-          inputMode='decimal'
-          placeholder='Optional'
-          value={form.expectedAnnualReturnPercent}
-          onChangeText={(value) =>
-            onChange('expectedAnnualReturnPercent', String(value || ''))
-          }
-        />
-      )}
 
-      {isLocked ? (
-        <TimelockDateInput
-          id={`edit-holding-timelock-${holding.id}`}
-          label='Extend timelock date'
-          value={form.timelockUntil}
-          onChangeText={(value) =>
-            onChange('timelockUntil', String(value || ''))
-          }
-        />
-      ) : (
-        <>
-          <AppPicker
-            id={`edit-holding-timelock-mode-${holding.id}`}
-            label='Timelock'
-            options={timelockOptions}
-            value={form.timelockMode}
-            onChange={(value) => onChange('timelockMode', value)}
-          />
-          {form.timelockMode === 'locked' && (
-            <TimelockDateInput
-              id={`edit-holding-timelock-${holding.id}`}
-              label='Timelock date'
-              value={form.timelockUntil}
+          {isMarket ? (
+            <>
+              <AppTextInput
+                id={`edit-holding-symbol-${holding.id}`}
+                label="Investment"
+                value={form.symbol}
+                onChangeText={(value) =>
+                  onChange("symbol", String(value || ""))
+                }
+                required
+              />
+            </>
+          ) : (
+            <AppTextInput
+              id={`edit-holding-rate-${holding.id}`}
+              label="Expected annual %"
+              inputMode="decimal"
+              placeholder="Optional"
+              value={form.expectedAnnualReturnPercent}
               onChangeText={(value) =>
-                onChange('timelockUntil', String(value || ''))
+                onChange("expectedAnnualReturnPercent", String(value || ""))
               }
             />
           )}
-        </>
+
+          {isLocked ? (
+            <TimelockDateInput
+              id={`edit-holding-timelock-${holding.id}`}
+              label="Extend timelock date"
+              value={form.timelockUntil}
+              onChangeText={(value) =>
+                onChange("timelockUntil", String(value || ""))
+              }
+            />
+          ) : (
+            <>
+              <AppPicker
+                id={`edit-holding-timelock-mode-${holding.id}`}
+                label="Timelock"
+                options={timelockOptions}
+                value={form.timelockMode}
+                onChange={(value) => onChange("timelockMode", value)}
+              />
+              {form.timelockMode === "locked" && (
+                <TimelockDateInput
+                  id={`edit-holding-timelock-${holding.id}`}
+                  label="Timelock date"
+                  value={form.timelockUntil}
+                  onChangeText={(value) =>
+                    onChange("timelockUntil", String(value || ""))
+                  }
+                />
+              )}
+            </>
+          )}
+
+          <AppButton
+            type="submit"
+            size="sm"
+            disabled={
+              isPending ||
+              !form.name.trim() ||
+              !hasValidTimelock(form.timelockMode, form.timelockUntil)
+            }
+          >
+            Save Details
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={() => onModeChange("actions")}
+          >
+            Back
+          </AppButton>
+        </form>
       )}
 
-      <AppButton
-        type='submit'
-        size='sm'
-        disabled={
-          isPending ||
-          !form.name.trim() ||
-          !hasValidTimelock(form.timelockMode, form.timelockUntil)
-        }
-      >
-        Save Details
-      </AppButton>
-      <AppButton
-        type='button'
-        variant='outlined'
-        size='sm'
-        onClick={() => onModeChange('actions')}
-      >
-        Back
-      </AppButton>
-    </form>
-      )}
-
-      {mode === 'price' && isMarket && (
-      <form onSubmit={onSubmitMarketPrice} className='mt-3 grid grid-cols-1 gap-3'>
-        <AppTextInput
-          id={`edit-holding-price-${holding.id}`}
-          label='Current price'
-          inputMode='decimal'
-          value={form.currentPrice}
-          onChangeText={(value) =>
-            onChange('currentPrice', String(value || ''))
-          }
-          required
-        />
-        <AppButton
-          type='submit'
-          size='sm'
-          disabled={isPending || toNumber(form.currentPrice) <= 0}
+      {mode === "price" && isMarket && (
+        <form
+          onSubmit={onSubmitMarketPrice}
+          className="mt-3 grid grid-cols-1 gap-3"
         >
-          Update Price
-        </AppButton>
-        <AppButton
-          type='button'
-          variant='outlined'
-          size='sm'
-          onClick={() => onModeChange('actions')}
-        >
-          Back
-        </AppButton>
-      </form>
+          <AppTextInput
+            id={`edit-holding-price-${holding.id}`}
+            label="Current price"
+            inputMode="decimal"
+            value={form.currentPrice}
+            onChangeText={(value) =>
+              onChange("currentPrice", String(value || ""))
+            }
+            required
+          />
+          <AppButton
+            type="submit"
+            size="sm"
+            disabled={isPending || toNumber(form.currentPrice) <= 0}
+          >
+            Update Price
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={() => onModeChange("actions")}
+          >
+            Back
+          </AppButton>
+        </form>
       )}
 
-      {mode === 'withdraw' && !isMarket && (
-        <form onSubmit={onSubmitSimpleWithdrawal} className='mt-3 grid grid-cols-1 gap-3'>
-          <div className='grid grid-cols-2 gap-3'>
+      {mode === "withdraw" && !isMarket && (
+        <form
+          onSubmit={onSubmitSimpleWithdrawal}
+          className="mt-3 grid grid-cols-1 gap-3"
+        >
+          <div className="grid grid-cols-2 gap-3">
             <AppTextInput
               id={`edit-holding-withdrawal-${holding.id}`}
-              label='Withdraw'
-              inputMode='decimal'
+              label="Withdraw"
+              inputMode="decimal"
               value={form.withdrawalAmount}
               onChangeText={(value) =>
-                onChange('withdrawalAmount', String(value || ''))
+                onChange("withdrawalAmount", String(value || ""))
               }
               required
             />
             <AppTextInput
               id={`edit-holding-withdrawal-date-${holding.id}`}
-              label='Date'
-              type='date'
+              label="Date"
+              type="date"
               value={form.withdrawalDate}
               onChangeText={(value) =>
-                onChange('withdrawalDate', String(value || ''))
+                onChange("withdrawalDate", String(value || ""))
               }
               required
             />
           </div>
           <AppButton
-            type='submit'
-            size='sm'
+            type="submit"
+            size="sm"
             disabled={
               isPending ||
               isLocked ||
               toNumber(form.withdrawalAmount) <= 0 ||
               toNumber(form.withdrawalAmount) > holding.current_value
             }
-        >
-          Log Withdrawal
-        </AppButton>
+          >
+            Log Withdrawal
+          </AppButton>
           <AppButton
-            type='button'
-            variant='outlined'
-            size='sm'
-            onClick={() => onModeChange('actions')}
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={() => onModeChange("actions")}
           >
             Back
           </AppButton>
-      </form>
+        </form>
       )}
 
-      {mode === 'balance' && !isMarket && (
-        <form onSubmit={onSubmitSimpleBalance} className='mt-3 grid grid-cols-1 gap-3'>
+      {mode === "balance" && !isMarket && (
+        <form
+          onSubmit={onSubmitSimpleBalance}
+          className="mt-3 grid grid-cols-1 gap-3"
+        >
           <AppTextInput
             id={`edit-holding-value-${holding.id}`}
-            label='Correct balance'
-            inputMode='decimal'
+            label="Correct balance"
+            inputMode="decimal"
             value={form.currentValue}
             onChangeText={(value) =>
-              onChange('currentValue', String(value || ''))
+              onChange("currentValue", String(value || ""))
             }
             required
           />
           <AppButton
-            type='submit'
-            size='sm'
+            type="submit"
+            size="sm"
             disabled={
               isPending ||
               toNumber(form.currentValue) <= 0 ||
@@ -1287,10 +1345,10 @@ const HoldingEditForm = ({
             Save Balance Correction
           </AppButton>
           <AppButton
-            type='button'
-            variant='outlined'
-            size='sm'
-            onClick={() => onModeChange('actions')}
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={() => onModeChange("actions")}
           >
             Back
           </AppButton>
@@ -1301,8 +1359,8 @@ const HoldingEditForm = ({
 };
 
 const EmptyCopy = ({ text }: { text: string }) => (
-  <div className='rounded-lg bg-neutral-50 p-4 text-center'>
-    <AppTypography variant='small' className='text-neutral-400'>
+  <div className="rounded-lg bg-neutral-50 p-4 text-center">
+    <AppTypography variant="small" className="text-neutral-400">
       {text}
     </AppTypography>
   </div>
@@ -1327,7 +1385,7 @@ const TimelockDateInput = ({
     <AppTextInput
       id={id}
       label={label}
-      type={isFocused || !!value ? 'date' : 'text'}
+      type={isFocused || !!value ? "date" : "text"}
       value={value}
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
@@ -1337,7 +1395,7 @@ const TimelockDateInput = ({
 };
 
 function toNumber(value: string): number {
-  const parsed = Number(value.replace(/,/g, ''));
+  const parsed = Number(value.replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -1349,7 +1407,7 @@ function toOptionalNumber(value: string): number | null {
 function toOptionalDate(value: string): Date | null {
   if (!value.trim()) return null;
   const parsed = dayjs(value);
-  return parsed.isValid() ? parsed.startOf('day').toDate() : null;
+  return parsed.isValid() ? parsed.startOf("day").toDate() : null;
 }
 
 function isHoldingTimelocked(holding: InvestmentHolding): boolean {
@@ -1358,7 +1416,7 @@ function isHoldingTimelocked(holding: InvestmentHolding): boolean {
 }
 
 function hasValidTimelock(mode: TimelockMode, value: string): boolean {
-  return mode === 'none' || !!value.trim();
+  return mode === "none" || !!value.trim();
 }
 
 export default Investments;

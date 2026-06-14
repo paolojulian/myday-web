@@ -23,6 +23,7 @@ const ExpenseEdit: FC = () => {
       }}
       initialRecurrence={data?.recurrence ?? null}
       initialRecurrenceId={data?.recurrence_id ?? null}
+      initialWarrantyId={data?.warranty_id ?? null}
     />
   );
 };
