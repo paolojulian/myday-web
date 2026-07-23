@@ -8,12 +8,12 @@ import {
   HoldingEditForm,
 } from "@/components/organisms/holding-edit-form";
 import {
-  TimelockDateInput,
   TimelockMode,
   hasValidTimelock,
   timelockOptions,
   toNumber,
 } from "@/components/organisms/holding-edit-form/holding-edit-form.utils";
+import { TimelockDateInput } from "@/components/organisms/holding-edit-form/timelock-date-input";
 import { UpdatePrice } from "@/components/organisms/update-price";
 import { useCreateInvestment } from "@/hooks/investments/use-create-investment";
 import { useDeleteInvestmentHolding } from "@/hooks/investments/use-delete-investment-holding";
@@ -126,6 +126,8 @@ const Investments = () => {
     quantity: "",
     currentPrice: "",
     currentValue: "",
+    correctedValue: "",
+    notes: "",
     withdrawalAmount: "",
     withdrawalDate: dayjs().format("YYYY-MM-DD"),
     expectedAnnualReturnPercent: "",
@@ -284,6 +286,8 @@ const Investments = () => {
       quantity: String(holding.quantity),
       currentPrice: String(holding.current_price),
       currentValue: String(holding.current_value),
+      correctedValue: String(holding.current_value),
+      notes: "",
       withdrawalAmount: "",
       withdrawalDate: dayjs().format("YYYY-MM-DD"),
       expectedAnnualReturnPercent:
@@ -352,6 +356,20 @@ const Investments = () => {
     await updateHolding.updateSimpleBalance({
       holdingId: holding.id ?? "",
       currentValue: toNumber(editForm.currentValue),
+    });
+    closeEditHolding();
+  };
+
+  const submitCorrectValue = async (
+    event: FormEvent<HTMLFormElement>,
+    holding: InvestmentHolding,
+  ) => {
+    event.preventDefault();
+
+    await updateHolding.correctValue({
+      holdingId: holding.id ?? "",
+      correctedValue: toNumber(editForm.correctedValue),
+      notes: editForm.notes || null,
     });
     closeEditHolding();
   };
@@ -855,6 +873,9 @@ const Investments = () => {
                       }
                       onSubmitSimpleBalance={(event) =>
                         submitSimpleBalance(event, holding)
+                      }
+                      onSubmitCorrectValue={(event) =>
+                        submitCorrectValue(event, holding)
                       }
                       onSubmitSimpleWithdrawal={(event) =>
                         submitSimpleWithdrawal(event, holding)

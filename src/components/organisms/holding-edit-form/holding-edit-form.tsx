@@ -1,23 +1,25 @@
 import { AppButton } from "@/components/atoms/app-button";
 import { AppPicker } from "@/components/atoms/app-picker";
 import AppTextInput from "@/components/atoms/app-text-input";
+import { calculateReturnPercent } from "@/lib/investment.utils";
 import { InvestmentHolding } from "@/repository";
 import { FormEvent } from "react";
 import {
-  TimelockDateInput,
   TimelockMode,
   hasValidTimelock,
   isHoldingTimelocked,
   timelockOptions,
   toNumber,
 } from "./holding-edit-form.utils";
+import { TimelockDateInput } from "./timelock-date-input";
 
 export type HoldingActionMode =
   | "actions"
   | "details"
   | "price"
   | "withdraw"
-  | "balance";
+  | "balance"
+  | "correct";
 
 export type HoldingEditFormState = {
   name: string;
@@ -25,6 +27,8 @@ export type HoldingEditFormState = {
   quantity: string;
   currentPrice: string;
   currentValue: string;
+  correctedValue: string;
+  notes: string;
   withdrawalAmount: string;
   withdrawalDate: string;
   expectedAnnualReturnPercent: string;
@@ -45,6 +49,7 @@ type HoldingEditFormProps = {
   onSubmitDetails: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitMarketPrice: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSimpleBalance: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitCorrectValue: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSimpleWithdrawal: (event: FormEvent<HTMLFormElement>) => void;
 };
 
@@ -61,6 +66,7 @@ export const HoldingEditForm = ({
   onSubmitDetails,
   onSubmitMarketPrice,
   onSubmitSimpleBalance,
+  onSubmitCorrectValue,
   onSubmitSimpleWithdrawal,
 }: HoldingEditFormProps) => {
   const isLocked = isHoldingTimelocked(holding);
@@ -95,6 +101,14 @@ export const HoldingEditForm = ({
               Correct
             </AppButton>
           )}
+          <AppButton
+            type="button"
+            size="sm"
+            variant="outlined"
+            onClick={() => onModeChange("correct")}
+          >
+            Correct value
+          </AppButton>
           <AppButton
             type="button"
             variant="danger"
@@ -312,6 +326,58 @@ export const HoldingEditForm = ({
             }
           >
             Save Balance Correction
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="outlined"
+            size="sm"
+            onClick={() => onModeChange("actions")}
+          >
+            Back
+          </AppButton>
+        </form>
+      )}
+
+      {mode === "correct" && (
+        <form
+          onSubmit={onSubmitCorrectValue}
+          className="mt-3 grid grid-cols-1 gap-3"
+        >
+          <AppTextInput
+            id={`edit-holding-corrected-value-${holding.id}`}
+            label="Corrected value"
+            inputMode="decimal"
+            value={form.correctedValue}
+            onChangeText={(value) =>
+              onChange("correctedValue", String(value || ""))
+            }
+            required
+          />
+          <AppTextInput
+            id={`edit-holding-correction-note-${holding.id}`}
+            label="Note"
+            placeholder="Optional"
+            value={form.notes}
+            onChangeText={(value) => onChange("notes", String(value || ""))}
+          />
+          <p className="text-xs text-neutral-400">
+            Gain/loss stays at{" "}
+            {calculateReturnPercent(
+              holding.current_value,
+              holding.cost_basis,
+            ).toFixed(1)}
+            %
+          </p>
+          <AppButton
+            type="submit"
+            size="sm"
+            disabled={
+              isPending ||
+              toNumber(form.correctedValue) <= 0 ||
+              (isLocked && toNumber(form.correctedValue) < holding.current_value)
+            }
+          >
+            Save Corrected Value
           </AppButton>
           <AppButton
             type="button"
