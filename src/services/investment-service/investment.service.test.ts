@@ -6,6 +6,7 @@ import {
   InvestmentCurrency,
   InvestmentTransactionType,
 } from '@/repository/investment.db';
+import { calculateReturnPercent } from '@/lib/investment.utils';
 import { investmentService } from './investment.service';
 
 const SIMPLE_MP2_DEPOSIT = {
@@ -647,6 +648,214 @@ describe('investmentService holding updates', () => {
     const result = await investmentService.updateSimpleBalance({
       holdingId: 'missing',
       currentValue: 1000,
+    });
+
+    expect(result.error).toBeInstanceOf(Error);
+  });
+});
+
+describe('investmentService.correctHoldingValue', () => {
+  it('corrects a simple holding value while preserving gain/loss percent', async () => {
+    await investmentService.add({ ...SIMPLE_MP2_DEPOSIT, amount: 800 });
+    const [holding] = await db.investmentHoldings.toArray();
+    await investmentService.updateSimpleBalance({
+      holdingId: holding.id ?? '',
+      currentValue: 1000,
+    });
+    const [beforeHolding] = await db.investmentHoldings.toArray();
+    const beforePercent = calculateReturnPercent(
+      beforeHolding.current_value,
+      beforeHolding.cost_basis
+    );
+
+    const result = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 1500,
+      notes: 'Reconciled with statement',
+    });
+
+    expect(result.error).toBeNull();
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+    const transactions = await db.investmentTransactions.toArray();
+    const expenses = await db.expenses.toArray();
+    const snapshots = await db.investmentPriceSnapshots.toArray();
+
+    expect(updatedHolding.quantity).toBe(1);
+    expect(updatedHolding.cost_basis).toBeCloseTo(1200);
+    expect(updatedHolding.current_price).toBe(1500);
+    expect(updatedHolding.current_value).toBe(1500);
+    expect(updatedHolding.price_source).toBe('manual');
+    expect(
+      calculateReturnPercent(
+        updatedHolding.current_value,
+        updatedHolding.cost_basis
+      )
+    ).toBeCloseTo(beforePercent);
+    expect(beforePercent).toBeCloseTo(25);
+
+    const correction = transactions.find(
+      (transaction) => transaction.type === InvestmentTransactionType.Correction
+    );
+    expect(correction).toMatchObject({
+      type: InvestmentTransactionType.Correction,
+      amount: 500,
+      holding_id: holding.id,
+      account_id: beforeHolding.account_id,
+      currency: InvestmentCurrency.PHP,
+      expense_id: null,
+      notes: 'Reconciled with statement',
+    });
+    expect(correction?.quantity).toBeNull();
+    expect(correction?.price_per_unit).toBeNull();
+
+    // no expense mirror, no price snapshot for a correction
+    expect(expenses).toHaveLength(1);
+    expect(snapshots).toHaveLength(0);
+  });
+
+  it('corrects a market holding, keeping quantity and deriving price, percent preserved', async () => {
+    await investmentService.add(MARKET_QQQ_BUY);
+    const [holding] = await db.investmentHoldings.toArray();
+    const beforePercent = calculateReturnPercent(
+      holding.current_value,
+      holding.cost_basis
+    );
+
+    const result = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 2000,
+    });
+
+    expect(result.error).toBeNull();
+
+    const [updatedHolding] = await db.investmentHoldings.toArray();
+    const transactions = await db.investmentTransactions.toArray();
+    const snapshots = await db.investmentPriceSnapshots.toArray();
+
+    expect(updatedHolding.quantity).toBe(2);
+    expect(updatedHolding.current_price).toBe(1000);
+    expect(updatedHolding.current_value).toBe(2000);
+    expect(updatedHolding.cost_basis).toBeCloseTo(2002);
+    expect(
+      calculateReturnPercent(
+        updatedHolding.current_value,
+        updatedHolding.cost_basis
+      )
+    ).toBeCloseTo(beforePercent);
+
+    const correction = transactions.find(
+      (transaction) => transaction.type === InvestmentTransactionType.Correction
+    );
+    expect(correction).toMatchObject({
+      type: InvestmentTransactionType.Correction,
+      amount: 1000,
+      holding_id: holding.id,
+      currency: InvestmentCurrency.USD,
+      expense_id: null,
+      notes: null,
+    });
+    // a correction is not a market price observation
+    expect(snapshots).toHaveLength(1);
+  });
+
+  it('does not count a correction as a monthly contribution', async () => {
+    await investmentService.add(SIMPLE_MP2_DEPOSIT);
+    const [holding] = await db.investmentHoldings.toArray();
+    const beforeSpent = await expenseService.spentThisMonth(
+      new Date('2026-05-10T00:00:00')
+    );
+
+    await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 9000,
+    });
+
+    const afterSpent = await expenseService.spentThisMonth(
+      new Date('2026-05-10T00:00:00')
+    );
+
+    expect(afterSpent).toBe(beforeSpent);
+    expect(await db.expenses.toArray()).toHaveLength(1);
+  });
+
+  it('rejects a corrected value of zero or below', async () => {
+    await investmentService.add(SIMPLE_MP2_DEPOSIT);
+    const [holding] = await db.investmentHoldings.toArray();
+
+    const zeroResult = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 0,
+    });
+    const negativeResult = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: -100,
+    });
+
+    expect(zeroResult.error).toBeInstanceOf(Error);
+    expect(negativeResult.error).toBeInstanceOf(Error);
+
+    const [unchanged] = await db.investmentHoldings.toArray();
+    expect(unchanged.current_value).toBe(5000);
+    expect(await db.investmentTransactions.toArray()).toHaveLength(1);
+  });
+
+  it('rejects correcting a holding that has no current value', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      accountName: 'Emergency Fund',
+      accountType: InvestmentAccountType.Cash,
+      holdingName: 'Emergency Fund',
+      amount: 1000,
+      expectedAnnualReturnPercent: null,
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+    await investmentService.withdraw({
+      holdingId: holding.id ?? '',
+      amount: 1000,
+      transactionDate: new Date('2026-05-20T00:00:00'),
+    });
+    const [emptyHolding] = await db.investmentHoldings.toArray();
+    expect(emptyHolding.current_value).toBe(0);
+
+    const result = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 500,
+    });
+
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
+  it('rejects a downward correction while timelocked but allows an upward one', async () => {
+    await investmentService.add({
+      ...SIMPLE_MP2_DEPOSIT,
+      timelockUntil: new Date('2031-05-04T10:30:00'),
+    });
+    const [holding] = await db.investmentHoldings.toArray();
+
+    const downwardResult = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 4000,
+    });
+
+    expect(downwardResult.error).toBeInstanceOf(Error);
+    const [afterDownward] = await db.investmentHoldings.toArray();
+    expect(afterDownward.current_value).toBe(5000);
+
+    const upwardResult = await investmentService.correctHoldingValue({
+      holdingId: holding.id ?? '',
+      correctedValue: 6000,
+    });
+
+    expect(upwardResult.error).toBeNull();
+    const [afterUpward] = await db.investmentHoldings.toArray();
+    expect(afterUpward.current_value).toBe(6000);
+  });
+
+  it('returns an error when correcting an unknown holding', async () => {
+    const result = await investmentService.correctHoldingValue({
+      holdingId: 'missing',
+      correctedValue: 1000,
     });
 
     expect(result.error).toBeInstanceOf(Error);

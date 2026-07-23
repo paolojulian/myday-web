@@ -1,6 +1,7 @@
 import { DBError } from "@/config/errors.constants";
 import { handleError } from "@/lib/handle-error.utils";
 import {
+  calculateCorrectedCostBasis,
   calculateHoldingValue,
   getTransactionCashImpact,
 } from "@/lib/investment.utils";
@@ -55,6 +56,12 @@ export type UpdateInvestmentMarketPriceParams = {
 export type UpdateInvestmentSimpleBalanceParams = {
   holdingId: string;
   currentValue: number;
+};
+
+export type CorrectInvestmentHoldingValueParams = {
+  holdingId: string;
+  correctedValue: number;
+  notes?: string | null;
 };
 
 export type WithdrawInvestmentParams = {
@@ -407,6 +414,109 @@ class InvestmentService {
         error: handleError(
           e,
           new DBError("Unable to update investment balance"),
+        ),
+      };
+    }
+  }
+
+  public async correctHoldingValue(
+    params: CorrectInvestmentHoldingValueParams,
+  ): Promise<{ error: Error | null; holding?: InvestmentHolding }> {
+    const dateNow = new Date();
+
+    try {
+      const holding = await db.investmentHoldings.get(params.holdingId);
+      if (!holding) {
+        return { error: new DBError("Investment holding not found") };
+      }
+
+      const account = await db.investmentAccounts.get(holding.account_id);
+      if (!account) {
+        return { error: new DBError("Investment account not found") };
+      }
+
+      const { correctedValue } = params;
+      if (correctedValue <= 0) {
+        return {
+          error: new DBError("Corrected value must be greater than zero"),
+        };
+      }
+      if (holding.current_value <= 0) {
+        return {
+          error: new DBError("Cannot correct a holding with no current value"),
+        };
+      }
+      if (
+        isHoldingLocked(holding, dateNow) &&
+        correctedValue < holding.current_value
+      ) {
+        return { error: new DBError("Investment holding is timelocked") };
+      }
+
+      const previousValue = holding.current_value;
+      const nextCostBasis = calculateCorrectedCostBasis({
+        currentValue: holding.current_value,
+        correctedValue,
+        costBasis: holding.cost_basis,
+      });
+      const isMarket = isMarketAccountType(account.type);
+      const nextQuantity = isMarket ? holding.quantity : 1;
+      const nextPrice = isMarket
+        ? correctedValue / holding.quantity
+        : correctedValue;
+
+      const updatedHolding: InvestmentHolding = {
+        ...holding,
+        quantity: nextQuantity,
+        cost_basis: nextCostBasis,
+        current_price: nextPrice,
+        current_value: correctedValue,
+        price_source: "manual",
+        price_updated_at: dateNow,
+        updated_at: dateNow,
+      };
+      const transaction: InvestmentTransaction = {
+        id: generateInvestmentId(),
+        account_id: holding.account_id,
+        holding_id: holding.id ?? null,
+        expense_id: null,
+        type: InvestmentTransactionType.Correction,
+        transaction_date: dateNow,
+        symbol: null,
+        quantity: null,
+        price_per_unit: null,
+        amount: correctedValue - previousValue,
+        fees: null,
+        currency: holding.currency,
+        notes: params.notes ?? null,
+        created_at: dateNow,
+        updated_at: dateNow,
+      };
+
+      await db.transaction(
+        "rw",
+        db.investmentHoldings,
+        db.investmentTransactions,
+        async () => {
+          await db.investmentHoldings.update(params.holdingId, {
+            quantity: updatedHolding.quantity,
+            cost_basis: updatedHolding.cost_basis,
+            current_price: updatedHolding.current_price,
+            current_value: updatedHolding.current_value,
+            price_source: updatedHolding.price_source,
+            price_updated_at: updatedHolding.price_updated_at,
+            updated_at: updatedHolding.updated_at,
+          });
+          await db.investmentTransactions.add(transaction);
+        },
+      );
+
+      return { error: null, holding: updatedHolding };
+    } catch (e) {
+      return {
+        error: handleError(
+          e,
+          new DBError("Unable to correct investment holding value"),
         ),
       };
     }

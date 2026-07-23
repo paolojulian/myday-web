@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  CorrectInvestmentHoldingValueParams,
   investmentService,
   UpdateInvestmentHoldingDetailsParams,
   UpdateInvestmentMarketPriceParams,
@@ -45,6 +46,19 @@ export const useUpdateInvestmentHolding = () => {
     }
   };
 
+  const correctValue = async (
+    params: CorrectInvestmentHoldingValueParams
+  ) => {
+    setIsPending(true);
+    try {
+      const result = await investmentService.correctHoldingValue(params);
+      if (result.error) throw result.error;
+      return result.holding;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   const withdraw = async (params: WithdrawInvestmentParams) => {
     setIsPending(true);
     try {
@@ -60,6 +74,7 @@ export const useUpdateInvestmentHolding = () => {
     updateDetails,
     updateMarketPrice,
     updateSimpleBalance,
+    correctValue,
     withdraw,
     isPending,
   };
