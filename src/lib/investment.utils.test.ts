@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPortfolioOverview,
   buildInvestmentProjectionScenarios,
+  calculateCorrectedCostBasis,
   calculateInvestmentProjection,
   calculateReturnPercent,
   getTransactionCashImpact,
@@ -27,6 +28,41 @@ describe('investment utils', () => {
     expect(calculateReturnPercent(1200, 0)).toBe(0);
   });
 
+  it('scales cost basis so the return percent is preserved after a value correction', () => {
+    // Upward correction: 1000 -> 1500 at +25% (cost 800) keeps +25%.
+    const upBasis = calculateCorrectedCostBasis({
+      currentValue: 1000,
+      correctedValue: 1500,
+      costBasis: 800,
+    });
+    expect(upBasis).toBe(1200);
+    expect(calculateReturnPercent(1500, upBasis)).toBeCloseTo(
+      calculateReturnPercent(1000, 800),
+      10
+    );
+
+    // Downward correction: 1000 -> 800 at +25% (cost 800) keeps +25%.
+    const downBasis = calculateCorrectedCostBasis({
+      currentValue: 1000,
+      correctedValue: 800,
+      costBasis: 800,
+    });
+    expect(downBasis).toBe(640);
+    expect(calculateReturnPercent(800, downBasis)).toBeCloseTo(
+      calculateReturnPercent(1000, 800),
+      10
+    );
+
+    // Zero cost basis stays 0.
+    expect(
+      calculateCorrectedCostBasis({
+        currentValue: 1000,
+        correctedValue: 1500,
+        costBasis: 0,
+      })
+    ).toBe(0);
+  });
+
   it('calculates cash impact by transaction type', () => {
     expect(
       getTransactionCashImpact({
@@ -43,6 +79,78 @@ describe('investment utils', () => {
         fees: 10,
       })
     ).toBe(-990);
+
+    expect(
+      getTransactionCashImpact({
+        type: InvestmentTransactionType.Correction,
+        amount: 500,
+        fees: 0,
+      })
+    ).toBe(0);
+  });
+
+  it('does not count a correction toward monthly contributions', () => {
+    const accounts: InvestmentAccount[] = [
+      {
+        id: 'mp2',
+        name: 'MP2',
+        type: InvestmentAccountType.MP2,
+        currency: InvestmentCurrency.PHP,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+    const holdings: InvestmentHolding[] = [
+      {
+        id: 'mp2-holding',
+        account_id: 'mp2',
+        name: 'MP2',
+        quantity: 1,
+        cost_basis: 12000,
+        current_price: 12000,
+        current_value: 12000,
+        currency: InvestmentCurrency.PHP,
+        price_source: 'manual',
+        price_updated_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+    const transactions: InvestmentTransaction[] = [
+      {
+        id: 'deposit',
+        account_id: 'mp2',
+        holding_id: 'mp2-holding',
+        type: InvestmentTransactionType.Deposit,
+        transaction_date: new Date('2026-05-04'),
+        amount: 5000,
+        currency: InvestmentCurrency.PHP,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        id: 'correction',
+        account_id: 'mp2',
+        holding_id: 'mp2-holding',
+        type: InvestmentTransactionType.Correction,
+        transaction_date: new Date('2026-05-06'),
+        amount: 3000,
+        currency: InvestmentCurrency.PHP,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+
+    const overview = buildPortfolioOverview({
+      accounts,
+      holdings,
+      transactions,
+      now: new Date('2026-05-10'),
+      usdToPhp: 58,
+    });
+
+    // Only the 5000 deposit counts; the 3000 correction contributes nothing.
+    expect(overview.monthlyContributionsPhp).toBe(5000);
   });
 
   it('builds portfolio totals, allocation, and current-month contributions for simple balances', () => {

@@ -23,6 +23,7 @@ export enum InvestmentTransactionType {
   Interest = 'interest',
   Fee = 'fee',
   PriceUpdate = 'price_update',
+  Correction = 'correction',
 }
 
 export type InvestmentAccount = {

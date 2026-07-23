@@ -76,6 +76,17 @@ export function calculateReturnPercent(
   return ((currentValue - costBasis) / costBasis) * 100;
 }
 
+/** Scale cost basis so calculateReturnPercent stays identical after a value
+ *  correction. Requires currentValue > 0. A costBasis <= 0 stays 0. */
+export function calculateCorrectedCostBasis(params: {
+  currentValue: number;
+  correctedValue: number;
+  costBasis: number;
+}): number {
+  const { currentValue, correctedValue, costBasis } = params;
+  return costBasis <= 0 ? 0 : costBasis * (correctedValue / currentValue);
+}
+
 export function getTransactionCashImpact(
   transaction: Pick<InvestmentTransaction, "type" | "amount" | "fees">,
 ): number {
@@ -93,6 +104,7 @@ export function getTransactionCashImpact(
     case InvestmentTransactionType.Dividend:
     case InvestmentTransactionType.Interest:
     case InvestmentTransactionType.PriceUpdate:
+    case InvestmentTransactionType.Correction:
       return 0;
   }
 }
