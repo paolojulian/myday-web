@@ -143,7 +143,7 @@ nonisolated enum WebImport {
     }
 
     /// All-or-nothing: one save at the end; on any throw, `context.rollback()` then rethrow.
-    func run(_ file: WebExportFile) throws -> ImportSummary {
+    @discardableResult func run(_ file: WebExportFile) throws -> ImportSummary {
         do {
             let summary = try insert(file)
             try beforeSave?()

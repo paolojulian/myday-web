@@ -152,7 +152,7 @@ struct WebImportTests {
     }
 
     @Test func aSecondImportAddsNothing() throws {
-        try seededFood()
+        _ = try seededFood()
         let file = try WebImport.decode(try fixture())
         try WebImporter(context: context).run(file)
         let counts = try (store.fetch(Expense.self).count, store.fetch(ExpenseCategory.self).count,
@@ -173,7 +173,7 @@ struct WebImportTests {
     }
 
     @Test func leavesTheStoreUntouchedWhenItThrowsMidWay() throws {
-        try seededFood()
+        _ = try seededFood()
         struct Boom: Error {}
         var importer = WebImporter(context: context)
         importer.beforeSave = { throw Boom() }
