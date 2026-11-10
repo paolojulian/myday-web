@@ -126,6 +126,11 @@ struct DateMathTests {
         #expect(DateMath.mediumDate(d(2026, 11, 3), calendar: cal) == "Nov 3, 2026")
     }
 
+    @Test func monthDay() {
+        #expect(DateMath.monthDay(d(2026, 11, 3), calendar: cal) == "Nov 3")
+        #expect(DateMath.monthDay(d(2025, 12, 31, 23, 30), calendar: cal) == "Dec 31")
+    }
+
     @Test func formattingUsesTheCalendarTimeZone() {
         // 23:30 in Manila on Nov 3 is still Nov 3 there, even though it is Nov 3 15:30 UTC.
         #expect(DateMath.mediumDate(d(2026, 11, 3, 23, 30), calendar: cal) == "Nov 3, 2026")

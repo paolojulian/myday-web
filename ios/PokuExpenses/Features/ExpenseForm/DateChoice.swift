@@ -10,8 +10,8 @@ struct DateChoice: View {
         let selected: Option
 
         init(date: Date, now: Date = .now, calendar: Calendar = .current) {
-            todaySubtitle = DateChoice.monthDay(now, calendar: calendar)
-            yesterdaySubtitle = DateChoice.monthDay(DateMath.addingDays(-1, to: now, calendar: calendar), calendar: calendar)
+            todaySubtitle = DateMath.monthDay(now, calendar: calendar)
+            yesterdaySubtitle = DateMath.monthDay(DateMath.addingDays(-1, to: now, calendar: calendar), calendar: calendar)
             if DateMath.isToday(date, now: now, calendar: calendar) {
                 selected = .today
             } else if DateMath.isYesterday(date, now: now, calendar: calendar) {
@@ -20,23 +20,13 @@ struct DateChoice: View {
                 selected = .custom
             }
             if selected == .custom {
-                customTitle = DateChoice.monthDay(date, calendar: calendar)
+                customTitle = DateMath.monthDay(date, calendar: calendar)
                 customSubtitle = "Custom"
             } else {
                 customTitle = "Custom"
                 customSubtitle = "Pick a date"
             }
         }
-    }
-
-    /// "Nov 3".
-    static func monthDay(_ date: Date, calendar: Calendar = .current) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
-        formatter.calendar = calendar
-        formatter.timeZone = calendar.timeZone
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
     }
 
     /// `day`'s date with `time`'s time of day, so ordering within a day stays by entry time.

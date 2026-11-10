@@ -71,6 +71,11 @@ nonisolated enum DateMath {
         return string(date, format: format, calendar: calendar)
     }
 
+    /// "Nov 3".
+    static func monthDay(_ date: Date, calendar: Calendar = .current) -> String {
+        string(date, format: "MMM d", calendar: calendar)
+    }
+
     /// "Nov 3, 2026".
     static func mediumDate(_ date: Date, calendar: Calendar = .current) -> String {
         string(date, format: "MMM d, yyyy", calendar: calendar)
