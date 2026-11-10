@@ -1,0 +1,89 @@
+{
+  "format": "poku-expenses-export",
+  "version": 1,
+  "exported_at": "2026-11-10T01:00:00.000Z",
+  "categories": [
+    { "id": "ctg-web-food", "name": "food", "created_at": "2025-01-02T03:04:05.000Z" },
+    { "id": "ctg-web-pets", "name": "Pets", "created_at": "2025-01-02T03:04:06.000Z" }
+  ],
+  "budget": [
+    { "id": "bdg-web-1", "amount": 25000, "created_at": "2025-01-01T00:00:00.000Z" },
+    { "id": "bdg-web-2", "amount": 30000, "created_at": "2026-10-01T00:00:00.000Z" }
+  ],
+  "expenses": [
+    {
+      "id": "exp-web-lunch",
+      "title": "Lunch",
+      "amount": 650,
+      "transaction_date": "2026-11-03T04:05:06.789Z",
+      "description": "With the team",
+      "category_id": "ctg-web-food",
+      "recurrence": null,
+      "recurrence_id": null,
+      "warranty_id": null,
+      "created_at": "2026-11-03T04:05:06.789Z",
+      "updated_at": "2026-11-03T04:05:06.789Z"
+    },
+    {
+      "id": "exp-web-vet",
+      "title": "Vet",
+      "amount": 1200.5,
+      "transaction_date": "2026-11-04T10:00:00.000Z",
+      "description": null,
+      "category_id": "ctg-web-pets",
+      "recurrence": null,
+      "recurrence_id": null,
+      "warranty_id": null,
+      "created_at": "2026-11-04T10:00:00.000Z",
+      "updated_at": "2026-11-04T10:00:00.000Z"
+    },
+    {
+      "id": "exp-web-rent",
+      "title": "Rent",
+      "amount": 15000,
+      "transaction_date": "2026-10-01T00:00:00.000Z",
+      "description": null,
+      "category_id": null,
+      "recurrence": "monthly",
+      "recurrence_id": null,
+      "warranty_id": null,
+      "created_at": "2026-10-01T00:00:00.000Z",
+      "updated_at": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "exp-web-refund",
+      "title": "Shoe return",
+      "amount": -500,
+      "transaction_date": "2026-11-05T08:00:00.000Z",
+      "description": null,
+      "category_id": "ctg-web-missing",
+      "recurrence": null,
+      "recurrence_id": null,
+      "warranty_id": "wrt-web-fan",
+      "created_at": "2026-11-05T08:00:00.000Z",
+      "updated_at": "2026-11-05T08:00:00.000Z"
+    }
+  ],
+  "warranties": [
+    {
+      "id": "wrt-web-fan",
+      "title": "Fan",
+      "expiration_date": "2028-03-14T00:00:00.000Z",
+      "image_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "image_content_type": "image/png",
+      "image_url": "https://res.cloudinary.com/demo/fan.png",
+      "created_at": "2026-11-05T08:00:00.000Z",
+      "updated_at": "2026-11-05T08:00:00.000Z"
+    },
+    {
+      "id": "wrt-web-tv",
+      "title": "TV",
+      "expiration_date": null,
+      "image_base64": null,
+      "image_content_type": null,
+      "image_url": "https://res.cloudinary.com/demo/tv.jpg",
+      "created_at": "2026-06-01T00:00:00.000Z",
+      "updated_at": "2026-06-01T00:00:00.000Z"
+    }
+  ]
+}

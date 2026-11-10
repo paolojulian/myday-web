@@ -2,6 +2,7 @@ import { AppButton, AppPageHeader } from '@/components/atoms';
 import AppTypography from '@/components/atoms/app-typography';
 import { db } from '@/repository';
 import { useDexieSync } from '@/hooks/use-dexie-sync';
+import { exportAllData, saveExportFile } from '@/lib/export.utils';
 import { FC, useState, ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -13,6 +14,21 @@ const Settings: FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    navigator.vibrate?.(8);
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      await saveExportFile(await exportAllData());
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'Could not export your data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleToggleSync = () => {
     if (syncEnabled) {
@@ -127,6 +143,32 @@ const Settings: FC = () => {
             </span>
           </Link>
         </div>
+      </div>
+
+      {/* Your data section */}
+      <div className='mt-6'>
+        <AppTypography variant='small' className='text-neutral-500 mb-3 font-medium uppercase tracking-wide'>
+          Your data
+        </AppTypography>
+
+        <div className='bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3'>
+          <div>
+            <AppTypography variant='body' className='font-medium text-neutral-900'>
+              Export my data
+            </AppTypography>
+            <AppTypography variant='small' className='text-neutral-500'>
+              Save a file you can import into the iPhone app
+            </AppTypography>
+          </div>
+          <AppButton variant='outlined' size='sm' onClick={handleExport} disabled={isExporting}>
+            {isExporting ? 'Exporting...' : 'Export'}
+          </AppButton>
+        </div>
+        {exportError && (
+          <AppTypography variant='small' className='text-red-600 mt-2'>
+            {exportError}
+          </AppTypography>
+        )}
       </div>
 
       {/* Sync section */}
