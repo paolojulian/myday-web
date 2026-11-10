@@ -48,6 +48,18 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: day.poku.myday.tests
         GENERATE_INFOPLIST_FILE: YES
+  PokuExpensesUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: PokuExpensesUITests
+    dependencies:
+      - target: PokuExpenses
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: day.poku.myday.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: PokuExpenses
 schemes:
   PokuExpenses:
     build:
@@ -59,3 +71,12 @@ schemes:
       config: Debug
       targets:
         - PokuExpensesTests
+  PokuExpensesUI:
+    build:
+      targets:
+        PokuExpenses: all
+        PokuExpensesUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - PokuExpensesUITests
