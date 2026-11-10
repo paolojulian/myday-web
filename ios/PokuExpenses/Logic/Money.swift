@@ -24,6 +24,18 @@ nonisolated enum Money {
         expenseAmount < 0 ? "+" + format(-expenseAmount) : format(expenseAmount)
     }
 
+    /// A stored amount as edit-field text: 1250.5 → "₱ 1,250.5". Rounds half-up to 2 decimals like `format`.
+    static func inputText(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        formatter.roundingMode = .halfUp
+        return formatInput(formatter.string(from: NSNumber(value: amount)) ?? "")
+    }
+
     /// As-you-type field text: "₱ 1,234.56", "₱ 0.", "", max 2 decimals.
     static func formatInput(_ raw: String) -> String {
         let cleaned = clean(raw)

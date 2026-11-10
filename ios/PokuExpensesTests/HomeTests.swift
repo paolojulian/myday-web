@@ -84,9 +84,6 @@ struct HomeTests {
     // MARK: BudgetSheet
 
     @Test func budgetSheetPrefillsAndLabelsWhenEditing() {
-        #expect(BudgetSheet.initialText(for: nil) == "")
-        #expect(BudgetSheet.initialText(for: 30000) == "₱ 30,000")
-        #expect(BudgetSheet.initialText(for: 1250.5) == "₱ 1,250.5")
         #expect(BudgetSheet.saveTitle(isEditing: false) == "Set budget")
         #expect(BudgetSheet.saveTitle(isEditing: true) == "Update budget")
     }

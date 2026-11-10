@@ -53,6 +53,18 @@ struct MoneyTests {
         #expect(Money.formatInput(raw) == expected)
     }
 
+    // A stored amount back into field text (edit forms prefill); rounds half-up like `format`.
+    @Test(arguments: [
+        (1250.0, "₱ 1,250"),
+        (1250.5, "₱ 1,250.5"),
+        (1250.75, "₱ 1,250.75"),
+        (1250.125, "₱ 1,250.13"),
+        (30000.0, "₱ 30,000"),
+    ])
+    func inputText(amount: Double, expected: String) {
+        #expect(Money.inputText(amount) == expected)
+    }
+
     // clearCurrencyFormatting + Number()
     @Test func parseInput() {
         #expect(Money.parseInput("₱ 1,000") == 1000)

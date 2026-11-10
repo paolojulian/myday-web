@@ -56,7 +56,7 @@ import SwiftData
         editing = expense
         kind = expense.isRefund ? .refund : .expense
         categoryID = expense.categoryID
-        amountText = Money.formatInput(Self.plainNumber(abs(expense.amount)))
+        amountText = Money.inputText(abs(expense.amount))
         title = expense.title
         note = expense.note ?? ""
         date = expense.transactionDate
@@ -151,12 +151,5 @@ import SwiftData
             try service.update(existingWarranty, title: title, expirationDate: warrantyExpiration, now: now)
             return existingWarranty.id
         }
-    }
-
-    /// "1250" / "1250.5" — what a user would have typed, before `Money.formatInput`.
-    nonisolated static func plainNumber(_ value: Double) -> String {
-        if value == value.rounded() { return String(Int(value)) }
-        return String(format: "%.2f", value)
-            .replacingOccurrences(of: #"0+$"#, with: "", options: .regularExpression)
     }
 }

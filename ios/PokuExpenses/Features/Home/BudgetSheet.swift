@@ -13,13 +13,7 @@ struct BudgetSheet: View {
 
     init(currentAmount: Double?) {
         self.currentAmount = currentAmount
-        _text = State(initialValue: Self.initialText(for: currentAmount))
-    }
-
-    static func initialText(for amount: Double?) -> String {
-        guard let amount else { return "" }
-        let raw = amount == amount.rounded() ? String(Int(amount)) : String(amount)
-        return Money.formatInput(raw)
+        _text = State(initialValue: currentAmount.map(Money.inputText) ?? "")
     }
 
     static func saveTitle(isEditing: Bool) -> String { isEditing ? "Update budget" : "Set budget" }
