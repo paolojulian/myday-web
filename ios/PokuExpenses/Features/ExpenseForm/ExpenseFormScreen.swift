@@ -89,7 +89,8 @@ private struct ExpenseFormContent: View {
                     .padding(.top, Theme.Spacing.block)
                 category.padding(.top, Theme.Spacing.field)
                 UnderlineField(label: "Amount", text: $model.amountText, placeholder: "₱ 0.00",
-                               error: model.amountError, large: true, keyboard: .decimalPad)
+                               error: model.amountError, large: true, keyboard: .decimalPad,
+                               moneyInput: true)
                     .focused($focus, equals: .amount)
                     .accessibilityIdentifier("amount-field")
                     .padding(.top, Theme.Spacing.field)
@@ -115,10 +116,6 @@ private struct ExpenseFormContent: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Theme.Colors.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) { footer }
-        .onChange(of: model.amountText) { _, newValue in
-            let formatted = Money.formatInput(newValue)
-            if formatted != newValue { model.amountText = formatted }
-        }
         .onAppear { if !model.isEditing { focus = .amount } }
         .toolbar {
             // The decimal pad has no return key: Next moves on to the title (web parity), Done closes it.

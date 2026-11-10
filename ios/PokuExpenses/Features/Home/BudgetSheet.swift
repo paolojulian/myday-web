@@ -42,7 +42,7 @@ struct BudgetSheet: View {
                 .foregroundStyle(Theme.Colors.textMuted)
                 .padding(.top, Theme.Spacing.tight)
             UnderlineField(label: "Monthly budget", text: $text, placeholder: "₱ 0", error: error,
-                           large: true, keyboard: .decimalPad)
+                           large: true, keyboard: .decimalPad, moneyInput: true)
                 .focused($focused)
                 .accessibilityIdentifier("budget-amount-field")
                 .padding(.top, Theme.Spacing.field)
@@ -60,11 +60,7 @@ struct BudgetSheet: View {
         .background(Theme.Colors.surface)
         .presentationDetents([.medium])
         .presentationCornerRadius(Theme.Radius.sheet)
-        .onChange(of: text) { _, newValue in
-            let formatted = Money.formatInput(newValue)
-            if formatted != newValue { text = formatted }
-            error = nil
-        }
+        .onChange(of: text) { error = nil }
         .onAppear { focused = true }
         .errorAlert($saveError)
     }
