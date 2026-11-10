@@ -7,8 +7,8 @@ struct BudgetSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var text: String
-    @State private var error: String?
-    @State private var saveError: String?
+    @State private var amountError: String?
+    @State private var errorMessage: String?
     @FocusState private var focused: Bool
 
     init(currentAmount: Double?) {
@@ -35,7 +35,7 @@ struct BudgetSheet: View {
                 .font(Theme.Fonts.small)
                 .foregroundStyle(Theme.Colors.textMuted)
                 .padding(.top, Theme.Spacing.tight)
-            UnderlineField(label: "Monthly budget", text: $text, placeholder: "₱ 0", error: error,
+            UnderlineField(label: "Monthly budget", text: $text, placeholder: "₱ 0", error: amountError,
                            large: true, keyboard: .decimalPad, moneyInput: true)
                 .focused($focused)
                 .accessibilityIdentifier("budget-amount-field")
@@ -54,17 +54,17 @@ struct BudgetSheet: View {
         .background(Theme.Colors.surface)
         .presentationDetents([.medium])
         .presentationCornerRadius(Theme.Radius.sheet)
-        .onChange(of: text) { error = nil }
+        .onChange(of: text) { amountError = nil }
         .onAppear { focused = true }
-        .errorAlert($saveError)
+        .errorAlert($errorMessage)
     }
 
     private func save() {
         do {
-            error = try Self.submit(text, context: context)
-            if error == nil { dismiss() }
+            amountError = try Self.submit(text, context: context)
+            if amountError == nil { dismiss() }
         } catch {
-            saveError = error.localizedDescription
+            errorMessage = error.localizedDescription
         }
     }
 }
