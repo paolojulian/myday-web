@@ -54,13 +54,8 @@ private struct MonthExpenses: View {
         let interval = DateMath.monthInterval(month)
         let start = interval.start, end = interval.end
         _expenses = Query(filter: #Predicate<Expense> { $0.transactionDate >= start && $0.transactionDate < end },
-                          sort: [SortDescriptor(\.transactionDate, order: .reverse),
-                                 SortDescriptor(\.createdAt, order: .reverse)])
-        // Same rule as BudgetService.budget(forMonthOf:): latest created before the month ends.
-        var latest = FetchDescriptor<Budget>(predicate: #Predicate { $0.createdAt < end },
-                                             sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        latest.fetchLimit = 1
-        _budgets = Query(latest)
+                          sort: ExpenseService.newestFirst)
+        _budgets = Query(BudgetService.latestDescriptor(before: end))
     }
 
     var body: some View {

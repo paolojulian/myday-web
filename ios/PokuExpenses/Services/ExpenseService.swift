@@ -40,9 +40,14 @@ struct ExpenseDraft: Equatable, Sendable {
         let start = interval.start, end = interval.end
         let descriptor = FetchDescriptor<Expense>(
             predicate: #Predicate { $0.transactionDate >= start && $0.transactionDate < end },
-            sortBy: [SortDescriptor(\.transactionDate, order: .reverse), SortDescriptor(\.createdAt, order: .reverse)]
+            sortBy: Self.newestFirst
         )
         return try context.fetch(descriptor)
+    }
+
+    /// Newest transactionDate first, then newest createdAt; shared with the screens' `@Query`s.
+    nonisolated static var newestFirst: [SortDescriptor<Expense>] {
+        [SortDescriptor(\.transactionDate, order: .reverse), SortDescriptor(\.createdAt, order: .reverse)]
     }
 
     func expense(id: String) throws -> Expense? {

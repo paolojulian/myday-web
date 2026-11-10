@@ -61,6 +61,15 @@ struct ExpenseServiceTests {
         #expect(try service.expenses(in: month).map(\.title) == ["Late", "Early"])
     }
 
+    @Test func newestFirstSortsByTransactionDateThenCreatedAt() throws {
+        let day = TestCalendar.date(2026, 11, 10)
+        try service.add(draft("Older day", on: TestCalendar.date(2026, 11, 9)), now: TestCalendar.date(2026, 11, 12))
+        try service.add(draft("First added", on: day), now: TestCalendar.date(2026, 11, 10, 8))
+        try service.add(draft("Second added", on: day), now: TestCalendar.date(2026, 11, 10, 9))
+        let sorted = try store.context.fetch(FetchDescriptor<Expense>(sortBy: ExpenseService.newestFirst))
+        #expect(sorted.map(\.title) == ["Second added", "First added", "Older day"])
+    }
+
     @Test func expensesInIntervalIsEmptyWhenNothingMatches() throws {
         try service.add(draft(on: TestCalendar.date(2026, 11, 10)))
         let month = DateMath.monthInterval(TestCalendar.date(2025, 1, 15), calendar: cal)

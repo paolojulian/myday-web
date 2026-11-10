@@ -59,4 +59,13 @@ struct BudgetServiceTests {
         try service.set(amount: 4500)
         #expect(try service.budget(forMonthOf: .now)?.amount == 4500)
     }
+
+    @Test func latestDescriptorFetchesOnlyTheNewestBudgetBeforeTheEnd() throws {
+        try insert(1000, createdAt: TestCalendar.date(2024, 1, 5))
+        try insert(2000, createdAt: TestCalendar.date(2024, 1, 20))
+        try insert(9999, createdAt: TestCalendar.date(2024, 2, 1, 0, 0))
+        let end = DateMath.monthInterval(TestCalendar.date(2024, 1, 15), calendar: cal).end
+        let fetched = try store.context.fetch(BudgetService.latestDescriptor(before: end))
+        #expect(fetched.map(\.amount) == [2000])
+    }
 }

@@ -74,11 +74,7 @@ private struct HomeBudget: View {
         _isEditingBudget = isEditingBudget
         let start = month.start, end = month.end
         _expenses = Query(filter: #Predicate<Expense> { $0.transactionDate >= start && $0.transactionDate < end })
-        // Same rule as BudgetService.budget(forMonthOf:): latest created before the month ends.
-        var latest = FetchDescriptor<Budget>(predicate: #Predicate { $0.createdAt < end },
-                                             sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        latest.fetchLimit = 1
-        _budgets = Query(latest)
+        _budgets = Query(BudgetService.latestDescriptor(before: end))
     }
 
     var body: some View {
@@ -92,10 +88,6 @@ private struct HomeBudget: View {
     }
 }
 
-private func newestFirst() -> [SortDescriptor<Expense>] {
-    [SortDescriptor(\.transactionDate, order: .reverse), SortDescriptor(\.createdAt, order: .reverse)]
-}
-
 /// The selected day's rule and rows.
 private struct SelectedDayList: View {
     let title: String
@@ -107,7 +99,7 @@ private struct SelectedDayList: View {
         self.categoryNames = categoryNames
         let start = interval.start, end = interval.end
         _expenses = Query(filter: #Predicate<Expense> { $0.transactionDate >= start && $0.transactionDate < end },
-                          sort: newestFirst())
+                          sort: ExpenseService.newestFirst)
     }
 
     var body: some View {
@@ -130,7 +122,7 @@ private struct EarlierList: View {
         self.onShowEarlier = onShowEarlier
         let start = interval.start, end = interval.end
         _expenses = Query(filter: #Predicate<Expense> { $0.transactionDate >= start && $0.transactionDate < end },
-                          sort: newestFirst())
+                          sort: ExpenseService.newestFirst)
         var before = FetchDescriptor<Expense>(predicate: #Predicate { $0.transactionDate < start })
         before.fetchLimit = 1
         _older = Query(before)

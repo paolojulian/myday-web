@@ -7,12 +7,17 @@ import SwiftData
     /// Latest budget whose createdAt is before the END of `date`'s month (web getBudgetByMonth).
     func budget(forMonthOf date: Date, calendar: Calendar = .current) throws -> Budget? {
         let end = DateMath.monthInterval(date, calendar: calendar).end
+        return try context.fetch(Self.latestDescriptor(before: end)).first
+    }
+
+    /// The single newest budget created before `end`; shared with the screens' `@Query`s.
+    nonisolated static func latestDescriptor(before end: Date) -> FetchDescriptor<Budget> {
         var descriptor = FetchDescriptor<Budget>(
             predicate: #Predicate { $0.createdAt < end },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         descriptor.fetchLimit = 1
-        return try context.fetch(descriptor).first
+        return descriptor
     }
 
     /// Always inserts a new record (history is how past months keep their budget).
