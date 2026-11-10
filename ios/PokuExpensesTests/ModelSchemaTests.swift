@@ -5,7 +5,7 @@ import Testing
 
 @MainActor
 struct ModelSchemaTests {
-    static let schema = Schema([Expense.self, ExpenseCategory.self, Budget.self, Warranty.self])
+    static let schema = AppContainer.schema
 
     @Test func schemaHasTheFourEntities() {
         let names = Set(Self.schema.entities.map(\.name))
