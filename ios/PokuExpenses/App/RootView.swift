@@ -57,7 +57,7 @@ struct RootView: View {
         .sensoryFeedback(.selection, trigger: tab)
         .environment(\.presentExpenseForm) { formTarget = $0 }
         .sheet(item: $formTarget) { target in
-            ExpenseFormPlaceholder(target: target)
+            ExpenseFormScreen(target: target)
         }
     }
 
@@ -86,29 +86,6 @@ private struct PlaceholderScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.Colors.background)
         .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-/// Replaced by ExpenseFormScreen in Phase 4.
-private struct ExpenseFormPlaceholder: View {
-    let target: FormTarget
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.field) {
-            switch target {
-            case .add: Text("Add expense").font(Theme.Fonts.title)
-            case .edit: Text("Edit expense").font(Theme.Fonts.title)
-            }
-            Spacer(minLength: 0)
-            IconButton(systemImage: "xmark", label: "Cancel") { dismiss() }
-                .accessibilityIdentifier("form-cancel-button")
-        }
-        .foregroundStyle(Theme.Colors.text)
-        .padding(.vertical, Theme.Spacing.field)
-        .screenMargins()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Colors.surface)
     }
 }
 
