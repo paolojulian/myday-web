@@ -31,7 +31,7 @@ final class ExpenseSmokeTests: XCTestCase {
         let amountField = app.textFields["amount-field"]
         XCTAssertTrue(amountField.waitForExistence(timeout: 5))
         if !(amountField.value(forKey: "hasKeyboardFocus") as? Bool ?? false) { amountField.tap() }
-        amountField.typeText(amount)
+        amountField.typeAmount(amount)
 
         // The decimal pad has no return key; the keyboard toolbar moves on to the title.
         app.buttons["keyboard-next"].tap()

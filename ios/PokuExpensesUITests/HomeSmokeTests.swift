@@ -28,7 +28,7 @@ final class HomeSmokeTests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         // The field is focused on appear.
         XCTAssertTrue(field.value(forKey: "hasKeyboardFocus") as? Bool ?? false)
-        field.typeText("30000")
+        field.typeAmount("30000")
         XCTAssertEqual(field.value as? String, "₱ 30,000")
         app.buttons["budget-save-button"].tap()
 
