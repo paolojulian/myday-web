@@ -40,6 +40,12 @@ struct ExpensesScreenTests {
         #expect(ExpensesScreen.filtered(all, selectedID: uncategorized).map(\.title) == ["c"])
     }
 
+    @Test func spendingIDIsTheSharedKey() {
+        #expect(CategorySpending.key(categoryID: "a") == "a")
+        #expect(CategorySpending(categoryID: nil, categoryName: "", total: 0, percentage: 0).id == CategorySpending.key(categoryID: nil))
+        #expect(CategorySpending.key(categoryID: nil) != CategorySpending.key(categoryID: ""))
+    }
+
     @Test func ruleNamesTheFilterAndCount() {
         #expect(ExpensesScreen.ruleTitle(categoryName: nil, count: 12) == "All · 12 expenses")
         #expect(ExpensesScreen.ruleTitle(categoryName: "Food", count: 9) == "Food · 9 expenses")

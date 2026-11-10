@@ -19,9 +19,12 @@ enum CategoryServiceError: LocalizedError, Equatable {
 
     /// Name A–Z, case-insensitive.
     func all() throws -> [ExpenseCategory] {
-        try context.fetch(FetchDescriptor<ExpenseCategory>()).sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        try context.fetch(FetchDescriptor<ExpenseCategory>()).sorted { Self.nameAscending($0.name, $1.name) }
+    }
+
+    /// The one category order: name A–Z, case-insensitive.
+    nonisolated static func nameAscending(_ a: String, _ b: String) -> Bool {
+        a.localizedCaseInsensitiveCompare(b) == .orderedAscending
     }
 
     /// Trims. Empty name throws. An existing name (case-insensitive) is returned instead of duplicated.

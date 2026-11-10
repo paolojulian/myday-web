@@ -20,8 +20,6 @@ struct WarrantiesScreen: View {
         warranties.sorted(by: WarrantyService.soonestExpiryFirst)
     }
 
-    static func deleteTitle(_ title: String) -> String { "Delete “\(title)”?" }
-
     @Query private var warranties: [Warranty]
     @Environment(\.modelContext) private var context
     @State private var isAdding = false
@@ -71,7 +69,7 @@ struct WarrantiesScreen: View {
         .sheet(isPresented: $isAdding) {
             WarrantyFormScreen(warranty: nil)
         }
-        .confirmationDialog(Self.deleteTitle(pendingDelete?.title ?? ""),
+        .confirmationDialog(DeleteConfirmation.title(pendingDelete?.title ?? ""),
                             isPresented: Binding(get: { pendingDelete != nil },
                                                  set: { if !$0 { pendingDelete = nil } }),
                             titleVisibility: .visible) {
@@ -109,15 +107,6 @@ private struct WarrantyRow: View {
         .frame(minHeight: Theme.controlHeight)
         .contentShape(Rectangle())
         .rowDivider()
-    }
-}
-
-extension View {
-    /// A List row laid out like the rest of the app: screen margins, no system separator or inset.
-    func plainListRow() -> some View {
-        listRowInsets(EdgeInsets(top: 0, leading: Theme.Spacing.margin, bottom: 0, trailing: Theme.Spacing.margin))
-            .listRowSeparator(.hidden)
-            .listRowBackground(Theme.Colors.background)
     }
 }
 

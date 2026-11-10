@@ -27,7 +27,7 @@ struct WarrantiesScreenTests {
     }
 
     @Test func deleteConfirmationNamesTheWarranty() {
-        #expect(WarrantiesScreen.deleteTitle("Blender") == "Delete “Blender”?")
+        #expect(DeleteConfirmation.title("Blender") == "Delete “Blender”?")
     }
 
     @Test func formExpiryRowTextAndLinks() {

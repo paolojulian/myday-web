@@ -6,15 +6,11 @@ struct ExpensesScreen: View {
     /// `selectedID` is a `CategorySpending.id`, so "no category" can be filtered too.
     static func filtered(_ expenses: [Expense], selectedID: String?) -> [Expense] {
         guard let selectedID else { return expenses }
-        return expenses.filter { key(for: $0) == selectedID }
+        return expenses.filter { CategorySpending.key(categoryID: $0.categoryID) == selectedID }
     }
 
     static func ruleTitle(categoryName: String?, count: Int) -> String {
         "\(categoryName ?? "All") · \(count) \(count == 1 ? "expense" : "expenses")"
-    }
-
-    private static func key(for expense: Expense) -> String {
-        CategorySpending(categoryID: expense.categoryID, categoryName: "", total: 0, percentage: 0).id
     }
 
     @State private var month = Date.now
@@ -72,7 +68,7 @@ private struct MonthExpenses: View {
         let spending = Spending.byCategory(expenses: expenses, categories: categories)
         let listed = ExpensesScreen.filtered(expenses, selectedID: selectedCategoryID)
         let selectedName = selectedCategoryID.flatMap { id in spending.first { $0.id == id }?.categoryName }
-        let names = Dictionary(categories.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+        let names = Spending.namesByID(categories)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {

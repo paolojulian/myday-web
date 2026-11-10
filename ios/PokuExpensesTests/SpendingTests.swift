@@ -14,6 +14,12 @@ struct SpendingTests {
         Expense(title: title, amount: amount, transactionDate: date, categoryID: categoryID, createdAt: createdAt)
     }
 
+    @Test func namesByIDMapsIDToNameKeepingTheFirstDuplicate() {
+        let duplicate = ExpenseCategory(id: "ctg-food", name: "Snacks")
+        let names = Spending.namesByID([food, bills, duplicate])
+        #expect(names == ["ctg-food": "Food", "ctg-bills": "Bills"])
+    }
+
     // MARK: breakdown
 
     @Test func breakdownSplitsBillsByExactName() {

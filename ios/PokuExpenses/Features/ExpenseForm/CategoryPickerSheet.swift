@@ -17,7 +17,7 @@ struct CategoryPickerSheet: View {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return categories
             .filter { needle.isEmpty || $0.name.localizedCaseInsensitiveContains(needle) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { CategoryService.nameAscending($0.name, $1.name) }
     }
 
     /// The name to offer creating, or nil when the query is blank or matches a category exactly.

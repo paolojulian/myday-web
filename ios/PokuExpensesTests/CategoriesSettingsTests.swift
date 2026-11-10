@@ -19,7 +19,7 @@ struct CategoriesSettingsTests {
     }
 
     @Test func deleteConfirmationNamesTheCategory() {
-        #expect(CategoriesScreen.deleteTitle("Food") == "Delete “Food”?")
+        #expect(DeleteConfirmation.title("Food") == "Delete “Food”?")
     }
 
     @Test func addingFromTheScreenTrimsAndDoesNotDuplicate() throws {

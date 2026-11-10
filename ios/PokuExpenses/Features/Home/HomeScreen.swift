@@ -6,10 +6,6 @@ struct HomeScreen: View {
     static let initialWindowDays = 30
     static let windowStep = 30
 
-    static func dayInterval(_ day: Date, calendar: Calendar = .current) -> DateInterval {
-        DateMath.dayInterval(day, calendar: calendar)
-    }
-
     /// `[start of selectedDay − windowDays, start of selectedDay)`. Whole days keep every day total exact.
     static func earlierInterval(selectedDay: Date, windowDays: Int, calendar: Calendar = .current) -> DateInterval {
         let end = calendar.startOfDay(for: selectedDay)
@@ -22,9 +18,7 @@ struct HomeScreen: View {
     @Environment(\.presentExpenseForm) private var presentExpenseForm
     @Query private var categories: [ExpenseCategory]
 
-    private var categoryNames: [String: String] {
-        Dictionary(categories.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-    }
+    private var categoryNames: [String: String] { Spending.namesByID(categories) }
 
     var body: some View {
         let now = Date.now
@@ -39,7 +33,7 @@ struct HomeScreen: View {
                 HomeBudget(month: DateMath.monthInterval(now), now: now, categories: categories,
                            isEditingBudget: $isEditingBudget)
                     .padding(.top, Theme.Spacing.block)
-                SelectedDayList(interval: Self.dayInterval(selectedDay), title: dayLabel, categoryNames: categoryNames)
+                SelectedDayList(interval: DateMath.dayInterval(selectedDay), title: dayLabel, categoryNames: categoryNames)
                 EarlierList(interval: Self.earlierInterval(selectedDay: selectedDay, windowDays: windowDays),
                             now: now, categoryNames: categoryNames) {
                     windowDays += Self.windowStep

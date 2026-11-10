@@ -114,6 +114,13 @@ extension View {
         padding(.horizontal, Theme.Spacing.margin)
     }
 
+    /// A List row laid out like the rest of the app: screen margins, no system separator or inset.
+    func plainListRow() -> some View {
+        listRowInsets(EdgeInsets(top: 0, leading: Theme.Spacing.margin, bottom: 0, trailing: Theme.Spacing.margin))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Theme.Colors.background)
+    }
+
     /// A 1pt line under a row.
     func rowDivider(_ color: Color = Theme.Colors.borderSubtle) -> some View {
         overlay(alignment: .bottom) {

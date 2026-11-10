@@ -9,7 +9,7 @@ struct HomeTests {
     // MARK: whole-day windows
 
     @Test func selectedDayIntervalIsTheWholeDay() {
-        let interval = HomeScreen.dayInterval(TestCalendar.date(2026, 11, 10, 15), calendar: cal)
+        let interval = DateMath.dayInterval(TestCalendar.date(2026, 11, 10, 15), calendar: cal)
         #expect(interval.start == TestCalendar.date(2026, 11, 10, 0))
         #expect(interval.end == TestCalendar.date(2026, 11, 11, 0))
     }

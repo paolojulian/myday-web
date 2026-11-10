@@ -8,7 +8,10 @@ struct CategorySpending: Identifiable, Equatable, Sendable {
     let categoryName: String
     let total: Double
     let percentage: Double
-    var id: String { categoryID ?? "__uncategorized__" }
+    var id: String { Self.key(categoryID: categoryID) }
+
+    /// The strip/filter key for a category id; nil ("no category") gets its own key.
+    static func key(categoryID: String?) -> String { categoryID ?? "__uncategorized__" }
 }
 
 struct DayGroup: Identifiable {
@@ -49,7 +52,7 @@ struct DayGroup: Identifiable {
             return CategorySpending(categoryID: categoryID, categoryName: name, total: total,
                                     percentage: grandTotal > 0 ? total / grandTotal * 100 : 0)
         }
-        .sorted { $0.total != $1.total ? $0.total > $1.total : byName($0.categoryName, $1.categoryName) }
+        .sorted { $0.total != $1.total ? $0.total > $1.total : CategoryService.nameAscending($0.categoryName, $1.categoryName) }
     }
 
     /// Most-used first (count of expenses), ties by name A–Z.
@@ -60,7 +63,7 @@ struct DayGroup: Identifiable {
         }
         let sorted = categories.sorted {
             let a = counts[$0.id, default: 0], b = counts[$1.id, default: 0]
-            return a != b ? a > b : byName($0.name, $1.name)
+            return a != b ? a > b : CategoryService.nameAscending($0.name, $1.name)
         }
         return Array(sorted.prefix(max(0, limit)))
     }
@@ -76,11 +79,8 @@ struct DayGroup: Identifiable {
         }
     }
 
-    private static func namesByID(_ categories: [ExpenseCategory]) -> [String: String] {
+    /// Category id → name. A duplicated id keeps the first name.
+    static func namesByID(_ categories: [ExpenseCategory]) -> [String: String] {
         Dictionary(categories.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-    }
-
-    private static func byName(_ a: String, _ b: String) -> Bool {
-        a.localizedCaseInsensitiveCompare(b) == .orderedAscending
     }
 }

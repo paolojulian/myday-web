@@ -9,10 +9,8 @@ struct CategoriesScreen: View {
     }
 
     static func sorted(_ categories: [ExpenseCategory]) -> [ExpenseCategory] {
-        categories.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        categories.sorted { CategoryService.nameAscending($0.name, $1.name) }
     }
-
-    static func deleteTitle(_ name: String) -> String { "Delete “\(name)”?" }
 
     /// Trims; an existing name (any case) is reused, not duplicated.
     static func add(name: String, context: ModelContext) throws {
@@ -85,7 +83,7 @@ struct CategoriesScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) { addBar }
-        .confirmationDialog(Self.deleteTitle(pendingDelete?.name ?? ""),
+        .confirmationDialog(DeleteConfirmation.title(pendingDelete?.name ?? ""),
                             isPresented: Binding(get: { pendingDelete != nil },
                                                  set: { if !$0 { pendingDelete = nil } }),
                             titleVisibility: .visible) {

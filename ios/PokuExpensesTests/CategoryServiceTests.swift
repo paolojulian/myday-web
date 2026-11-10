@@ -16,6 +16,12 @@ struct CategoryServiceTests {
         #expect(all.count == 1 && all[0].name == "Food")
     }
 
+    @Test func nameAscendingIsCaseInsensitiveAToZ() {
+        let names = ["food", "Bills", "apple", "Zoo"].sorted(by: CategoryService.nameAscending)
+        #expect(names == ["apple", "Bills", "food", "Zoo"])
+        #expect(!CategoryService.nameAscending("Food", "food"))
+    }
+
     @Test func addGeneratesUniqueIDs() throws {
         let a = try service.add(name: "A")
         let b = try service.add(name: "B")
