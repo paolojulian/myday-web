@@ -17,7 +17,7 @@ struct PokuExpensesApp: App {
     var body: some Scene {
         WindowGroup {
             MaintenanceHost {
-                Text("Poku Expenses")
+                RootView()
             }
         }
         .modelContainer(container)
@@ -54,14 +54,7 @@ private struct MaintenanceHost<Content: View>: View {
                     runMaintenance()
                 }
             }
-            .alert("Something went wrong", isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
+            .errorAlert($errorMessage)
     }
 
     private func runMaintenance() {
