@@ -64,7 +64,7 @@ struct RootView: View {
     @ViewBuilder private func screen(for tab: Tab) -> some View {
         switch tab {
         case .home: HomeScreen()
-        case .expenses: PlaceholderScreen(title: "Expenses")
+        case .expenses: ExpensesScreen()
         case .warranties: PlaceholderScreen(title: "Warranties")
         case .settings: PlaceholderScreen(title: "Settings")
         }
