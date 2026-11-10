@@ -51,7 +51,8 @@ import SwiftData
         initialWarrantyID = nil
     }
 
-    init(editing expense: Expense, context: ModelContext) {
+    /// Throws when the linked warranty cannot be fetched; a link to a deleted warranty loads as "no receipt".
+    init(editing expense: Expense, context: ModelContext) throws {
         self.context = context
         editing = expense
         kind = expense.isRefund ? .refund : .expense
@@ -67,7 +68,7 @@ import SwiftData
         receiptChange = .none
         isEditing = true
         initialWarrantyID = expense.warrantyID
-        let warranty = expense.warrantyID.flatMap { try? WarrantyService(context: context).warranty(id: $0) }
+        let warranty = try expense.warrantyID.flatMap { try WarrantyService(context: context).warranty(id: $0) }
         existingWarranty = warranty
         warrantyExpiration = warranty?.expirationDate
     }

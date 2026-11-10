@@ -54,7 +54,7 @@ struct ExpenseFormModelTests {
         let expense = try ExpenseService(context: context).add(
             ExpenseDraft(title: "Shoe return", amount: -1250.5, transactionDate: now, note: "Box",
                          categoryID: food.id), now: now)
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         #expect(model.isEditing)
         #expect(model.kind == .refund)
         #expect(model.amountText == "₱ 1,250.5")
@@ -72,13 +72,13 @@ struct ExpenseFormModelTests {
                                                     recurrenceID: template.id), now: now)
         let plain = try service.add(ExpenseDraft(title: "Lunch", amount: 100, transactionDate: now), now: now)
 
-        let templateModel = ExpenseFormModel(editing: template, context: context)
+        let templateModel = try ExpenseFormModel(editing: template, context: context)
         #expect(templateModel.isRecurring)
         #expect(templateModel.isRecurringInstance == false)
-        let instanceModel = ExpenseFormModel(editing: instance, context: context)
+        let instanceModel = try ExpenseFormModel(editing: instance, context: context)
         #expect(instanceModel.isRecurring)
         #expect(instanceModel.isRecurringInstance)
-        #expect(ExpenseFormModel(editing: plain, context: context).isRecurring == false)
+        #expect(try ExpenseFormModel(editing: plain, context: context).isRecurring == false)
     }
 
     // MARK: validation
@@ -179,7 +179,7 @@ struct ExpenseFormModelTests {
         let shopping = try category("Shopping")
         let expense = try ExpenseService(context: context).add(
             ExpenseDraft(title: "Lunch", amount: 650, transactionDate: now, categoryID: food.id), now: now)
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         model.kind = .refund
         model.categoryID = shopping.id
         model.amountText = "₱ 200"
@@ -209,7 +209,7 @@ struct ExpenseFormModelTests {
                                                     recurrence: .monthly), now: now)
         let instance = try service.add(ExpenseDraft(title: "Rent", amount: 100, transactionDate: now,
                                                     recurrenceID: template.id), now: now)
-        let model = ExpenseFormModel(editing: instance, context: context)
+        let model = try ExpenseFormModel(editing: instance, context: context)
         model.categoryID = try category().id
         #expect(try model.save(now: now))
         #expect(instance.recurrence == nil)
@@ -221,7 +221,7 @@ struct ExpenseFormModelTests {
         let template = try ExpenseService(context: context).add(
             ExpenseDraft(title: "Rent", amount: 100, transactionDate: now, categoryID: try category().id,
                          recurrence: .monthly), now: now)
-        let model = ExpenseFormModel(editing: template, context: context)
+        let model = try ExpenseFormModel(editing: template, context: context)
         model.isRecurring = false
         #expect(try model.save(now: now))
         #expect(template.recurrence == nil && template.recurrenceID == nil)
@@ -234,7 +234,7 @@ struct ExpenseFormModelTests {
                                                     categoryID: food.id, recurrence: .monthly), now: now)
         let instance = try service.add(ExpenseDraft(title: "Rent", amount: 100, transactionDate: now,
                                                     categoryID: food.id, recurrenceID: template.id), now: now)
-        let model = ExpenseFormModel(editing: instance, context: context)
+        let model = try ExpenseFormModel(editing: instance, context: context)
         model.isRecurring = false
         #expect(try model.save(now: now))
         #expect(instance.recurrence == nil && instance.recurrenceID == nil)
@@ -280,16 +280,39 @@ struct ExpenseFormModelTests {
     @Test func editingLoadsTheExistingWarranty() throws {
         let (expense, warranty) = try expenseWithWarranty()
         warranty.expirationDate = TestCalendar.date(2028, 1, 1)
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         #expect(model.existingWarranty?.id == warranty.id)
         #expect(model.warrantyExpiration == TestCalendar.date(2028, 1, 1))
         #expect(model.hasReceipt)
     }
 
+    @Test func screenLoadsTheEditModelWithItsLinkedWarranty() throws {
+        let (expense, warranty) = try expenseWithWarranty()
+        let model = try #require(try ExpenseFormScreen.loadModel(for: .edit(expenseID: expense.id), context: context))
+        #expect(model.isEditing)
+        #expect(model.existingWarranty?.id == warranty.id)
+        #expect(model.hasReceipt)
+    }
+
+    @Test func screenLoadReturnsNilOnlyForAMissingExpense() throws {
+        #expect(try ExpenseFormScreen.loadModel(for: .edit(expenseID: "exp_gone"), context: context) == nil)
+        let added = try #require(try ExpenseFormScreen.loadModel(for: .add(defaultDate: now), context: context))
+        #expect(added.isEditing == false)
+    }
+
+    @Test func aLinkToADeletedWarrantyLoadsAsNoReceipt() throws {
+        let (expense, warranty) = try expenseWithWarranty()
+        context.delete(warranty)
+        try context.save()
+        let model = try ExpenseFormModel(editing: expense, context: context)
+        #expect(model.existingWarranty == nil)
+        #expect(model.hasReceipt == false)
+    }
+
     @Test func replacedReceiptDeletesTheOldWarrantyAndLinksANewOne() throws {
         let (expense, old) = try expenseWithWarranty()
         let oldID = old.id
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         model.receiptChange = .replaced(otherImage)
         #expect(try model.save(now: now))
         let warranties = try store.fetch(Warranty.self)
@@ -302,7 +325,7 @@ struct ExpenseFormModelTests {
 
     @Test func removedReceiptDeletesAndUnlinks() throws {
         let (expense, _) = try expenseWithWarranty()
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         model.receiptChange = .removed
         #expect(model.hasReceipt == false)
         #expect(try model.save(now: now))
@@ -312,7 +335,7 @@ struct ExpenseFormModelTests {
 
     @Test func unchangedReceiptUpdatesTheWarrantyTitleAndExpiry() throws {
         let (expense, warranty) = try expenseWithWarranty()
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         model.title = "Rice cooker XL"
         let expiry = TestCalendar.date(2029, 2, 1)
         model.warrantyExpiration = expiry
@@ -326,7 +349,7 @@ struct ExpenseFormModelTests {
 
     @Test func invalidSaveTouchesNoWarranty() throws {
         let (expense, _) = try expenseWithWarranty()
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         model.receiptChange = .removed
         model.amountText = ""
         #expect(try model.save(now: now) == false)
@@ -338,7 +361,7 @@ struct ExpenseFormModelTests {
 
     @Test func deleteRemovesTheExpenseOnly() throws {
         let (expense, _) = try expenseWithWarranty()
-        let model = ExpenseFormModel(editing: expense, context: context)
+        let model = try ExpenseFormModel(editing: expense, context: context)
         try model.delete()
         #expect(try store.fetch(Expense.self).isEmpty)
         #expect(try store.fetch(Warranty.self).count == 1)

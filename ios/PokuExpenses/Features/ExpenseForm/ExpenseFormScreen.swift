@@ -7,7 +7,9 @@ struct ExpenseFormScreen: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var model: ExpenseFormModel?
-    @State private var isMissing = false
+    /// Shown instead of the form when the expense is gone or could not be loaded.
+    @State private var unavailableText: String?
+    @State private var errorMessage: String?
 
     static func expiryText(_ date: Date?, calendar: Calendar = .current) -> String {
         date.map { "Expires \(DateMath.mediumDate($0, calendar: calendar))" } ?? "No expiry date"
@@ -26,9 +28,9 @@ struct ExpenseFormScreen: View {
         Group {
             if let model {
                 ExpenseFormContent(model: model)
-            } else if isMissing {
+            } else if let unavailableText {
                 VStack(alignment: .leading, spacing: 0) {
-                    EmptyLine("This expense no longer exists.")
+                    EmptyLine(unavailableText)
                     Spacer(minLength: 0)
                     IconButton(systemImage: "xmark", label: "Cancel") { dismiss() }
                         .accessibilityIdentifier("form-cancel-button")
@@ -42,20 +44,29 @@ struct ExpenseFormScreen: View {
         }
         .background(Theme.Colors.surface)
         .presentationCornerRadius(Theme.Radius.sheet)
+        .errorAlert($errorMessage)
         .onAppear(perform: load)
     }
 
     private func load() {
         guard model == nil else { return }
+        do {
+            model = try Self.loadModel(for: target, context: context)
+            if model == nil { unavailableText = "This expense no longer exists." }
+        } catch {
+            unavailableText = "This expense could not be loaded."
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// nil only when the edited expense no longer exists; fetch failures throw.
+    static func loadModel(for target: FormTarget, context: ModelContext) throws -> ExpenseFormModel? {
         switch target {
         case .add(let defaultDate):
-            model = ExpenseFormModel(adding: defaultDate, context: context)
+            return ExpenseFormModel(adding: defaultDate, context: context)
         case .edit(let expenseID):
-            if let expense = try? ExpenseService(context: context).expense(id: expenseID) {
-                model = ExpenseFormModel(editing: expense, context: context)
-            } else {
-                isMissing = true
-            }
+            return try ExpenseService(context: context).expense(id: expenseID)
+                .map { try ExpenseFormModel(editing: $0, context: context) }
         }
     }
 }
