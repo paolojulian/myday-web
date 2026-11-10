@@ -66,26 +66,8 @@ struct RootView: View {
         case .home: HomeScreen()
         case .expenses: ExpensesScreen()
         case .warranties: WarrantiesScreen()
-        case .settings: PlaceholderScreen(title: "Settings")
+        case .settings: SettingsScreen()
         }
-    }
-}
-
-/// Stands in for screens built in later phases.
-private struct PlaceholderScreen: View {
-    let title: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title).themeLabel()
-            EmptyLine("Coming soon.")
-            Spacer(minLength: 0)
-        }
-        .screenMargins()
-        .padding(.top, Theme.Spacing.block)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.Colors.background)
-        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
