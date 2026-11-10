@@ -120,6 +120,17 @@ private struct ExpenseFormContent: View {
             if formatted != newValue { model.amountText = formatted }
         }
         .onAppear { if !model.isEditing { focus = .amount } }
+        .toolbar {
+            // The decimal pad has no return key: Next moves on to the title (web parity), Done closes it.
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                if focus == .amount {
+                    Button("Next") { focus = .title }.accessibilityIdentifier("keyboard-next")
+                } else {
+                    Button("Done") { focus = nil }.accessibilityIdentifier("keyboard-done")
+                }
+            }
+        }
         .sheet(item: $sheet, onDismiss: {
             if focusAmountAfterSheet {
                 focusAmountAfterSheet = false
