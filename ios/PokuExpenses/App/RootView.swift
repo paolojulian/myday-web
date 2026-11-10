@@ -65,7 +65,7 @@ struct RootView: View {
         switch tab {
         case .home: HomeScreen()
         case .expenses: ExpensesScreen()
-        case .warranties: PlaceholderScreen(title: "Warranties")
+        case .warranties: WarrantiesScreen()
         case .settings: PlaceholderScreen(title: "Settings")
         }
     }
